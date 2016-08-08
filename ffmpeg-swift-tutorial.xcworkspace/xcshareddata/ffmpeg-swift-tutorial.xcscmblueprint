@@ -1,0 +1,37 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "924A1CC8EC03A7ABC42878157AB8C3A08C78B51C",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "53C1F6315D6E003861EFBC7A9403F82AE3440309" : 0,
+    "924A1CC8EC03A7ABC42878157AB8C3A08C78B51C" : 0,
+    "1BF19058C9B814F8BA3C3075BCECA7739FE75020" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "A430E997-F676-4FF6-974A-FEA860A55624",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "53C1F6315D6E003861EFBC7A9403F82AE3440309" : "ffmpeg-swift-tutorial\/ffmpeg-tutorial\/",
+    "924A1CC8EC03A7ABC42878157AB8C3A08C78B51C" : "ffmpeg-swift-tutorial\/",
+    "1BF19058C9B814F8BA3C3075BCECA7739FE75020" : "ffmpeg-swift-tutorial\/FFmpeg-iOS-build-script\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "ffmpeg-swift-tutorial",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "ffmpeg-swift-tutorial.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:kewlbear\/FFmpeg-iOS-build-script.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1BF19058C9B814F8BA3C3075BCECA7739FE75020"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:mpenkov\/ffmpeg-tutorial.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "53C1F6315D6E003861EFBC7A9403F82AE3440309"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:singcodes\/ffmpeg-swift-tutorial.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "924A1CC8EC03A7ABC42878157AB8C3A08C78B51C"
+    }
+  ]
+}
