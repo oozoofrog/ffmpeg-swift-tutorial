@@ -31,6 +31,13 @@ class ViewController: UITableViewController {
         dispatch_source_set_event_handler(documents_observer) {
             weakSelf?.updateDocuments()
         }
+        dispatch_resume(documents_observer)
+    }
+    
+    deinit {
+        if 0 < fd {
+            close(fd)
+        }
     }
     
     func updateDocuments() {
@@ -38,8 +45,12 @@ class ViewController: UITableViewController {
         guard let files = try? NSFileManager.defaultManager().contentsOfDirectoryAtPath(documentPath) else {
             return
         }
-        
-        self.files = files
+        self.files = files.filter(){ file in
+            guard let attributes: NSDictionary = try? NSFileManager.defaultManager().attributesOfItemAtPath(documentPath + "/" + file) else {
+                return !file.hasPrefix(".")
+            }
+            return !file.hasPrefix(".") && attributes.fileType() == NSFileTypeRegular
+        }
         
         self.tableView.reloadData()
     }
@@ -82,14 +93,33 @@ class ViewController: UITableViewController {
         
         let sheet = UIAlertController(title: "tutorial", message: nil, preferredStyle: .ActionSheet)
         for index in TutorialIndex.all {
-            sheet.addAction(UIAlertAction(title: "\(index))", style: .Default) { _ in
-                let _ = Tutorial(tutorialIndex: index, paths: [path])
+            sheet.addAction(UIAlertAction(title: "\(index)", style: .Default) { _ in
+                    index.runTutorial([path])
                 })
         }
         
         self.presentViewController(sheet, animated: true) {
             tableView.deselectRowAtIndexPath(indexPath, animated: true)
         }
+    }
+    
+    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]? {
+        weak var weakSelf: ViewController? = self
+        return TutorialIndex.all.lazy.map({
+            let index = $0
+            return UITableViewRowAction(style: .Default, title: "\(index)", handler: { (action, indexPath) in
+                tableView.setEditing(false, animated: true)
+                guard let file = weakSelf?.files?[indexPath.row], let documentPath = weakSelf?.documentPath else {
+                    return
+                }
+                let path = "\(documentPath)/\(file)"
+                index.runTutorial([path])
+            })
+        })
     }
 }
 

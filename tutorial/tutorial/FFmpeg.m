@@ -9,6 +9,37 @@
 #import "FFmpeg.h"
 #import <libavformat/avformat.h>
 #import <libavcodec/avcodec.h>
+#import <libavutil/error.h>
+
+struct AVDictionary {
+    int count;
+    AVDictionaryEntry *elems;
+};
+
+Test* alloc_test() {
+    Test* test = malloc(sizeof(Test));
+    for (int i=0; i<8; i++) {
+        test->values[i] = (i + 1) * 10;
+    }
+    return test;
+}
+
+BOOL isErr(int err, const char* desc) {
+    if (err >= 0) {
+        return NO;
+    }
+    print_err(err, desc);
+    return YES;
+}
+
+void print_err(int err, const char *desc) {
+    if (NULL == desc) {
+        printf("😱 LIBAV ERR -> %s", av_err2str(err));
+    }
+    else {
+        printf("😱 LIBAV ERR(%s) -> %s", desc, av_err2str(err));
+    }
+}
 
 @implementation FFmpegHelper
 

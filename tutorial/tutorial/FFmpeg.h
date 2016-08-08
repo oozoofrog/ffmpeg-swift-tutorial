@@ -8,6 +8,18 @@
 
 #import <Foundation/Foundation.h>
 
+
+typedef struct Test{
+    int values[8];
+} Test;
+
+Test* alloc_test();
+
+struct AVDictionary;
+
+BOOL isErr(int err, const char* desc);
+void print_err(int err, const char* desc);
+
 @interface FFmpegHelper : NSObject
 
 @end

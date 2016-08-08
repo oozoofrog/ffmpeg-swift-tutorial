@@ -37,6 +37,7 @@
 		A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96D17571D5876CD009F7AC2 /* tutorial.swift */; };
 		A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
+		D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +75,7 @@
 		A96D17571D5876CD009F7AC2 /* tutorial.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorial.swift; sourceTree = "<group>"; };
 		A96D175B1D587725009F7AC2 /* sample.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample.mp4; sourceTree = "<group>"; };
 		A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ffmpeg-tutorial"; path = "../../ffmpeg-tutorial"; sourceTree = "<group>"; };
+		D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Castable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +132,7 @@
 				A96D17331D587137009F7AC2 /* libs */,
 				A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */,
 				A96D16F51D5860C5009F7AC2 /* ViewController.swift */,
+				D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */,
 				A96D17571D5876CD009F7AC2 /* tutorial.swift */,
 				A96D17471D5875F1009F7AC2 /* FFmpeg.h */,
 				A96D17481D5875F1009F7AC2 /* FFmpeg.m */,
@@ -285,6 +288,7 @@
 			files = (
 				A96D174A1D5875F1009F7AC2 /* FFmpeg.m in Sources */,
 				A96D16F61D5860C5009F7AC2 /* ViewController.swift in Sources */,
+				D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */,
 				A96D16F41D5860C5009F7AC2 /* AppDelegate.swift in Sources */,
 				A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */,
 			);
@@ -451,6 +455,7 @@
 				A96D17041D5860C5009F7AC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

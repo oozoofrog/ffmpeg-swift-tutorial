@@ -34,7 +34,68 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
+        #if arch(i386) || arch(x86_64)
+            self.createSymbolickLinkForDocuments()
+        #endif
+//        let nomore = NSUserDefaults.standardUserDefaults().boolForKey("NO_MORE_ALERT")
+//        if nomore {
+//            return true
+//        }
+//        
+//        if NSFileManager.defaultManager().fileExistsAtPath(self.documentPathForUserWithAppName) && self.docPath == (try? NSFileManager.defaultManager().destinationOfSymbolicLinkAtPath(self.documentPathForUserWithAppName) ?? "") {
+//            return true
+//        }
+//        print(NSFileManager.defaultManager().fileExistsAtPath(self.documentPathForUserWithAppName))
+//        print((try? NSFileManager.defaultManager().destinationOfSymbolicLinkAtPath(self.documentPathForUserWithAppName) ?? ""))
+//        print(self.docPath)
+//        dispatch_async(dispatch_get_main_queue()) {
+//            let alert = UIAlertController(title: "Ask", message: "Allow documents symbolic link to \(self.documentPathForUserWithAppName) folder (only simulator)", preferredStyle: .Alert)
+//            alert.addAction(UIAlertAction(title: "Confirm", style: .Default, handler: { (action) in
+//                self.createSymbolickLinkForDocuments()
+//            }))
+//            alert.addAction(UIAlertAction(title: "Do not allow", style: .Cancel, handler: nil))
+//            
+//            alert.addAction(UIAlertAction(title: "Do not allow and No More This Alert", style: .Destructive, handler: { (action) in
+//                NSUserDefaults.standardUserDefaults().setBool(true, forKey: "NO_MORE_ALERT")
+//                NSUserDefaults.standardUserDefaults().synchronize()
+//            }))
+//            
+//            self.window?.rootViewController?.presentViewController(alert, animated: true, completion: nil)
+//        }
+//        
         return true
+    }
+    
+    var docPath: NSString {
+        return NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+    }
+    var docPaths: [String] {
+        return docPath.componentsSeparatedByString("/")
+    }
+    var user: String {
+        return docPaths[2]
+    }
+    var documentPathForUser: String {
+        return docPaths[0...2].joinWithSeparator("/") + "/Documents"
+    }
+    
+    var documentPathForUserWithAppName: String {
+        return documentPathForUser + "/ffmpeg_tutorial"
+    }
+    
+    func createSymbolickLinkForDocuments() {
+        if NSFileManager.defaultManager().fileExistsAtPath(self.documentPathForUserWithAppName) {
+            return
+        }
+        do {
+            try NSFileManager.defaultManager().removeItemAtPath(self.documentPathForUserWithAppName)
+            try NSFileManager.defaultManager().createSymbolicLinkAtPath(self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+            let noti = UIAlertController(title: "Succeed", message: "Symbolic link of \(self.docPath) make to \(self.documentPathForUserWithAppName)", preferredStyle: .Alert)
+            noti.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
+            self.window?.rootViewController?.presentViewController(noti, animated: true, completion: nil)
+        } catch let err as NSError {
+            assertionFailure(err.localizedDescription)
+        }
     }
 
     func applicationWillResignActive(application: UIApplication) {
