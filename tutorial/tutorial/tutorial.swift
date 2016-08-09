@@ -297,7 +297,7 @@ struct Tutorial2: Tutorial {
         
         let renderer = SDL_CreateRenderer(window, -1, 0)
         
-        let texture = SDL_CreateTexture(renderer, Int32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING), pCodecCtx.memory.width, pCodecCtx.memory.height)
+        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
         
         
         while 0 <= av_read_frame(pFormatCtx, &packet) {

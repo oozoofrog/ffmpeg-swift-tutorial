@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		267E35F5BEB7DE24BAEC4AEB /* Pods_tutorial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5C2995441EF9B826FCFBEF5 /* Pods_tutorial.framework */; };
 		A96BD6271D59702A0095C84C /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6261D59702A0095C84C /* libSDL2.a */; };
 		A96BD65E1D59705A0095C84C /* begin_code.h in Headers */ = {isa = PBXBuildFile; fileRef = A96BD6281D59705A0095C84C /* begin_code.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A96BD65F1D59705A0095C84C /* close_code.h in Headers */ = {isa = PBXBuildFile; fileRef = A96BD6291D59705A0095C84C /* close_code.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -64,8 +65,6 @@
 		A96BD6931D59705A0095C84C /* SDL.h in Headers */ = {isa = PBXBuildFile; fileRef = A96BD65D1D59705A0095C84C /* SDL.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A96BD6A71D59976B0095C84C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6A61D59976B0095C84C /* GameController.framework */; };
 		A96BD6A91D5997720095C84C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6A81D5997720095C84C /* CoreMotion.framework */; };
-		A96BD6AA1D5997960095C84C /* CuckooAlert.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6A41D5995BD0095C84C /* CuckooAlert.framework */; };
-		A96BD6AB1D5997960095C84C /* CuckooAlert.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6A41D5995BD0095C84C /* CuckooAlert.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A96BD6AF1D599B2D0095C84C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */; };
 		A96BD6B11D599B330095C84C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6B01D599B330095C84C /* CoreAudio.framework */; };
 		A96BD6B31D599B450095C84C /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6B21D599B450095C84C /* OpenGLES.framework */; };
@@ -111,7 +110,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A96BD6AB1D5997960095C84C /* CuckooAlert.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -175,7 +173,6 @@
 		A96BD65C1D59705A0095C84C /* SDL_video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SDL_video.h; path = "../../SDL-iOS/include/SDL_video.h"; sourceTree = "<group>"; };
 		A96BD65D1D59705A0095C84C /* SDL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SDL.h; path = "../../SDL-iOS/include/SDL.h"; sourceTree = "<group>"; };
 		A96BD6941D5973F90095C84C /* sdl.map */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; name = sdl.map; path = ../../sdl.map; sourceTree = "<group>"; };
-		A96BD6A41D5995BD0095C84C /* CuckooAlert.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CuckooAlert.framework; path = ../Carthage/Build/iOS/CuckooAlert.framework; sourceTree = "<group>"; };
 		A96BD6A61D59976B0095C84C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		A96BD6A81D5997720095C84C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -217,7 +214,10 @@
 		A96D17571D5876CD009F7AC2 /* tutorial.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorial.swift; sourceTree = "<group>"; };
 		A96D175B1D587725009F7AC2 /* sample.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample.mp4; sourceTree = "<group>"; };
 		A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ffmpeg-tutorial"; path = "../../ffmpeg-tutorial"; sourceTree = "<group>"; };
+		C7CF05DFDE02B1D04680BFEC /* Pods-tutorial.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tutorial.debug.xcconfig"; path = "Pods/Target Support Files/Pods-tutorial/Pods-tutorial.debug.xcconfig"; sourceTree = "<group>"; };
+		CDA07D4F80C80AD1991B0571 /* Pods-tutorial.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tutorial.release.xcconfig"; path = "Pods/Target Support Files/Pods-tutorial/Pods-tutorial.release.xcconfig"; sourceTree = "<group>"; };
 		D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Castable.swift; sourceTree = "<group>"; };
+		E5C2995441EF9B826FCFBEF5 /* Pods_tutorial.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tutorial.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -234,7 +234,6 @@
 				A96D17561D58764F009F7AC2 /* libiconv.tbd in Frameworks */,
 				A96D17531D58764B009F7AC2 /* libbz2.tbd in Frameworks */,
 				A96D17541D58764B009F7AC2 /* libz.tbd in Frameworks */,
-				A96BD6AA1D5997960095C84C /* CuckooAlert.framework in Frameworks */,
 				A96D17501D587645009F7AC2 /* CoreMedia.framework in Frameworks */,
 				A96D174D1D587640009F7AC2 /* AudioToolbox.framework in Frameworks */,
 				A96D174E1D587640009F7AC2 /* VideoToolbox.framework in Frameworks */,
@@ -245,12 +244,30 @@
 				A96D17301D587133009F7AC2 /* libavutil.a in Frameworks */,
 				A96D17311D587133009F7AC2 /* libswresample.a in Frameworks */,
 				A96D17321D587133009F7AC2 /* libswscale.a in Frameworks */,
+				267E35F5BEB7DE24BAEC4AEB /* Pods_tutorial.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		904ECCA24E27A11D0E3B33C8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E5C2995441EF9B826FCFBEF5 /* Pods_tutorial.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A5ED2F7D0E8A6B9150C6E7CC /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				C7CF05DFDE02B1D04680BFEC /* Pods-tutorial.debug.xcconfig */,
+				CDA07D4F80C80AD1991B0571 /* Pods-tutorial.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 		A96D16E71D5860C5009F7AC2 = {
 			isa = PBXGroup;
 			children = (
@@ -259,12 +276,13 @@
 				A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */,
 				A96BD6A81D5997720095C84C /* CoreMotion.framework */,
 				A96BD6A61D59976B0095C84C /* GameController.framework */,
-				A96BD6A41D5995BD0095C84C /* CuckooAlert.framework */,
 				A96D174F1D587645009F7AC2 /* CoreMedia.framework */,
 				A96D174B1D587640009F7AC2 /* AudioToolbox.framework */,
 				A96D174C1D587640009F7AC2 /* VideoToolbox.framework */,
 				A96D16F21D5860C5009F7AC2 /* tutorial */,
 				A96D16F11D5860C5009F7AC2 /* Products */,
+				A5ED2F7D0E8A6B9150C6E7CC /* Pods */,
+				904ECCA24E27A11D0E3B33C8 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -468,12 +486,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A96D17021D5860C5009F7AC2 /* Build configuration list for PBXNativeTarget "tutorial" */;
 			buildPhases = (
+				B675B7E61E43F592FE49F0D7 /* [CP] Check Pods Manifest.lock */,
 				A96D17451D5873F4009F7AC2 /* copy module map */,
 				A96D16EC1D5860C5009F7AC2 /* Sources */,
 				A96D17351D587152009F7AC2 /* Headers */,
 				A96D16ED1D5860C5009F7AC2 /* Frameworks */,
 				A96D16EE1D5860C5009F7AC2 /* Resources */,
 				A96BD6AC1D5997960095C84C /* Embed Frameworks */,
+				F81482DB073B671DAD436E0E /* [CP] Embed Pods Frameworks */,
+				9AB14CAD4A70528CC727EDDA /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -533,6 +554,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		9AB14CAD4A70528CC727EDDA /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-tutorial/Pods-tutorial-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		A96D17451D5873F4009F7AC2 /* copy module map */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -547,6 +583,36 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cp $SRCROOT/../ffmpeg.map $SRCROOT/../FFmpeg-iOS-build-script/FFmpeg-iOS/include/module.map\ncp $SRCROOT/../sdl.map $SRCROOT/../SDL-iOS/include/module.map";
+		};
+		B675B7E61E43F592FE49F0D7 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		F81482DB073B671DAD436E0E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-tutorial/Pods-tutorial-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -671,11 +737,11 @@
 		};
 		A96D17031D5860C5009F7AC2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C7CF05DFDE02B1D04680BFEC /* Pods-tutorial.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
-				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../Carthage/Build/iOS";
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include",
 					"$(SRCROOT)/../SDL-iOS/include",
@@ -688,6 +754,7 @@
 				);
 				MODULEMAP_FILE = "$(SRCROOT)/../ffmpeg.map";
 				MODULEMAP_PRIVATE_FILE = "";
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gretech.tutorial;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial/tutorial-Bridging-Header.h";
@@ -697,11 +764,11 @@
 		};
 		A96D17041D5860C5009F7AC2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CDA07D4F80C80AD1991B0571 /* Pods-tutorial.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
-				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../Carthage/Build/iOS";
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include",
 					"$(SRCROOT)/../SDL-iOS/include",
@@ -714,6 +781,7 @@
 				);
 				MODULEMAP_FILE = "$(SRCROOT)/../ffmpeg.map";
 				MODULEMAP_PRIVATE_FILE = "";
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gretech.tutorial;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial/tutorial-Bridging-Header.h";
