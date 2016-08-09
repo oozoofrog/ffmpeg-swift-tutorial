@@ -1,0 +1,4 @@
+module SDL[extern_c] {
+    header "SDL.h"
+    header "SDL_main.h"
+}
