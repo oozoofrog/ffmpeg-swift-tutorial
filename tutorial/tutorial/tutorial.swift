@@ -200,6 +200,8 @@ struct Tutorial2: Tutorial {
     let paths: [String]
     
     func run() {
+        
+        // SDL needs operation
         let operation = NSBlockOperation {
             
             var pFormatCtx: UnsafeMutablePointer<AVFormatContext> = avformat_alloc_context()
@@ -261,14 +263,15 @@ struct Tutorial2: Tutorial {
                 av_frame_free(&pFrame)
             }
             
-            let dst_pix_fmt: AVPixelFormat = AV_PIX_FMT_BGR24
+            let dst_pix_fmt: AVPixelFormat = AV_PIX_FMT_YUV420P
             pFrame = av_frame_alloc()
             pFrameDST = av_frame_alloc()
             
             numBytes = avpicture_get_size(dst_pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height)
             buffer = UnsafeMutablePointer<UInt8>(av_malloc(Int(numBytes) * sizeof(UInt8)))
             
-            sws_ctx = sws_getContext(pCodecCtx.memory.width, pCodecCtx.memory.height, pCodecCtx.memory.pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height, dst_pix_fmt, SWS_BILINEAR, nil, nil, nil)
+            let screenSize = UIScreen.mainScreen().bounds.size
+            sws_ctx = sws_getContext(pCodecCtx.memory.width, pCodecCtx.memory.height, pCodecCtx.memory.pix_fmt, Int32(screenSize.width), Int32(screenSize.height), dst_pix_fmt, SWS_BILINEAR, nil, nil, nil)
             
             avpicture_fill(pFrameDST.cast(), buffer, dst_pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height)
             
@@ -289,7 +292,7 @@ struct Tutorial2: Tutorial {
                 return
             }
             // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-            let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.mainScreen().bounds.width / 2.0), Int32(UIScreen.mainScreen().bounds.height / 2.0), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+            let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.mainScreen().bounds.width), Int32(UIScreen.mainScreen().bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
             guard nil != window else {
                 print("SDL: couldn't create window")
                 return
@@ -297,7 +300,7 @@ struct Tutorial2: Tutorial {
             
             let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue)
             
-            let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_BGR24), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
+            let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
             defer {
                 SDL_DestroyTexture(texture)
             }
@@ -313,15 +316,15 @@ struct Tutorial2: Tutorial {
                     if 0 < frameFinished {
                         sws_scale(sws_ctx, pFrame.memory.dataPtr().cast(), pFrame.memory.linesizePtr(), 0, pCodecCtx.memory.height, pFrameDST.memory.dataPtr().mutable(), pFrameDST.memory.linesizePtr())
                         SDL_UpdateTexture(texture, &rect, pFrameDST.memory.data.0, pFrameDST.memory.linesize.0)
+                        
                         SDL_RenderClear(renderer)
                         SDL_RenderCopy(renderer, texture, &rect, &rect)
                         SDL_RenderPresent(renderer)
                     }
-                    SDL_Delay(50)
+//                    SDL_Delay(50)
                 }
                 av_packet_unref(&packet)
                 SDL_PollEvent(&event)
-                print(SDL_EventType.init(event.type))
                 switch event.type {
                 case SDL_QUIT.rawValue:
                     SDL_Quit()
