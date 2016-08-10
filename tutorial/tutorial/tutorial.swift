@@ -12,7 +12,8 @@ import SDL
 
 enum TutorialIndex: Int {
     case tutorial1 = 1
-    case tutorial2
+    case tutorial2, tutorial3
+    case tutorialNumber
     
     func runTutorial(paths:[String]) {
         switch self {
@@ -20,10 +21,12 @@ enum TutorialIndex: Int {
             Tutorial1(paths: paths).run()
         case .tutorial2:
             Tutorial2(paths: paths).run()
+        case .tutorial3:
+            Tutorial3(paths: paths).run()
         }
     }
     
-    static let all: [TutorialIndex] = (1...TutorialIndex.tutorial2.rawValue).flatMap(){TutorialIndex(rawValue: $0)}
+    static let all: [TutorialIndex] = (1..<TutorialIndex.tutorialNumber.rawValue).flatMap(){TutorialIndex(rawValue: $0)}
 }
 
 protocol Tutorial {
@@ -336,6 +339,14 @@ struct Tutorial2: Tutorial {
                 }
             }
         }.start()
+    }
+}
+
+struct  Tutorial3: Tutorial {
+    var paths: [String]
+    
+    func run() {
+        
     }
 }
 
