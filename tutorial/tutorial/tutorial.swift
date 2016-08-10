@@ -200,118 +200,138 @@ struct Tutorial2: Tutorial {
     let paths: [String]
     
     func run() {
-        var pFormatCtx: UnsafeMutablePointer<AVFormatContext> = avformat_alloc_context()
-        var i: Int32 = 0, videoStream: Int32 = 0
-        var pCodecCtx: UnsafeMutablePointer<AVCodecContext> = nil
-        var pCodec: UnsafeMutablePointer<AVCodec> = nil
-        var pFrame: UnsafeMutablePointer<AVFrame> = nil
-        var pFrameRGB: UnsafeMutablePointer<AVFrame> = nil
-        var packet = AVPacket()
-        var frameFinished: Int32 = 0
-        var numBytes: Int32 = 0
-        
-        var optionsDict: UnsafeMutablePointer<COpaquePointer> = nil
-        var buffer: UnsafeMutablePointer<UInt8> = nil
-        
-        //        AVDictionaryEntry
-        //        var optionsDict: UnsafeMutablePointer<AVDictionary> = nil
-        var sws_ctx: COpaquePointer = nil
-        
-        if isErr(avformat_open_input(&pFormatCtx, paths[0], nil, nil), nil) {
-            return
-        }
-        defer {
-            if nil != pFormatCtx {
-                avformat_free_context(pFormatCtx)
-                print("format closed")
+        let operation = NSBlockOperation {
+            
+            var pFormatCtx: UnsafeMutablePointer<AVFormatContext> = avformat_alloc_context()
+            var i: Int32 = 0, videoStream: Int32 = 0
+            var pCodecCtx: UnsafeMutablePointer<AVCodecContext> = nil
+            var pCodec: UnsafeMutablePointer<AVCodec> = nil
+            var pFrame: UnsafeMutablePointer<AVFrame> = nil
+            var pFrameDST: UnsafeMutablePointer<AVFrame> = nil
+            var packet = AVPacket()
+            var frameFinished: Int32 = 0
+            var numBytes: Int32 = 0
+            
+            var optionsDict: UnsafeMutablePointer<COpaquePointer> = nil
+            var buffer: UnsafeMutablePointer<UInt8> = nil
+            
+            //        AVDictionaryEntry
+            //        var optionsDict: UnsafeMutablePointer<AVDictionary> = nil
+            var sws_ctx: COpaquePointer = nil
+            
+            if isErr(avformat_open_input(&pFormatCtx, self.paths[0], nil, nil), nil) {
+                return
             }
-        }
-        
-        if isErr(avformat_find_stream_info(pFormatCtx, nil), nil) {
-            return
-        }
-        
-        av_dump_format(pFormatCtx, 0, paths[0], 0)
-        
-        videoStream = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, &pCodec, 0)
-        
-        if isErr(videoStream, "av_find_best_stream") {
-            return
-        }
-        
-        if nil == pCodec {
-            print("Unsupported codec!")
-            return
-        }
-        
-        pCodecCtx = pFormatCtx.memory.streams.advancedBy(Int(videoStream)).memory.memory.codec
-        
-        defer {
-            print("close codec context")
-            avcodec_close(pCodecCtx)
+            defer {
+                if nil != pFormatCtx {
+                    avformat_free_context(pFormatCtx)
+                    print("format closed")
+                }
+            }
             
-        }
-        
-        if isErr(avcodec_open2(pCodecCtx, pCodec, optionsDict), "avcodec_open2") {
-            return
-        }
-        
-        defer {
-            av_frame_free(&pFrameRGB)
-            av_frame_free(&pFrame)
-        }
-        
-        pFrame = av_frame_alloc()
-        pFrameRGB = av_frame_alloc()
-        
-        numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx.memory.width, pCodecCtx.memory.height)
-        buffer = UnsafeMutablePointer<UInt8>(av_malloc(Int(numBytes) * sizeof(UInt8)))
-        
-        sws_ctx = sws_getContext(pCodecCtx.memory.width, pCodecCtx.memory.height, pCodecCtx.memory.pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
-        
-        avpicture_fill(pFrameRGB.cast(), buffer, AV_PIX_FMT_RGB24, pCodecCtx.memory.width, pCodecCtx.memory.height)
-        
-        defer {
+            if isErr(avformat_find_stream_info(pFormatCtx, nil), nil) {
+                return
+            }
             
-            av_packet_unref(&packet)
+            videoStream = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, &pCodec, 0)
             
-            if nil != pFrame {
+            if isErr(videoStream, "av_find_best_stream") {
+                return
+            }
+            
+            if nil == pCodec {
+                print("Unsupported codec!")
+                return
+            }
+            
+            pCodecCtx = pFormatCtx.memory.streams.advancedBy(Int(videoStream)).memory.memory.codec
+            
+            defer {
+                print("close codec context")
+                avcodec_close(pCodecCtx)
+                
+            }
+            
+            if isErr(avcodec_open2(pCodecCtx, pCodec, optionsDict), "avcodec_open2") {
+                return
+            }
+            
+            defer {
+                av_frame_free(&pFrameDST)
                 av_frame_free(&pFrame)
             }
             
-            av_free(buffer)
-            if nil != pFrameRGB {
-                av_frame_free(&pFrameRGB)
-            }
-        }
-        
-        guard  SDLHelper().SDL_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
-            return
-        }
-        // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.mainScreen().bounds.width), Int32(UIScreen.mainScreen().bounds.height), SDL_WINDOW_FULLSCREEN.rawValue | SDL_WINDOW_OPENGL.rawValue)
-        guard nil != window else {
-            print("SDL: couldn't create window")
-            return
-        }
-        
-        let renderer = SDL_CreateRenderer(window, -1, 0)
-        
-        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
-        
-        
-        while 0 <= av_read_frame(pFormatCtx, &packet) {
-            if packet.stream_index == videoStream {
-                if isErr(avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet), "avcodec_decode_video2") {
-                    return
+            let dst_pix_fmt: AVPixelFormat = AV_PIX_FMT_BGR24
+            pFrame = av_frame_alloc()
+            pFrameDST = av_frame_alloc()
+            
+            numBytes = avpicture_get_size(dst_pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height)
+            buffer = UnsafeMutablePointer<UInt8>(av_malloc(Int(numBytes) * sizeof(UInt8)))
+            
+            sws_ctx = sws_getContext(pCodecCtx.memory.width, pCodecCtx.memory.height, pCodecCtx.memory.pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height, dst_pix_fmt, SWS_BILINEAR, nil, nil, nil)
+            
+            avpicture_fill(pFrameDST.cast(), buffer, dst_pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height)
+            
+            defer {
+                av_packet_unref(&packet)
+                
+                if nil != pFrame {
+                    av_frame_free(&pFrame)
                 }
-                if 0 < frameFinished {
-                    
-              
+                
+                av_free(buffer)
+                if nil != pFrameDST {
+                    av_frame_free(&pFrameDST)
                 }
             }
-            av_packet_unref(&packet)
-        }
+            
+            guard  SDLHelper().SDL_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
+                return
+            }
+            // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
+            let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.mainScreen().bounds.width / 2.0), Int32(UIScreen.mainScreen().bounds.height / 2.0), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+            guard nil != window else {
+                print("SDL: couldn't create window")
+                return
+            }
+            
+            let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue)
+            
+            let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_BGR24), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
+            defer {
+                SDL_DestroyTexture(texture)
+            }
+            var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx.memory.width, h: pCodecCtx.memory.height)
+            
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
+            var event = SDL_Event()
+            while 0 <= av_read_frame(pFormatCtx, &packet) {
+                if packet.stream_index == videoStream {
+                    if isErr(avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet), "avcodec_decode_video2") {
+                        return
+                    }
+                    if 0 < frameFinished {
+                        sws_scale(sws_ctx, pFrame.memory.dataPtr().cast(), pFrame.memory.linesizePtr(), 0, pCodecCtx.memory.height, pFrameDST.memory.dataPtr().mutable(), pFrameDST.memory.linesizePtr())
+                        SDL_UpdateTexture(texture, &rect, pFrameDST.memory.data.0, pFrameDST.memory.linesize.0)
+                        SDL_RenderClear(renderer)
+                        SDL_RenderCopy(renderer, texture, &rect, &rect)
+                        SDL_RenderPresent(renderer)
+                    }
+                    SDL_Delay(50)
+                }
+                av_packet_unref(&packet)
+                SDL_PollEvent(&event)
+                print(SDL_EventType.init(event.type))
+                switch event.type {
+                case SDL_QUIT.rawValue:
+                    SDL_Quit()
+                    exit(0)
+                    break
+                default:
+                    break
+                }
+            }
+        }.start()
     }
 }
 
