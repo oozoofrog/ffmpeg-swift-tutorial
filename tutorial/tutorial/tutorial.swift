@@ -303,11 +303,15 @@ struct Tutorial2: Tutorial {
             let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
             defer {
                 SDL_DestroyTexture(texture)
+                SDL_DestroyRenderer(renderer)
+                SDL_DestroyWindow(window)
             }
             var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx.memory.width, h: pCodecCtx.memory.height)
             
             SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
             var event = SDL_Event()
+            
+            
             while 0 <= av_read_frame(pFormatCtx, &packet) {
                 if packet.stream_index == videoStream {
                     if isErr(avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet), "avcodec_decode_video2") {
@@ -325,12 +329,9 @@ struct Tutorial2: Tutorial {
                 }
                 av_packet_unref(&packet)
                 SDL_PollEvent(&event)
-                switch event.type {
-                case SDL_QUIT.rawValue:
-                    SDL_Quit()
-                    exit(0)
+                if event.type == SDL_QUIT.rawValue {
                     break
-                default:
+                } else if event.type == SDL_FINGERDOWN.rawValue {
                     break
                 }
             }

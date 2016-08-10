@@ -8,7 +8,6 @@
 
 import UIKit
 import SDL
-import CuckooAlert
 
 class ViewController: UITableViewController {
     
