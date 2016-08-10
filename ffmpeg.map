@@ -2,7 +2,12 @@ module ffmpeg[extern_c] {
     header "libavformat/avformat.h"
     header "libavcodec/avcodec.h"
     header "libavfilter/avfilter.h"
+    header "libavfilter/avfiltergraph.h"
+    header "libavfilter/buffersrc.h"
+    header "libavfilter/buffersink.h"
     header "libswscale/swscale.h"
     header "libavutil/avutil.h"
+    header "libavutil/pixfmt.h"
+    header "libavutil/opt.h"
     header "libavutil/dict.h"
 }

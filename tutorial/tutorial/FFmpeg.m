@@ -10,6 +10,7 @@
 #import <libavformat/avformat.h>
 #import <libavcodec/avcodec.h>
 #import <libavutil/error.h>
+#import <libavutil/opt.h>
 
 struct AVDictionary {
     int count;
@@ -39,6 +40,18 @@ void print_err(int err, const char *desc) {
     else {
         printf("😱 LIBAV ERR(%s) -> %s", desc, av_err2str(err));
     }
+}
+
+int opt_set_int_list(AVFilterContext *ctx, const char * key, void *value, int64_t term, int flags) {
+    return av_opt_set_int_list(ctx, key, value, term, flags);
+}
+
+int AVERROR_CONVERT(int err) {
+    return AVERROR(err);
+}
+
+BOOL AVFILTER_EOF(int ret) {
+    return ret == AVERROR(EAGAIN) || ret == AVERROR_EOF;
 }
 
 @implementation FFmpegHelper

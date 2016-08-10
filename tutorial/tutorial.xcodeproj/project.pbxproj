@@ -99,6 +99,9 @@
 		A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96D17571D5876CD009F7AC2 /* tutorial.swift */; };
 		A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
+		A970FA0B1D5C538700A114A1 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0A1D5C538700A114A1 /* README.md */; };
+		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
+		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
 		D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */; };
 /* End PBXBuildFile section */
 
@@ -213,6 +216,9 @@
 		A96D17571D5876CD009F7AC2 /* tutorial.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorial.swift; sourceTree = "<group>"; };
 		A96D175B1D587725009F7AC2 /* sample.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample.mp4; sourceTree = "<group>"; };
 		A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ffmpeg-tutorial"; path = "../../ffmpeg-tutorial"; sourceTree = "<group>"; };
+		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
+		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 		D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Castable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -273,6 +279,8 @@
 		A96D16F21D5860C5009F7AC2 /* tutorial */ = {
 			isa = PBXGroup;
 			children = (
+				A970FA0A1D5C538700A114A1 /* README.md */,
+				A999BE7C1D5C1E0400097E95 /* examples */,
 				A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */,
 				A96D17341D587142009F7AC2 /* includes */,
 				A96D17331D587137009F7AC2 /* libs */,
@@ -280,6 +288,7 @@
 				A96D16F51D5860C5009F7AC2 /* ViewController.swift */,
 				D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */,
 				A96D17571D5876CD009F7AC2 /* tutorial.swift */,
+				A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */,
 				A96D17471D5875F1009F7AC2 /* FFmpeg.h */,
 				A96D17481D5875F1009F7AC2 /* FFmpeg.m */,
 				A96BD6B41D599C3E0095C84C /* SDLHelper.h */,
@@ -519,6 +528,7 @@
 				A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */,
 				A96D16FE1D5860C5009F7AC2 /* LaunchScreen.storyboard in Resources */,
 				A96D16FB1D5860C5009F7AC2 /* Assets.xcassets in Resources */,
+				A999BE7D1D5C1E0400097E95 /* examples in Resources */,
 				A96D16F91D5860C5009F7AC2 /* Main.storyboard in Resources */,
 				A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */,
 			);
@@ -552,9 +562,11 @@
 				A96D174A1D5875F1009F7AC2 /* FFmpeg.m in Sources */,
 				A96D16F61D5860C5009F7AC2 /* ViewController.swift in Sources */,
 				D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */,
+				A970FA0B1D5C538700A114A1 /* README.md in Sources */,
 				A96BD6B71D599C3E0095C84C /* SDLHelper.mm in Sources */,
 				A96D16F41D5860C5009F7AC2 /* AppDelegate.swift in Sources */,
 				A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */,
+				A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -667,8 +679,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_OPTIMIZATION = time;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include",
 					"$(SRCROOT)/../SDL-iOS/include",
@@ -686,6 +700,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial/tutorial-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -693,8 +708,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_OPTIMIZATION = space;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
+				GCC_OPTIMIZATION_LEVEL = fast;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include",
 					"$(SRCROOT)/../SDL-iOS/include",
@@ -711,6 +728,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.gretech.tutorial;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial/tutorial-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

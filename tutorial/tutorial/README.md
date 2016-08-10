@@ -11,4 +11,5 @@
 
 **swift only coding is not working now.**
 
+- **crashing from avfiltercontext type casing problme**
 - **some macros cannot bridging to swift**

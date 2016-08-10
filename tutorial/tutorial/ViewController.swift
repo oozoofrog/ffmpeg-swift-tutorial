@@ -98,7 +98,8 @@ class ViewController: UITableViewController {
                     index.runTutorial([path])
                 })
         }
-        
+        sheet.popoverPresentationController?.sourceView = tableView
+        sheet.popoverPresentationController?.sourceRect = tableView.rectForRowAtIndexPath(indexPath)
         self.presentViewController(sheet, animated: true) {
             tableView.deselectRowAtIndexPath(indexPath, animated: true)
         }
