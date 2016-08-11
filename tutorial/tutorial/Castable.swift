@@ -10,35 +10,34 @@ import Foundation
 
 protocol Castable {}
 
-protocol UnsafePointerProtocol: NilLiteralConvertible {
-    associatedtype Memory
-    init(nilLiteral: ())
+protocol UnsafePointerProtocol {
+    associatedtype Pointee
+    
     init<Memory>(_ from: UnsafeMutablePointer<Memory>)
     init<Memory>(_ from: UnsafePointer<Memory>)
-    var memory: Memory { get }
-    func mutable<M>() -> UnsafeMutablePointer<M>
+    var pointee: Pointee { get }
 }
 
 extension UnsafeMutablePointer : UnsafePointerProtocol, Castable{}
 extension UnsafePointer : UnsafePointerProtocol, Castable{}
 
 extension UnsafePointerProtocol where Self: Castable {
-    func cast<P: UnsafePointerProtocol, M where M == P.Memory>() -> P {
+    func cast<P: UnsafePointerProtocol, M where M == P.Pointee>() -> P? {
         switch self {
-        case let ptr as UnsafePointer<Memory>:
+        case let ptr as UnsafePointer<Pointee>:
             return P(ptr)
-        case let ptr as UnsafeMutablePointer<Memory>:
+        case let ptr as UnsafeMutablePointer<Pointee>:
             return P(ptr)
         default:
             return nil
         }
     }
     
-    func mutable<M>() -> UnsafeMutablePointer<M> {
+    func mutable<M>() -> UnsafeMutablePointer<M>? {
         switch self {
-        case let ptr as UnsafePointer<Memory>:
+        case let ptr as UnsafePointer<Pointee>:
             return UnsafeMutablePointer<M>(ptr)
-        case let ptr as UnsafeMutablePointer<Memory>:
+        case let ptr as UnsafeMutablePointer<Pointee>:
             return UnsafeMutablePointer<M>(ptr)
         default:
             return nil
@@ -49,7 +48,7 @@ extension UnsafePointerProtocol where Self: Castable {
 
 protocol Pointerable {
     associatedtype Element
-    var pointer: UnsafePointer<Element> {get}
+    var pointer: UnsafePointer<Element>? {get}
 }
 
 extension Array : Pointerable {}
@@ -59,8 +58,8 @@ extension ArraySlice : Pointerable {
     }
 }
 
-extension Pointerable where Self: SequenceType {
-    var pointer: UnsafePointer<Element> {
+extension Pointerable where Self: Sequence {
+    var pointer: UnsafePointer<Element>? {
         switch self {
         case let a as Array<Element>:
             return UnsafePointer<Element>(a)

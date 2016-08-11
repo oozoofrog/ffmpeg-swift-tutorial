@@ -15,7 +15,7 @@ enum TutorialIndex: Int {
     case tutorial2, tutorial3
     case tutorialNumber
     
-    func runTutorial(paths:[String]) {
+    func runTutorial(_ paths:[String]) {
         var tutorial: Tutorial? = nil
         switch self {
         case .tutorial1:
@@ -44,13 +44,13 @@ protocol Tutorial {
 
 extension Tutorial {
     var docPath: String {
-        return NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+        return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     }
     var writePath: String {
         return docPath + "/exports/\(String(self.dynamicType))"
     }
     var screenSize: CGSize {
-        return UIScreen.mainScreen().bounds.size
+        return UIScreen.main.bounds.size
     }
 }
 
@@ -60,31 +60,31 @@ extension Tutorial {
 struct Tutorial1: Tutorial {
     var paths: [String]
     
-    func Saveframe(pFrame: UnsafeMutablePointer<AVFrame>, width: Int32, height: Int32, iFrame: Int32) {
+    func Saveframe(_ pFrame: UnsafeMutablePointer<AVFrame>, width: Int32, height: Int32, iFrame: Int32) {
         let writePath = self.writePath + "/frame\(iFrame).ppm"
         
         do {
             
             
-            if false == NSFileManager.defaultManager().fileExistsAtPath(writePath) {
-                try NSFileManager.defaultManager().createDirectoryAtPath(self.writePath, withIntermediateDirectories: true, attributes: nil)
-                NSFileManager.defaultManager().createFileAtPath(writePath, contents: nil, attributes: nil)
+            if false == FileManager.default.fileExists(atPath: writePath) {
+                try FileManager.default.createDirectory(atPath: self.writePath, withIntermediateDirectories: true, attributes: nil)
+                FileManager.default.createFile(atPath: writePath, contents: nil, attributes: nil)
             }
             
-            let writeHandle = try NSFileHandle(forWritingToURL: NSURL(fileURLWithPath: writePath))
+            let writeHandle = try FileHandle(forWritingTo: URL(fileURLWithPath: writePath))
             
             defer {
                 writeHandle.synchronizeFile()
                 writeHandle.closeFile()
             }
-            guard let header = "P6\n\(width) \(height)\n255\n".dataUsingEncoding(NSASCIIStringEncoding) else {
+            guard let header = "P6\n\(width) \(height)\n255\n".data(using: String.Encoding.ascii) else {
                 return
             }
-            writeHandle.writeData(header)
+            writeHandle.write(header)
             
             for y in 0..<height {
-                let bytes = pFrame.memory.data.0.advancedBy(Int(y) * Int(pFrame.memory.linesize.0))
-                writeHandle.writeData(NSData(bytes: bytes, length: Int(pFrame.memory.linesize.0)))
+                let bytes = pFrame.pointee.data.0?.advanced(by: Int(y) * Int(pFrame.pointee.linesize.0))
+                writeHandle.write(Data(bytes: UnsafePointer<UInt8>(bytes!), count: Int(pFrame.pointee.linesize.0)))
             }
             
         } catch let err as NSError {
@@ -93,22 +93,22 @@ struct Tutorial1: Tutorial {
     }
     
     mutating func run() {
-        var pFormatCtx: UnsafeMutablePointer<AVFormatContext> = avformat_alloc_context()
+        var pFormatCtx: UnsafeMutablePointer<AVFormatContext>? = avformat_alloc_context()
         var i: Int32 = 0, videoStream: Int32 = 0
-        var pCodecCtx: UnsafeMutablePointer<AVCodecContext> = nil
-        var pCodec: UnsafeMutablePointer<AVCodec> = nil
-        var pFrame: UnsafeMutablePointer<AVFrame> = nil
-        var pFrameRGB: UnsafeMutablePointer<AVFrame> = nil
+        var pCodecCtx: UnsafeMutablePointer<AVCodecContext>? = nil
+        var pCodec: UnsafeMutablePointer<AVCodec>? = nil
+        var pFrame: UnsafeMutablePointer<AVFrame>? = nil
+        var pFrameRGB: UnsafeMutablePointer<AVFrame>? = nil
         var packet = AVPacket()
         var frameFinished: Int32 = 0
         var numBytes: Int32 = 0
         
-        var optionsDict: UnsafeMutablePointer<COpaquePointer> = nil
-        var buffer: UnsafeMutablePointer<UInt8> = nil
+        var optionsDict: UnsafeMutablePointer<OpaquePointer?>? = nil
+        var buffer: UnsafeMutablePointer<UInt8>? = nil
         
         //        AVDictionaryEntry
         //        var optionsDict: UnsafeMutablePointer<AVDictionary> = nil
-        var sws_ctx: COpaquePointer = nil
+        var sws_ctx: OpaquePointer? = nil
         
         if isErr(avformat_open_input(&pFormatCtx, paths[0], nil, nil), nil) {
             return
@@ -137,12 +137,16 @@ struct Tutorial1: Tutorial {
             return
         }
         
-        pCodecCtx = pFormatCtx.memory.streams.advancedBy(Int(videoStream)).memory.memory.codec
+        pCodecCtx = pFormatCtx?.pointee.streams.advanced(by: Int(videoStream)).pointee?.pointee.codec
         
         defer {
             print("close codec context")
             avcodec_close(pCodecCtx)
             
+        }
+        
+        if nil == pCodecCtx {
+            return
         }
         
         if isErr(avcodec_open2(pCodecCtx, pCodec, optionsDict), "avcodec_open2") {
@@ -157,12 +161,12 @@ struct Tutorial1: Tutorial {
         pFrame = av_frame_alloc()
         pFrameRGB = av_frame_alloc()
         
-        numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx.memory.width, pCodecCtx.memory.height)
+        numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, (pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!)
         buffer = UnsafeMutablePointer<UInt8>(av_malloc(Int(numBytes) * sizeof(UInt8)))
         
-        sws_ctx = sws_getContext(pCodecCtx.memory.width, pCodecCtx.memory.height, pCodecCtx.memory.pix_fmt, pCodecCtx.memory.width, pCodecCtx.memory.height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
+        sws_ctx = sws_getContext((pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!, (pCodecCtx?.pointee.pix_fmt)!, (pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
         
-        avpicture_fill(pFrameRGB.cast(), buffer, AV_PIX_FMT_RGB24, pCodecCtx.memory.width, pCodecCtx.memory.height)
+        avpicture_fill(pFrameRGB!.cast(), buffer, AV_PIX_FMT_RGB24, pCodecCtx?.pointee.width ?? 0, pCodecCtx?.pointee.height ?? 0)
         
         defer {
             
@@ -185,17 +189,17 @@ struct Tutorial1: Tutorial {
                 if 0 < frameFinished {
                     
                     sws_scale(sws_ctx,
-                              pFrame.memory.dataPtr().cast(),
-                              pFrame.memory.linesizePtr(),
+                              pFrame?.pointee.dataPtr().cast(),
+                              pFrame?.pointee.linesizePtr(),
                               0,
-                              pCodecCtx.memory.height,
-                              pFrameRGB.memory.dataPtr(),
-                              pFrameRGB.memory.linesizePtr())
+                              pCodecCtx!.pointee.height,
+                              pFrameRGB?.pointee.dataPtr().cast(),
+                              pFrameRGB?.pointee.linesizePtr())
                     frameFinished = 0
                 }
                 i += 1
                 if i <= 5 {
-                    Saveframe(pFrameRGB, width: pCodecCtx.memory.width, height: pCodecCtx.memory.height, iFrame: i)
+                    Saveframe(pFrameRGB!, width: (pCodecCtx?.pointee.width)!, height: (pCodecCtx?.pointee.height)!, iFrame: i)
                 }
             }
             av_packet_unref(&packet)
@@ -213,17 +217,17 @@ struct Tutorial2: Tutorial {
     
     var i: Int32 = 0
     
-    var pFrame: UnsafeMutablePointer<AVFrame> = nil
-    var pFrameDST: UnsafeMutablePointer<AVFrame> = nil
+    var pFrame: UnsafeMutablePointer<AVFrame>? = nil
+    var pFrameDST: UnsafeMutablePointer<AVFrame>? = nil
     var packet = AVPacket()
     var frameFinished: Int32 = 0
     
     let dst_pix_fmt: AVPixelFormat = AV_PIX_FMT_YUV420P
     
     var buffersrc = avfilter_get_by_name("buffer")
-    var buffersrc_ctx: UnsafeMutablePointer<AVFilterContext> = nil
+    var buffersrc_ctx: UnsafeMutablePointer<AVFilterContext>? = nil
     var buffersink = avfilter_get_by_name("buffersink")
-    var buffersink_ctx: UnsafeMutablePointer<AVFilterContext> = nil
+    var buffersink_ctx: UnsafeMutablePointer<AVFilterContext>? = nil
     var inputs = avfilter_inout_alloc()
     var outputs = avfilter_inout_alloc()
     var filter_graph = avfilter_graph_alloc()
@@ -260,7 +264,7 @@ struct Tutorial2: Tutorial {
         pFrame = av_frame_alloc()
         pFrameDST = av_frame_alloc()
         
-        let screenSize = UIScreen.mainScreen().bounds.size
+        let screenSize = UIScreen.main.bounds.size
         
         defer {
             av_packet_unref(&packet)
@@ -275,11 +279,11 @@ struct Tutorial2: Tutorial {
             }
         }
         
-        guard  SDLHelper().SDL_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
+        guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
             return
         }
         // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.mainScreen().bounds.width), Int32(UIScreen.mainScreen().bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
         guard nil != window else {
             print("SDL: couldn't create window")
             return
@@ -287,18 +291,18 @@ struct Tutorial2: Tutorial {
         
         let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue)
         
-        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx.memory.width, pCodecCtx.memory.height)
+        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx!.pointee.width, pCodecCtx!.pointee.height)
         defer {
             SDL_DestroyTexture(texture)
             SDL_DestroyRenderer(renderer)
             SDL_DestroyWindow(window)
         }
-        var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx.memory.width, h: pCodecCtx.memory.height)
+        var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx!.pointee.width, h: pCodecCtx!.pointee.height)
         
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
         var event = SDL_Event()
         
-        let size = UIScreen.mainScreen().bounds.size
+        let size = UIScreen.main.bounds.size
         let ratio = (size.width / size.height) / (CGFloat(rect.w) / CGFloat(rect.h))
         var scale = CGSize()
         if 0 > ratio {
@@ -318,7 +322,7 @@ struct Tutorial2: Tutorial {
         helper.decode({ (type, frame) -> Bool in
             switch type {
             case AVMEDIA_TYPE_VIDEO:
-                SDL_UpdateYUVTexture(texture, &rect, frame.memory.data.0, frame.memory.linesize.0, frame.memory.data.1, frame.memory.linesize.1, frame.memory.data.2, frame.memory.linesize.2)
+                SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
                 SDL_RenderClear(renderer)
                 SDL_RenderCopy(renderer, texture, &rect, &rect)
                 SDL_RenderPresent(renderer)
@@ -419,7 +423,7 @@ struct  Tutorial3: Tutorial {
 }
 
 protocol AVData {
-    var data: (UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>, UnsafeMutablePointer<UInt8>) {set get}
+    var data: (UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?) {set get}
     
     var linesize: (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32) {set get}
     

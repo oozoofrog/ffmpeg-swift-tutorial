@@ -15,20 +15,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
 
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         
         av_register_all()
         avfilter_register_all()
         
-        let documentPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+        let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
         let documentSamplePath = "\(documentPath)/sample.mp4"
-        if false == NSFileManager.defaultManager().fileExistsAtPath(documentSamplePath) {
-            guard let samplePath = NSBundle.mainBundle().pathForResource("sample", ofType: "mp4") else {
+        if false == FileManager.default.fileExists(atPath: documentSamplePath) {
+            guard let samplePath = Bundle.main.path(forResource: "sample", ofType: "mp4") else {
                 return true
             }
             do {
-                try NSFileManager.defaultManager().copyItemAtPath(samplePath, toPath: documentSamplePath)
+                try FileManager.default.copyItem(atPath: samplePath, toPath: documentSamplePath)
             } catch let err as NSError {
                 assertionFailure(err.localizedDescription)
             }
@@ -67,16 +67,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     var docPath: NSString {
-        return NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+        return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     }
     var docPaths: [String] {
-        return docPath.componentsSeparatedByString("/")
+        return docPath.components(separatedBy: "/")
     }
     var user: String {
         return docPaths[2]
     }
     var documentPathForUser: String {
-        return docPaths[0...2].joinWithSeparator("/") + "/Documents"
+        return docPaths[0...2].joined(separator: "/") + "/Documents"
     }
     
     var documentPathForUserWithAppName: String {
@@ -84,39 +84,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func createSymbolickLinkForDocuments() {
-        if NSFileManager.defaultManager().fileExistsAtPath(self.documentPathForUserWithAppName) {
+        if FileManager.default.fileExists(atPath: self.documentPathForUserWithAppName) {
             return
         }
         do {
-            try NSFileManager.defaultManager().removeItemAtPath(self.documentPathForUserWithAppName)
-            try NSFileManager.defaultManager().createSymbolicLinkAtPath(self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
-            let noti = UIAlertController(title: "Succeed", message: "Symbolic link of \(self.docPath) make to \(self.documentPathForUserWithAppName)", preferredStyle: .Alert)
-            noti.addAction(UIAlertAction(title: "OK", style: .Cancel, handler: nil))
-            self.window?.rootViewController?.presentViewController(noti, animated: true, completion: nil)
+            try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
+            try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+            let noti = UIAlertController(title: "Succeed", message: "Symbolic link of \(self.docPath) make to \(self.documentPathForUserWithAppName)", preferredStyle: .alert)
+            noti.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+            self.window?.rootViewController?.present(noti, animated: true, completion: nil)
         } catch let err as NSError {
             assertionFailure(err.localizedDescription)
         }
     }
 
-    func applicationWillResignActive(application: UIApplication) {
+    func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
     }
 
-    func applicationDidEnterBackground(application: UIApplication) {
+    func applicationDidEnterBackground(_ application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     }
 
-    func applicationWillEnterForeground(application: UIApplication) {
+    func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
     }
 
-    func applicationDidBecomeActive(application: UIApplication) {
+    func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     }
 
-    func applicationWillTerminate(application: UIApplication) {
+    func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 

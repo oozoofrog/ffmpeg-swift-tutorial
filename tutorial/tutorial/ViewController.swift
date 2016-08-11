@@ -11,12 +11,20 @@ import SDL
 
 class ViewController: UITableViewController {
     
-    let documentPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+    let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     
     var fd: CInt = 0
-    var documents_observer: dispatch_source_t!
+    var documents_observer: DispatchSourceFileSystemObject?
     
     var files: [String]?
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,13 +34,13 @@ class ViewController: UITableViewController {
         }
         
         fd = open(documentPath, O_EVTONLY)
-        documents_observer = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, UInt(fd), DISPATCH_VNODE_WRITE | DISPATCH_VNODE_DELETE, dispatch_get_main_queue())
+        documents_observer = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .delete], queue: .main)
         
         weak var weakSelf: ViewController? = self
-        dispatch_source_set_event_handler(documents_observer) {
+        documents_observer?.setEventHandler {
             weakSelf?.updateDocuments()
         }
-        dispatch_resume(documents_observer)
+        documents_observer?.resume()
     }
     
     deinit {
@@ -43,14 +51,14 @@ class ViewController: UITableViewController {
     
     func updateDocuments() {
         
-        guard let files = try? NSFileManager.defaultManager().contentsOfDirectoryAtPath(documentPath) else {
+        guard let files = try? FileManager.default.contentsOfDirectory(atPath: documentPath) else {
             return
         }
         self.files = files.filter(){ file in
-            guard let attributes: NSDictionary = try? NSFileManager.defaultManager().attributesOfItemAtPath(documentPath + "/" + file) else {
+            guard let attributes: NSDictionary = try? FileManager.default.attributesOfItem(atPath: documentPath + "/" + file) else {
                 return !file.hasPrefix(".")
             }
-            return !file.hasPrefix(".") && attributes.fileType() == NSFileTypeRegular
+            return !file.hasPrefix(".") && attributes.fileType() == FileAttributeType.typeRegular.rawValue
         }
         
         self.tableView.reloadData()
@@ -64,18 +72,18 @@ class ViewController: UITableViewController {
     
     //MARK: - UITableViewDataSource
     
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return files?.count ?? 0
     }
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath)
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         
-        guard let file = self.files?[indexPath.row] else {
+        guard let file = self.files?[(indexPath as NSIndexPath).row] else {
             cell.textLabel?.text = nil
             return cell
         }
@@ -85,37 +93,37 @@ class ViewController: UITableViewController {
         return cell
     }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        guard let file = self.files?[indexPath.row] else {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let file = self.files?[(indexPath as NSIndexPath).row] else {
             return
         }
         
         let path = "\(documentPath)/\(file)"
         
-        let sheet = UIAlertController(title: "tutorial", message: nil, preferredStyle: .ActionSheet)
+        let sheet = UIAlertController(title: "tutorial", message: nil, preferredStyle: .actionSheet)
         for index in TutorialIndex.all {
-            sheet.addAction(UIAlertAction(title: "\(index)", style: .Default) { _ in
+            sheet.addAction(UIAlertAction(title: "\(index)", style: .default) { _ in
                     index.runTutorial([path])
                 })
         }
         sheet.popoverPresentationController?.sourceView = tableView
-        sheet.popoverPresentationController?.sourceRect = tableView.rectForRowAtIndexPath(indexPath)
-        self.presentViewController(sheet, animated: true) {
-            tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        sheet.popoverPresentationController?.sourceRect = tableView.rectForRow(at: indexPath)
+        self.present(sheet, animated: true) {
+            tableView.deselectRow(at: indexPath, animated: true)
         }
     }
     
-    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
     }
     
-    override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]? {
+    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         weak var weakSelf: ViewController? = self
         return TutorialIndex.all.lazy.map({
             let index = $0
-            return UITableViewRowAction(style: .Default, title: "\(index)", handler: { (action, indexPath) in
+            return UITableViewRowAction(style: .default, title: "\(index)", handler: { (action, indexPath) in
                 tableView.setEditing(false, animated: true)
-                guard let file = weakSelf?.files?[indexPath.row], let documentPath = weakSelf?.documentPath else {
+                guard let file = weakSelf?.files?[(indexPath as NSIndexPath).row], let documentPath = weakSelf?.documentPath else {
                     return
                 }
                 let path = "\(documentPath)/\(file)"
