@@ -275,7 +275,7 @@ struct Tutorial2: Tutorial {
         }
         
         // half scale, yuv 420 pixel format, rotate
-        guard helper.setupFilter("scale=0.5:0.5,format=pix_fmts=yuv420p,rotate=PI/6") else {
+        guard helper.setupFilter(filterDesc: "scale=0.25:0.25,format=pix_fmts=yuv420p") else {
             print("setup filter failed")
             return
         }

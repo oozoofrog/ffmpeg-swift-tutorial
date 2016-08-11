@@ -7,6 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <libavformat/avformat.h>
+#import <libavfilter/avfilter.h>
+#import <libavfilter/avfiltergraph.h>
 
 typedef struct Test{
     int values[8];
@@ -24,5 +27,15 @@ int AVERROR_CONVERT(int err);
 BOOL AVFILTER_EOF(int ret);
 
 @interface FFmpegHelper : NSObject
+
+@end
+
+@interface AVFilterHelper : NSObject
+
+@property (nonatomic, assign) AVFrame *filterFrame;
+
+- (BOOL)setup:(AVFormatContext *)fmt_ctx videoStream:(AVStream *)videoStream filterDescription:(NSString *)filterDescription;
+
+- (BOOL)applyFilter:(AVFrame *)sourceFrame;
 
 @end

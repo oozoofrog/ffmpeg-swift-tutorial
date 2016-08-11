@@ -34,11 +34,6 @@ extension AVHelperProtocol where Self: AVHelper {
     
     func close() {
         avformat_close_input(&formatContext)
-        
-        if filter_frame != nil {
-            av_frame_free(&filter_frame)
-//            avfilter_graph_free(&filter_graph)
-        }
     }
 }
 
@@ -88,7 +83,7 @@ extension AVHelperCodecProtocol where Self:AVHelper {
     }
 }
 
-protocol AVFilterHelperProtocol {
+//protocol AVFilterHelperProtocol {
 //    var buffersrc: UnsafeMutablePointer<AVFilter>? {set get}
 //    var buffersink: UnsafeMutablePointer<AVFilter>? {set get}
 //    var inputs: UnsafeMutablePointer<AVFilterInOut>? {set get}
@@ -97,14 +92,14 @@ protocol AVFilterHelperProtocol {
 //    var buffersink_ctx: UnsafeMutablePointer<AVFilterContext>? {set get}
 //    
 //    var filter_graph: UnsafeMutablePointer<AVFilterGraph>? {set get}
+////
+//    var filter_frame: UnsafeMutablePointer<AVFrame>? {set get}
+//    
+//    func setupFilter(_ filterDescription: String) -> Bool
+//}
 //
-    var filter_frame: UnsafeMutablePointer<AVFrame>? {set get}
-    
-    func setupFilter(_ filterDescription: String) -> Bool
-}
-
-extension AVFilterHelperProtocol where Self:AVHelper, Self: AVHelperProtocol, Self: AVHelperCodecProtocol {
-    func setupFilter(_ filterDescription: String) -> Bool {
+//extension AVFilterHelperProtocol where Self:AVHelper, Self: AVHelperProtocol, Self: AVHelperCodecProtocol {
+//    func setupFilter(_ filterDescription: String) -> Bool {
 //        buffersrc = avfilter_get_by_name("buffer")
 //        buffersink = avfilter_get_by_name("buffersink")
 //        
@@ -155,26 +150,19 @@ extension AVFilterHelperProtocol where Self:AVHelper, Self: AVHelperProtocol, Se
 //        }
 //        
 //        filter_frame = av_frame_alloc()
-        
-        return true
-    }
-}
+//        
+//        return true
+//    }
+//}
 
-class AVHelper: AVHelperProtocol, AVHelperCodecProtocol, AVFilterHelperProtocol {
+class AVHelper: AVHelperProtocol, AVHelperCodecProtocol {
     let inputPath: String
     var outputPath: String?
     
     var formatContext: UnsafeMutablePointer<AVFormatContext>?
     var codecs: [Int32 : UnsafeMutablePointer<AVCodec>?] = [:]
     
-//    var buffersrc: UnsafeMutablePointer<AVFilter>? = nil
-//    var buffersink: UnsafeMutablePointer<AVFilter>? = nil
-//    var buffersrc_ctx: UnsafeMutablePointer<AVFilterContext>? = nil
-//    var buffersink_ctx: UnsafeMutablePointer<AVFilterContext>? = nil
-//    var inputs: UnsafeMutablePointer<AVFilterInOut>? = nil
-//    var outputs: UnsafeMutablePointer<AVFilterInOut>? = nil
-//    var filter_graph: UnsafeMutablePointer<AVFilterGraph>?
-    var filter_frame: UnsafeMutablePointer<AVFrame>?
+    var filter: AVFilterHelper?
     
     var width: Int32 {
         return self.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)?.pointee.width ?? 0
@@ -198,12 +186,13 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol, AVFilterHelperProtocol 
         self.inputPath = path
         self.outputPath = nil
         formatContext = avformat_alloc_context()
-//        filter_graph = nil
-        filter_frame = nil
     }
     
+    func setupFilter(filterDesc: String) -> Bool {
+        self.filter = AVFilterHelper();
+        return filter?.setup(formatContext, videoStream: stream(forMediaType: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc) ?? false
+    }
     /**
-     
      
      - parameter decodeHandle, completion: return false to stop decoding
      */
@@ -227,30 +216,22 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol, AVFilterHelperProtocol 
                     defer {
                         av_frame_unref(frame)
                     }
-//                    if nil == filter_frame {
+                    guard let filter = filter else {
                         guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: frame!) else {
                             break
                         }
-//                    } else { // apply filter
-//                        if isErr(av_buffersrc_add_frame_flags(buffersrc_ctx, frame, Int32(AV_BUFFERSRC_FLAG_KEEP_REF)), "buffer src to frame") {
-//                            break
-//                        }
-//                        while true {
-//                            defer {
-//                                av_frame_unref(filter_frame)
-//                            }
-//                            let ret = av_buffersink_get_frame(buffersink_ctx, filter_frame)
-//                            if AVFILTER_EOF(ret) {
-//                                break
-//                            }
-//                            if 0 > ret {
-//                                return
-//                            }
-//                            guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: filter_frame!) else {
-//                                return
-//                            }
-//                        }
-//                    }
+                        continue
+                    }
+                    if filter.applyFilter(frame) {
+                        defer {
+                            av_frame_unref(filter.filterFrame)
+                        }
+                        guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: filter.filterFrame) else {
+                            break
+                        }
+                    } else {
+                        break
+                    }
                 }
             }
             guard completion() else {
