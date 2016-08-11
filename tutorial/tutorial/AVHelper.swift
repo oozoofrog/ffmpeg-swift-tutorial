@@ -208,29 +208,29 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol, AVFilterHelperProtocol 
      - parameter decodeHandle, completion: return false to stop decoding
      */
     func decode(_ decodeHandle:(type: AVMediaType, frame: UnsafePointer<AVFrame>) -> Bool, completion:() -> Bool) {
-//        var frame = av_frame_alloc()
-//        var packet = av_packet_alloc()
-//        defer {
-//            av_frame_free(&frame)
-//            av_packet_free(&packet)
-//        }
-//        
-//        let video_codec_ctx = codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)
-//        let video_stream_index = streamIndex(forMediaType: AVMEDIA_TYPE_VIDEO)
-//        var read_frame_finished: Int32 = 0
-//        while 0 == av_read_frame(formatContext, packet) {
-//            if packet?.pointee.stream_index == video_stream_index {
-//                if isErr(avcodec_decode_video2(video_codec_ctx, frame, &read_frame_finished, packet!.cast()), "decode video") {
-//                    return
-//                }
-//                if 0 < read_frame_finished {
-//                    defer {
-//                        av_frame_unref(frame)
-//                    }
+        var frame = av_frame_alloc()
+        var packet = av_packet_alloc()
+        defer {
+            av_frame_free(&frame)
+            av_packet_free(&packet)
+        }
+        
+        let video_codec_ctx = codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)
+        let video_stream_index = streamIndex(forMediaType: AVMEDIA_TYPE_VIDEO)
+        var read_frame_finished: Int32 = 0
+        while 0 == av_read_frame(formatContext, packet) {
+            if packet?.pointee.stream_index == video_stream_index {
+                if isErr(avcodec_decode_video2(video_codec_ctx, frame, &read_frame_finished, packet!.cast()), "decode video") {
+                    return
+                }
+                if 0 < read_frame_finished {
+                    defer {
+                        av_frame_unref(frame)
+                    }
 //                    if nil == filter_frame {
-//                        guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: frame!) else {
-//                            break
-//                        }
+                        guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: frame!) else {
+                            break
+                        }
 //                    } else { // apply filter
 //                        if isErr(av_buffersrc_add_frame_flags(buffersrc_ctx, frame, Int32(AV_BUFFERSRC_FLAG_KEEP_REF)), "buffer src to frame") {
 //                            break
@@ -251,13 +251,13 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol, AVFilterHelperProtocol 
 //                            }
 //                        }
 //                    }
-//                }
-//            }
-//            guard completion() else {
-//                break
-//            }
-//            av_packet_unref(packet)
-//        }
+                }
+            }
+            guard completion() else {
+                break
+            }
+            av_packet_unref(packet)
+        }
     }
     
     deinit {

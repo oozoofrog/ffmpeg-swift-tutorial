@@ -42,10 +42,6 @@ void print_err(int err, const char *desc) {
     }
 }
 
-int opt_set_int_list(AVFilterContext *ctx, const char * key, void *value, int64_t term, int flags) {
-    return av_opt_set_int_list(ctx, key, value, term, flags);
-}
-
 int AVERROR_CONVERT(int err) {
     return AVERROR(err);
 }

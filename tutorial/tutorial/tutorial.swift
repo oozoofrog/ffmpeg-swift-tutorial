@@ -220,108 +220,87 @@ struct Tutorial2: Tutorial {
     
     mutating func run() {
         
-//        guard let helper = AVHelper(inputPath: paths[0]) else {
-//            return
-//        }
-//        
-//        guard helper.open() else {
-//            return
-//        }
-//        
-//        var pFormatCtx = helper.formatContext
-//        
-//        var pCodecCtx = helper.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)
-//        
-//        defer {
-//            print("close codec context")
-//            avcodec_close(pCodecCtx)
-//            
-//        }
-//        
-//        defer {
-//            av_frame_free(&pFrameDST)
-//            av_frame_free(&pFrame)
-//        }
-//        
-//        pFrame = av_frame_alloc()
-//        pFrameDST = av_frame_alloc()
-//        
-//        let screenSize = UIScreen.main.bounds.size
-//        
-//        defer {
-//            av_packet_unref(&packet)
-//            
-//            if nil != pFrame {
-//                av_frame_free(&pFrame)
-//            }
-//            
-//            //            av_free(buffer)
-//            if nil != pFrameDST {
-//                av_frame_free(&pFrameDST)
-//            }
-//        }
-//        
-//        guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
-//            return
-//        }
-//        // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-//        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
-//        guard nil != window else {
-//            print("SDL: couldn't create window")
-//            return
-//        }
-//        
-//        let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue)
-//        
-//        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx!.pointee.width, pCodecCtx!.pointee.height)
-//        defer {
-//            SDL_DestroyTexture(texture)
-//            SDL_DestroyRenderer(renderer)
-//            SDL_DestroyWindow(window)
-//        }
-//        var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx!.pointee.width, h: pCodecCtx!.pointee.height)
-//        
-//        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
-//        var event = SDL_Event()
-//        
-//        let size = UIScreen.main.bounds.size
-//        let ratio = (size.width / size.height) / (CGFloat(rect.w) / CGFloat(rect.h))
-//        var scale = CGSize()
-//        if 0 > ratio {
-//            scale.width = 1
-//            scale.height = 1 / ratio
-//        } else {
-//            scale.width = 1 / ratio
-//            scale.height = 1
-//        }
-//        
-//        // half scale, yuv 420 pixel format, rotate
-//        guard helper.setupFilter("scale=0.5:0.5,format=pix_fmts=yuv420p,rotate=PI/6") else {
-//            print("setup filter failed")
-//            return
-//        }
-//        
-//        helper.decode({ (type, frame) -> Bool in
-//            switch type {
-//            case AVMEDIA_TYPE_VIDEO:
-//                SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
-//                SDL_RenderClear(renderer)
-//                SDL_RenderCopy(renderer, texture, &rect, &rect)
-//                SDL_RenderPresent(renderer)
-//                
-//            default:
-//                break
-//            }
-//            return true
-//        }) { () -> Bool in
-//            SDL_PollEvent(&event)
-//            if event.type == SDL_QUIT.rawValue {
-//                return false
-//            } else if event.type == SDL_FINGERDOWN.rawValue {
-//                return false
-//            }
-//            return true
-//        }
+        guard let helper = AVHelper(inputPath: paths[0]) else {
+            return
+        }
+        
+        guard helper.open() else {
+            return
+        }
+        
+        var pFormatCtx = helper.formatContext
+        
+        var pCodecCtx = helper.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)
+        
+        defer {
+            print("close codec context")
+            avcodec_close(pCodecCtx)
+            
+        }
+        
+        let screenSize = UIScreen.main.bounds.size
+        
+        guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
+            return
+        }
+        // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
+        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        guard nil != window else {
+            print("SDL: couldn't create window")
+            return
+        }
+        
+        let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue)
+        
+        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx!.pointee.width, pCodecCtx!.pointee.height)
+        defer {
+            SDL_DestroyTexture(texture)
+            SDL_DestroyRenderer(renderer)
+            SDL_DestroyWindow(window)
+        }
+        var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx!.pointee.width, h: pCodecCtx!.pointee.height)
+        
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
+        var event = SDL_Event()
+        
+        let size = UIScreen.main.bounds.size
+        let ratio = (size.width / size.height) / (CGFloat(rect.w) / CGFloat(rect.h))
+        var scale = CGSize()
+        if 0 > ratio {
+            scale.width = 1
+            scale.height = 1 / ratio
+        } else {
+            scale.width = 1 / ratio
+            scale.height = 1
+        }
+        
+        // half scale, yuv 420 pixel format, rotate
+        guard helper.setupFilter("scale=0.5:0.5,format=pix_fmts=yuv420p,rotate=PI/6") else {
+            print("setup filter failed")
+            return
+        }
+        
+        helper.decode({ (type, frame) -> Bool in
+            switch type {
+            case AVMEDIA_TYPE_VIDEO:
+                SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
+                SDL_RenderClear(renderer)
+                SDL_RenderCopy(renderer, texture, &rect, &rect)
+                SDL_RenderPresent(renderer)
+                
+            default:
+                break
+            }
+            return true
+        }) { () -> Bool in
+            SDL_PollEvent(&event)
+            if event.type == SDL_QUIT.rawValue {
+                return false
+            } else if event.type == SDL_FINGERDOWN.rawValue {
+                return false
+            }
+            return true
+        }
     }
 }
 
