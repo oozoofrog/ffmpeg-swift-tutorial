@@ -281,6 +281,8 @@
 				A970FA0A1D5C538700A114A1 /* README.md */,
 				A999BE7C1D5C1E0400097E95 /* examples */,
 				A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */,
+				A96D17051D5860FD009F7AC2 /* ffmpeg.map */,
+				A96BD6941D5973F90095C84C /* sdl.map */,
 				A96D17341D587142009F7AC2 /* includes */,
 				A96D17331D587137009F7AC2 /* libs */,
 				A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */,
@@ -323,8 +325,6 @@
 		A96D17341D587142009F7AC2 /* includes */ = {
 			isa = PBXGroup;
 			children = (
-				A96D17051D5860FD009F7AC2 /* ffmpeg.map */,
-				A96BD6941D5973F90095C84C /* sdl.map */,
 				A96D17361D587169009F7AC2 /* libavcodec */,
 				A96D17371D587169009F7AC2 /* libavdevice */,
 				A96D17381D587169009F7AC2 /* libavfilter */,

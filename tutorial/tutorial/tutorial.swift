@@ -340,77 +340,6 @@ struct Tutorial2: Tutorial {
             }
             return true
         }
-        //        let time_base = helper.stream(forMediaType: AVMEDIA_TYPE_VIDEO).memory.time_base
-        //        let args = "video_size=\(pCodecCtx.memory.width)x\(pCodecCtx.memory.height):pix_fmt=\(pCodecCtx.memory.pix_fmt.rawValue):time_base=\(time_base.num)/\(time_base.den):pixel_aspect=\(pCodecCtx.memory.sample_aspect_ratio.num)/\(pCodecCtx.memory.sample_aspect_ratio.den)"
-        //        if isErr(avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args, nil, filter_graph), "create input filter") {
-        //            return
-        //        }
-        //        if isErr(avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out", nil, nil, filter_graph), "create ouput filter") {
-        //            return
-        //        }
-        //
-        //        outputs.memory.name = av_strdup("in")
-        //        outputs.memory.filter_ctx = buffersrc_ctx
-        //        outputs.memory.pad_idx = 0
-        //        outputs.memory.next = nil
-        //
-        //        inputs.memory.name = av_strdup("out")
-        //        inputs.memory.filter_ctx = buffersink_ctx
-        //        inputs.memory.pad_idx = 0
-        //        inputs.memory.next = nil
-        //
-        //        defer {
-        //            avfilter_inout_free(&outputs)
-        //            avfilter_inout_free(&inputs)
-        //        }
-        //
-        //        if isErr(avfilter_graph_parse_ptr(filter_graph, "format=pix_fmts=yuv420p", &inputs, &outputs, nil), "filter parse") {
-        //            return
-        //        }
-        //        if isErr(avfilter_graph_config(filter_graph, nil), "filter config") {
-        //            return
-        //        }
-        //
-        //        let video_stream_index = helper.streamIndex(forMediaType: AVMEDIA_TYPE_VIDEO)
-        ////        let filter = AVFilterHelper(format: pFormatCtx, stream: stream, codec: pCodecCtx, filterDesc: "format=pix_fmts=yuv420p")
-        //        while 0 <= av_read_frame(pFormatCtx, &packet) {
-        //            if packet.stream_index == video_stream_index {
-        //                if isErr(avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet), "avcodec_decode_video2") {
-        //                    break
-        //                }
-        //                if 0 < frameFinished {
-        //                    defer {
-        //                        av_frame_unref(pFrame)
-        //                    }
-        //                    if isErr(av_buffersrc_add_frame_flags(buffersrc_ctx, pFrame, Int32(AV_BUFFERSRC_FLAG_KEEP_REF)), "filter add frame") {
-        //                        break
-        //                    }
-        //                    while true {
-        //                        let ret = av_buffersink_get_frame(buffersink_ctx, pFrameDST)
-        //                        if AVFILTER_EOF(ret) {
-        //                            break
-        //                        }
-        //                        if 0 > ret {
-        //                            isErr(ret, "filter to dst frame")
-        //                            return
-        //                        }
-        //
-        //                        SDL_UpdateYUVTexture(texture, &rect, self.pFrame.memory.data.0, self.pFrame.memory.linesize.0, self.pFrame.memory.data.1, self.pFrame.memory.linesize.1, self.pFrame.memory.data.2, self.pFrame.memory.linesize.2)
-        //                        SDL_RenderClear(renderer)
-        //                        SDL_RenderCopy(renderer, texture, &rect, &rect)
-        //                        SDL_RenderPresent(renderer)
-        //                        av_frame_unref(self.pFrameDST)
-        //                    }
-        //                }
-        //            }
-        //            av_packet_unref(&packet)
-        //            SDL_PollEvent(&event)
-        //            if event.type == SDL_QUIT.rawValue {
-        //                break
-        //            } else if event.type == SDL_FINGERDOWN.rawValue {
-        //                break
-        //            }
-        //        }
     }
 }
 
@@ -421,29 +350,3 @@ struct  Tutorial3: Tutorial {
         
     }
 }
-
-protocol AVData {
-    var data: (UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?) {set get}
-    
-    var linesize: (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32) {set get}
-    
-}
-
-protocol AVByteable {
-    mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>>
-    mutating func linesizePtr() -> UnsafeMutablePointer<Int32>
-}
-
-extension AVByteable where Self: AVData {
-    mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> {
-        return withUnsafeMutablePointer(&data, { (ptr) -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> in
-            return UnsafeMutablePointer<UnsafeMutablePointer<UInt8>>(ptr)
-        })
-    }
-    mutating func linesizePtr() -> UnsafeMutablePointer<Int32> {
-        return withUnsafeMutablePointer(&linesize) {return UnsafeMutablePointer<Int32>($0)}
-    }
-}
-
-extension AVFrame: AVData, AVByteable {}
-extension AVPicture: AVData, AVByteable {}

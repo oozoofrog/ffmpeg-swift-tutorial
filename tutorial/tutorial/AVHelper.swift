@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ffmpeg
 
 /**
  *  
@@ -259,3 +260,30 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol, AVFilterHelperProtocol 
         close()
     }
 }
+
+
+protocol AVData {
+    var data: (UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?) {set get}
+    
+    var linesize: (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32) {set get}
+    
+}
+
+protocol AVByteable {
+    mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>>
+    mutating func linesizePtr() -> UnsafeMutablePointer<Int32>
+}
+
+extension AVByteable where Self: AVData {
+    mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> {
+        return withUnsafeMutablePointer(&data, { (ptr) -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> in
+            return UnsafeMutablePointer<UnsafeMutablePointer<UInt8>>(ptr)
+        })
+    }
+    mutating func linesizePtr() -> UnsafeMutablePointer<Int32> {
+        return withUnsafeMutablePointer(&linesize) {return UnsafeMutablePointer<Int32>($0)}
+    }
+}
+
+extension AVFrame: AVData, AVByteable {}
+extension AVPicture: AVData, AVByteable {}
