@@ -259,23 +259,12 @@ struct Tutorial2: Tutorial {
             SDL_DestroyWindow(window)
         }
         var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx!.pointee.width, h: pCodecCtx!.pointee.height)
-        
+        var dst_rect = SDL_Rect(x: 0, y: 0, w: Int32(UIScreen.main.bounds.width), h: Int32(UIScreen.main.bounds.height))
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
         var event = SDL_Event()
         
-        let size = UIScreen.main.bounds.size
-        let ratio = (size.width / size.height) / (CGFloat(rect.w) / CGFloat(rect.h))
-        var scale = CGSize()
-        if 0 > ratio {
-            scale.width = 1
-            scale.height = 1 / ratio
-        } else {
-            scale.width = 1 / ratio
-            scale.height = 1
-        }
-        
         // half scale, yuv 420 pixel format, rotate
-        guard helper.setupFilter(filterDesc: "scale=0.25:0.25,format=pix_fmts=yuv420p") else {
+        guard helper.setupFilter(filterDesc: "format=pix_fmts=yuv420p") else {
             print("setup filter failed")
             return
         }
@@ -285,7 +274,7 @@ struct Tutorial2: Tutorial {
             case AVMEDIA_TYPE_VIDEO:
                 SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
                 SDL_RenderClear(renderer)
-                SDL_RenderCopy(renderer, texture, &rect, &rect)
+                SDL_RenderCopy(renderer, texture, &rect, &dst_rect)
                 SDL_RenderPresent(renderer)
                 
             default:
