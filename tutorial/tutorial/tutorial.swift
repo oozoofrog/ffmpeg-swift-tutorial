@@ -9,6 +9,7 @@
 import UIKit
 import ffmpeg
 import SDL
+import AVFoundation
 
 enum TutorialIndex: Int {
     case tutorial1 = 1
@@ -250,7 +251,7 @@ struct Tutorial2: Tutorial {
             return
         }
         
-        let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue)
+        let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue | SDL_RENDERER_ACCELERATED.rawValue)
         
         let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx!.pointee.width, pCodecCtx!.pointee.height)
         defer {
@@ -258,8 +259,10 @@ struct Tutorial2: Tutorial {
             SDL_DestroyRenderer(renderer)
             SDL_DestroyWindow(window)
         }
-        var rect = SDL_Rect(x: 0, y: 0, w: pCodecCtx!.pointee.width, h: pCodecCtx!.pointee.height)
-        var dst_rect = SDL_Rect(x: 0, y: 0, w: Int32(UIScreen.main.bounds.width), h: Int32(UIScreen.main.bounds.height))
+        
+        var rect = pCodecCtx?.pointee.size.SDL ?? SDL_Rect()
+        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).SDL
+        
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
         var event = SDL_Event()
         

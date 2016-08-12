@@ -101,6 +101,7 @@
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
 		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
+		D8E9FE691D5D45B60095C53C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E9FE681D5D45B60095C53C /* AVFoundation.framework */; };
 		D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */; };
 /* End PBXBuildFile section */
 
@@ -218,6 +219,7 @@
 		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
 		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
+		D8E9FE681D5D45B60095C53C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Castable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -226,6 +228,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8E9FE691D5D45B60095C53C /* AVFoundation.framework in Frameworks */,
 				A96BD6B31D599B450095C84C /* OpenGLES.framework in Frameworks */,
 				A96BD6B11D599B330095C84C /* CoreAudio.framework in Frameworks */,
 				A96BD6AF1D599B2D0095C84C /* QuartzCore.framework in Frameworks */,
@@ -264,6 +267,7 @@
 				A96D174C1D587640009F7AC2 /* VideoToolbox.framework */,
 				A96D16F21D5860C5009F7AC2 /* tutorial */,
 				A96D16F11D5860C5009F7AC2 /* Products */,
+				D8E9FE671D5D45B60095C53C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -388,6 +392,14 @@
 				A96BD65D1D59705A0095C84C /* SDL.h */,
 			);
 			name = includes;
+			sourceTree = "<group>";
+		};
+		D8E9FE671D5D45B60095C53C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D8E9FE681D5D45B60095C53C /* AVFoundation.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
