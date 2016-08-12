@@ -267,7 +267,11 @@ struct Tutorial2: Tutorial {
         var event = SDL_Event()
         
         // half scale, yuv 420 pixel format, rotate
-        guard helper.setupFilter(filterDesc: AVFilterDescriptor(pix_fmts: [helper.pix_fmt!])) else {
+        var descriptor = AVFilterDescriptor()
+        descriptor.add(pixelFormat: AV_PIX_FMT_YUV420P)
+        // smartblur filter doesn't exist
+//        descriptor.set(smartblur:AVFilterDescriptor.AVSmartblur(lr: 5, lt: 30, cr: 5, ct: 30))
+        guard helper.setupFilter(filterDesc: descriptor.description) else {
             print("setup filter failed")
             return
         }

@@ -189,9 +189,9 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol {
         formatContext = avformat_alloc_context()
     }
     
-    func setupFilter(filterDesc: AVFilterDescriptor) -> Bool {
+    func setupFilter(filterDesc: String) -> Bool {
         self.filter = AVFilterHelper();
-        return filter?.setup(formatContext, videoStream: stream(forMediaType: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc.description) ?? false
+        return filter?.setup(formatContext, videoStream: stream(forMediaType: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc) ?? false
     }
     /**
      
@@ -291,12 +291,49 @@ extension AVPixelFormat {
     }
 }
 
-struct AVFilterDescriptor {
+struct ValueLimiter<Number: Comparable where Number: Hashable> {
+    let min: Number
+    let max: Number
     
-    let pix_fmts: [AVPixelFormat]
+    private var rawValue: Number
+    var value: Number {
+        set {
+            if min > newValue || max < newValue {
+                assertionFailure("must be a in the range \(min) ~ \(max)")
+            } else {
+                rawValue = newValue
+            }
+        }
+        get {
+            return rawValue
+        }
+    }
+    init(min: Number, max: Number, value: Number) {
+        self.min = min
+        self.max = max
+        self.rawValue = value
+    }
+}
+
+protocol AVFilterDescription {
+    var description: String { get }
+}
+
+/*
+ http://ffmpeg.org/ffmpeg-filters.html
+ */
+struct AVFilterDescriptor: AVFilterDescription {
     
-    init(pix_fmts: [AVPixelFormat] = []) {
-        self.pix_fmts = pix_fmts
+    private var pix_fmts: [AVPixelFormat] = []
+    private var smartblur: AVSmartblur? = nil
+    
+    mutating func add(pixelFormat: AVPixelFormat) {
+        pix_fmts = pix_fmts + [pixelFormat]
+    }
+    
+    mutating func set(smartblur: AVSmartblur) {
+        print(String(cString: avfilter_configuration()))
+        self.smartblur = smartblur
     }
     
     var description: String {
@@ -305,6 +342,89 @@ struct AVFilterDescriptor {
             let pix_fmts_str = self.pix_fmts.flatMap(){return $0.name}.joined(separator: "|")
             descriptions.append("format=pix_fmts=\(pix_fmts_str)")
         }
+        if let smartblur = self.smartblur {
+            descriptions.append(smartblur.description)
+        }
         return descriptions.joined(separator: ",")
+    }
+    
+    struct AVSmartblur: AVFilterDescription {
+        
+        private var luma_radius = ValueLimiter<Float>(min: 0.1, max: 5.0, value: 1.0)
+        private var luma_strength = ValueLimiter<Float>(min: -1.0, max: 1.0, value: 1.0)
+        private var luma_threshold = ValueLimiter<Int>(min: -30, max: 30, value: 0)
+        
+        private var chroma_radius = ValueLimiter<Float>(min: 0.1, max: 5.0, value: 1.0)
+        private var chroma_strength = ValueLimiter<Float>(min: -1.0, max: 1.0, value: 1.0)
+        private var chroma_threshold = ValueLimiter<Int>(min: -30, max: 30, value: 0)
+        
+        /// luma radius
+        var lr: Float {
+            set {
+                luma_radius.value = newValue
+            }
+            get {
+                return luma_radius.value
+            }
+        }
+        /// luma strength
+        var ls: Float {
+            set {
+                luma_strength.value = newValue
+            }
+            get {
+                return luma_strength.value
+            }
+        }
+        /// luma threshold
+        var lt: Int {
+            set {
+                luma_threshold.value = newValue
+            }
+            get {
+                return luma_threshold.value
+            }
+        }
+        
+        /// chroma radius
+        var cr: Float {
+            set {
+                chroma_radius.value = newValue
+            }
+            get {
+                return chroma_radius.value
+            }
+        }
+        /// chroma strength
+        var cs: Float {
+            set {
+                chroma_strength.value = newValue
+            }
+            get {
+                return chroma_strength.value
+            }
+        }
+        /// chroma threshold
+        var ct: Int {
+            set {
+                chroma_threshold.value = newValue
+            }
+            get {
+                return chroma_threshold.value
+            }
+        }
+        
+        init(lr: Float = 1.0, ls: Float = 1.0, lt: Int = 0, cr: Float = 1.0, cs: Float = 1.0, ct: Int = 0) {
+            self.lr = lr
+            self.ls = ls
+            self.lt = lt
+            self.cr = cr
+            self.cs = cs
+            self.ct = ct
+        }
+        
+        var description: String {
+            return "smartblur=lr=\(lr):ls=\(ls):lt=\(lt):cr=\(cr):cs=\(cs):ct=\(ct)"
+        }
     }
 }
