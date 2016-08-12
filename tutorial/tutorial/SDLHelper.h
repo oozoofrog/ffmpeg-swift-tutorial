@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+BOOL isSDLError(int err);
+
 @interface SDLHelper : NSObject
 
 - (BOOL)SDL_init:(UInt32)flags;

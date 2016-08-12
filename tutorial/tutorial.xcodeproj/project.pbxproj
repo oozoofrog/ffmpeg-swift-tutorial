@@ -101,6 +101,8 @@
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
 		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
+		D88046781D5F904C00896792 /* CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88046771D5F904C00896792 /* CoreGraphics.swift */; };
+		D89657211D5DC0AE00F1DECB /* SDL&FFmpeg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */; };
 		D8DC59371D5D6D9200AADB7C /* SDLHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */; };
 		D8E9FE691D5D45B60095C53C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E9FE681D5D45B60095C53C /* AVFoundation.framework */; };
 		D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */; };
@@ -220,6 +222,8 @@
 		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
 		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
+		D88046771D5F904C00896792 /* CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreGraphics.swift; sourceTree = "<group>"; };
+		D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SDL&FFmpeg.swift"; sourceTree = "<group>"; };
 		D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDLHelper.swift; sourceTree = "<group>"; };
 		D8E9FE681D5D45B60095C53C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Castable.swift; sourceTree = "<group>"; };
@@ -284,23 +288,15 @@
 		A96D16F21D5860C5009F7AC2 /* tutorial */ = {
 			isa = PBXGroup;
 			children = (
+				D880467D1D5F92E500896792 /* c_libs */,
+				D880467B1D5F92B300896792 /* sources */,
+				D880467C1D5F92CC00896792 /* module_maps */,
+				D88046791D5F926A00896792 /* misc */,
+				D880467A1D5F928A00896792 /* media_helper */,
 				A970FA0A1D5C538700A114A1 /* README.md */,
-				A999BE7C1D5C1E0400097E95 /* examples */,
-				A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */,
-				A96D17051D5860FD009F7AC2 /* ffmpeg.map */,
-				A96BD6941D5973F90095C84C /* sdl.map */,
-				A96D17341D587142009F7AC2 /* includes */,
-				A96D17331D587137009F7AC2 /* libs */,
 				A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */,
 				A96D16F51D5860C5009F7AC2 /* ViewController.swift */,
-				D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */,
-				D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */,
 				A96D17571D5876CD009F7AC2 /* tutorial.swift */,
-				A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */,
-				A96D17471D5875F1009F7AC2 /* FFmpeg.h */,
-				A96D17481D5875F1009F7AC2 /* FFmpeg.m */,
-				A96BD6B41D599C3E0095C84C /* SDLHelper.h */,
-				A96BD6B51D599C3E0095C84C /* SDLHelper.mm */,
 				A96D17461D5875F0009F7AC2 /* tutorial-Bridging-Header.h */,
 				A96D175B1D587725009F7AC2 /* sample.mp4 */,
 				A96D16F71D5860C5009F7AC2 /* Main.storyboard */,
@@ -395,6 +391,56 @@
 				A96BD65D1D59705A0095C84C /* SDL.h */,
 			);
 			name = includes;
+			sourceTree = "<group>";
+		};
+		D88046791D5F926A00896792 /* misc */ = {
+			isa = PBXGroup;
+			children = (
+				D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */,
+				D88046771D5F904C00896792 /* CoreGraphics.swift */,
+			);
+			name = misc;
+			sourceTree = "<group>";
+		};
+		D880467A1D5F928A00896792 /* media_helper */ = {
+			isa = PBXGroup;
+			children = (
+				A96D17471D5875F1009F7AC2 /* FFmpeg.h */,
+				A96D17481D5875F1009F7AC2 /* FFmpeg.m */,
+				A96BD6B41D599C3E0095C84C /* SDLHelper.h */,
+				A96BD6B51D599C3E0095C84C /* SDLHelper.mm */,
+				D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */,
+				D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */,
+				A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */,
+			);
+			name = media_helper;
+			sourceTree = "<group>";
+		};
+		D880467B1D5F92B300896792 /* sources */ = {
+			isa = PBXGroup;
+			children = (
+				A999BE7C1D5C1E0400097E95 /* examples */,
+				A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */,
+			);
+			name = sources;
+			sourceTree = "<group>";
+		};
+		D880467C1D5F92CC00896792 /* module_maps */ = {
+			isa = PBXGroup;
+			children = (
+				A96D17051D5860FD009F7AC2 /* ffmpeg.map */,
+				A96BD6941D5973F90095C84C /* sdl.map */,
+			);
+			name = module_maps;
+			sourceTree = "<group>";
+		};
+		D880467D1D5F92E500896792 /* c_libs */ = {
+			isa = PBXGroup;
+			children = (
+				A96D17341D587142009F7AC2 /* includes */,
+				A96D17331D587137009F7AC2 /* libs */,
+			);
+			name = c_libs;
 			sourceTree = "<group>";
 		};
 		D8E9FE671D5D45B60095C53C /* Frameworks */ = {
@@ -576,9 +622,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				A96D174A1D5875F1009F7AC2 /* FFmpeg.m in Sources */,
+				D89657211D5DC0AE00F1DECB /* SDL&FFmpeg.swift in Sources */,
 				A96D16F61D5860C5009F7AC2 /* ViewController.swift in Sources */,
 				D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */,
 				A96BD6B71D599C3E0095C84C /* SDLHelper.mm in Sources */,
+				D88046781D5F904C00896792 /* CoreGraphics.swift in Sources */,
 				A96D16F41D5860C5009F7AC2 /* AppDelegate.swift in Sources */,
 				D8DC59371D5D6D9200AADB7C /* SDLHelper.swift in Sources */,
 				A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */,

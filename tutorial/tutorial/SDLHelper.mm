@@ -10,6 +10,14 @@
 #import "SDL.h"
 #import "SDL_main.h"
 
+BOOL isSDLError(int err) {
+    if (0 > err) {
+        printf("%s\n", SDL_GetError());
+        return YES;
+    }
+    return NO;
+}
+
 @implementation SDLHelper
 
 - (instancetype)init {

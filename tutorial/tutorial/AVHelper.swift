@@ -11,7 +11,7 @@ import ffmpeg
 import CoreVideo
 
 /**
- *  
+ *
  */
 protocol AVHelperProtocol {
     var inputPath: String {get}
@@ -20,6 +20,23 @@ protocol AVHelperProtocol {
     var formatContext: UnsafeMutablePointer<AVFormatContext>? { set get }
     func open() -> Bool
     func close()
+}
+
+
+protocol AVSizeProtocol {
+    var width: Int32 {
+        get
+    }
+    var height: Int32 {
+        get
+    }
+    var size: CGSize { get }
+}
+
+extension AVSizeProtocol {
+    var size: CGSize {
+        return CGSize(width: Int(width), height: Int(height))
+    }
 }
 
 extension AVHelperProtocol where Self: AVHelper {
@@ -38,149 +55,94 @@ extension AVHelperProtocol where Self: AVHelper {
     }
 }
 
-protocol AVHelperCodecProtocol {
-    var codecs: [Int32 : UnsafeMutablePointer<AVCodec>?] { set get }
-    func codec(forMediaType type: AVMediaType) -> UnsafePointer<AVCodec>?
-    func codecContext(forMediaType type: AVMediaType) -> UnsafeMutablePointer<AVCodecContext>?
-    func streamIndex(forMediaType type: AVMediaType) -> Int32
-    func stream(forMediaType type: AVMediaType) -> UnsafePointer<AVStream>?
+protocol AVCodecParametersGetter {
+    func params(at: Int32, type: AVMediaType?) -> UnsafeMutablePointer<AVCodecParameters>?
+    func params(type: AVMediaType) -> UnsafeMutablePointer<AVCodecParameters>?
 }
 
-extension AVHelperCodecProtocol where Self:AVHelper {
-    func codec(forMediaType type: AVMediaType) -> UnsafePointer<AVCodec>? {
-        let index = streamIndex(forMediaType: type)
-        let stream = formatContext?.pointee.streams[Int(index)]
-        guard let codec = self.codecs[type.rawValue] else {
+extension AVCodecParametersGetter where Self: AVHelper {
+    func params(type: AVMediaType) -> UnsafeMutablePointer<AVCodecParameters>? {
+        let index = av_find_best_stream(formatContext, type, -1, -1, nil, 0)
+        return params(at: index, type: type)
+    }
+    func params(at: Int32, type: AVMediaType? = nil) -> UnsafeMutablePointer<AVCodecParameters>? {
+        
+        let stream = formatContext?.pointee.streams[Int(at)]
+        
+        let param = stream?.pointee.codecpar
+        guard let type = type else {
+            return param
+        }
+        guard param?.pointee.codec_type == type else {
             return nil
         }
-        if 0 == avcodec_is_open(stream?.pointee.codec) {
-            if isErr(avcodec_open2(stream?.pointee.codec, codec, nil), "codec open \(type)") {
-                return nil
+        return param
+    }
+}
+
+protocol AVStreamGetter {
+    func streamIndexes(type: AVMediaType) -> [Int32]
+    func streamIndex(type: AVMediaType) -> Int32
+    func stream(at: Int32) -> UnsafeMutablePointer<AVStream>?
+    func stream(type: AVMediaType) -> UnsafeMutablePointer<AVStream>?
+    func type(at: Int32) -> AVMediaType?
+}
+
+extension AVStreamGetter where Self: AVHelper, Self: AVCodecParametersGetter {
+    func streamIndexes(type: AVMediaType) -> [Int32] {
+        var indexes: [Int32] = []
+        for i in 0..<(formatContext?.pointee.nb_streams ?? 0) {
+            guard let _ = params(at: Int32(i), type: type) else {
+                continue
             }
+            indexes.append(Int32(i))
         }
-        return codec?.cast()
+        return indexes
     }
-    
-    func openCodec(forMediaType type: AVMediaType) -> Bool {
-        return nil != codec(forMediaType: type)
-    }
-    
-    func codecContext(forMediaType type: AVMediaType) -> UnsafeMutablePointer<AVCodecContext>? {
-        guard openCodec(forMediaType: type) else {
-            return nil
-        }
-        return formatContext?.pointee.streams[Int(streamIndex(forMediaType: type))]?.pointee.codec
-    }
-    
-    func stream(forMediaType type: AVMediaType) -> UnsafePointer<AVStream>? {
-        return formatContext?.pointee.streams[Int(streamIndex(forMediaType: type))]?.cast()
-    }
-    
-    func streamIndex(forMediaType type: AVMediaType) -> Int32 {
-        var codec = self.codecs[type.rawValue] ?? nil
-        let index = av_find_best_stream(formatContext, type, -1, -1, &codec, 0)
-        self.codecs[type.rawValue] = codec
+    func streamIndex(type: AVMediaType) -> Int32 {
+        let index = av_find_best_stream(formatContext, type, -1, -1, nil, 0)
         return index
     }
+    func stream(at: Int32) -> UnsafeMutablePointer<AVStream>? {
+        return formatContext?.pointee.streams[Int(at)]
+    }
+    func stream(type: AVMediaType) -> UnsafeMutablePointer<AVStream>? {
+        return self.stream(at: streamIndex(type: type))
+    }
+    func type(at: Int32) -> AVMediaType? {
+        return self.params(at: at)?.pointee.codec_type
+    }
 }
 
-//protocol AVFilterHelperProtocol {
-//    var buffersrc: UnsafeMutablePointer<AVFilter>? {set get}
-//    var buffersink: UnsafeMutablePointer<AVFilter>? {set get}
-//    var inputs: UnsafeMutablePointer<AVFilterInOut>? {set get}
-//    var outputs: UnsafeMutablePointer<AVFilterInOut>? {set get}
-//    var buffersrc_ctx: UnsafeMutablePointer<AVFilterContext>? {set get}
-//    var buffersink_ctx: UnsafeMutablePointer<AVFilterContext>? {set get}
-//    
-//    var filter_graph: UnsafeMutablePointer<AVFilterGraph>? {set get}
-////
-//    var filter_frame: UnsafeMutablePointer<AVFrame>? {set get}
-//    
-//    func setupFilter(_ filterDescription: String) -> Bool
-//}
-//
-//extension AVFilterHelperProtocol where Self:AVHelper, Self: AVHelperProtocol, Self: AVHelperCodecProtocol {
-//    func setupFilter(_ filterDescription: String) -> Bool {
-//        buffersrc = avfilter_get_by_name("buffer")
-//        buffersink = avfilter_get_by_name("buffersink")
-//        
-//        inputs = avfilter_inout_alloc()
-//        outputs = avfilter_inout_alloc()
-//        
-//        filter_graph = avfilter_graph_alloc()
-//        
-//        defer {
-//            avfilter_inout_free(&inputs)
-//            avfilter_inout_free(&outputs)
-//        }
-//        
-//        guard let time_base = self.time_base(forMediaType: AVMEDIA_TYPE_VIDEO) else {
-//            return false
-//        }
-//        guard let pixel_aspect = self.pixel_aspect else {
-//            return false
-//        }
-//        guard let pix_fmt = self.pix_fmt else {
-//            return false
-//        }
-//        let args = "video_size=\(width)x\(height):pix_fmt=\(pix_fmt.rawValue):time_base=\(time_base.num)/\(time_base.den):pixel_aspect=\(pixel_aspect.num)/\(pixel_aspect.den)"
-//        if isErr(avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args, nil, filter_graph), "create in filter") {
-//            return false
-//        }
-//        
-//        if isErr(avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out", nil, nil, filter_graph), "create out filter") {
-//            return false
-//        }
-//        
-//        outputs?.pointee.name = av_strdup("in")
-//        outputs?.pointee.filter_ctx = buffersrc_ctx
-//        outputs?.pointee.pad_idx = 0
-//        outputs?.pointee.next = nil
-//        
-//        inputs?.pointee.name = av_strdup("out")
-//        inputs?.pointee.filter_ctx = buffersink_ctx
-//        inputs?.pointee.pad_idx = 0
-//        inputs?.pointee.next = nil
-//        
-//        if isErr(avfilter_graph_parse_ptr(filter_graph, filterDescription, &inputs, &outputs, nil), "parse graph filter") {
-//            return false
-//        }
-//        
-//        if isErr(avfilter_graph_config(filter_graph, nil), "graph config") {
-//            return false
-//        }
-//        
-//        filter_frame = av_frame_alloc()
-//        
-//        return true
-//    }
-//}
-
-class AVHelper: AVHelperProtocol, AVHelperCodecProtocol {
+class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSizeProtocol {
     let inputPath: String
     var outputPath: String?
     
     var formatContext: UnsafeMutablePointer<AVFormatContext>?
-    var codecs: [Int32 : UnsafeMutablePointer<AVCodec>?] = [:]
     
-    var filter: AVFilterHelper?
+    var videoFilter: AVFilterHelper?
     
     var width: Int32 {
-        return self.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)?.pointee.width ?? 0
+        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.width ?? 0
     }
     var height: Int32 {
-        return self.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)?.pointee.height ?? 0
+        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.height ?? 0
     }
     var pix_fmt: AVPixelFormat? {
-        return self.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)?.pointee.pix_fmt
+        guard let param: UnsafeMutablePointer<AVCodecParameters> = params(type: AVMEDIA_TYPE_VIDEO) else {
+            return AV_PIX_FMT_NONE
+        }
+        return AVPixelFormat(rawValue: param.pointee.format)
     }
     
     var pixel_aspect: AVRational? {
-        return self.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)?.pointee.sample_aspect_ratio
+        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.sample_aspect_ratio
     }
     
     func time_base(forMediaType type: AVMediaType) -> AVRational? {
-        return self.stream(forMediaType: type)?.pointee.time_base
+        let index = streamIndex(type: type)
+        let stream: UnsafeMutablePointer<AVStream>? = self.stream(at: index)
+        return stream?.pointee.time_base
     }
     
     init?(inputPath path: String) {
@@ -189,57 +151,134 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol {
         formatContext = avformat_alloc_context()
     }
     
-    func setupFilter(filterDesc: String) -> Bool {
-        self.filter = AVFilterHelper();
-        return filter?.setup(formatContext, videoStream: stream(forMediaType: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc) ?? false
+    func setupVideoFilter(filterDesc: String) -> Bool {
+        self.videoFilter = AVFilterHelper();
+        return videoFilter?.setup(formatContext, videoStream: stream(type: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc) ?? false
     }
-    /**
-     
-     - parameter decodeHandle, completion: return false to stop decoding
-     */
-    func decode(_ decodeHandle:(type: AVMediaType, frame: UnsafePointer<AVFrame>) -> Bool, completion:() -> Bool) {
-        var frame = av_frame_alloc()
-        var packet = av_packet_alloc()
+    
+    typealias FrameHandle = (type:AVMediaType, frame: UnsafePointer<AVFrame>?) -> HandleResult
+    typealias PacketHandle = (type:AVMediaType, packet: UnsafePointer<AVPacket>?) -> HandleResult
+    
+    enum HandleResult {
+        case succeed
+        case ignored
+        case cancelled(reason: Int32)
+    }
+    
+    var frame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
+    var packet: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+    
+    func decode(frameHandle: FrameHandle? = nil,
+                packetHandle: PacketHandle? = nil,
+                completion: () -> Bool) {
         defer {
             av_frame_free(&frame)
             av_packet_free(&packet)
         }
         
-        let video_codec_ctx = codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)
-        let video_stream_index = streamIndex(forMediaType: AVMEDIA_TYPE_VIDEO)
-        var read_frame_finished: Int32 = 0
-        while 0 == av_read_frame(formatContext, packet) {
-            if packet?.pointee.stream_index == video_stream_index {
-                if isErr(avcodec_decode_video2(video_codec_ctx, frame, &read_frame_finished, packet!.cast()), "decode video") {
-                    return
+        guard let frame = frame else {
+            return
+        }
+        guard let packet = packet else {
+            return
+        }
+        
+        var codecContexts: [Int32: UnsafeMutablePointer<AVCodecContext>] = [:]
+        var codecs: [Int32: UnsafeMutablePointer<AVCodec>] = [:]
+        
+        for i in 0..<(formatContext?.pointee.nb_streams ?? 0) {
+            let index = Int(i)
+            guard let stream = formatContext?.pointee.streams[index] else {
+                continue
+            }
+            guard let codecpar = stream.pointee.codecpar else {
+                continue
+            }
+            guard let codec = avcodec_find_decoder(codecpar.pointee.codec_id) else {
+                continue
+            }
+            let ctx = avcodec_alloc_context3(codec)
+            if isErr(avcodec_parameters_to_context(ctx, codecpar), "param to contex") {
+                var freed = ctx
+                avcodec_free_context(&freed)
+                continue
+            }
+            if 0 < avcodec_is_open(ctx) {
+                codecContexts[Int32(i)] = ctx!
+                codecs[Int32(i)] = codec
+            } else {
+                guard false == isErr(avcodec_open2(ctx, codec, nil), "failed \(avcodec_get_name(codec.pointee.id)) open") else {
+                    continue
                 }
-                if 0 < read_frame_finished {
-                    defer {
-                        av_frame_unref(frame)
-                    }
-                    guard let filter = filter else {
-                        guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: frame!) else {
-                            break
-                        }
-                        continue
-                    }
+                codecContexts[Int32(i)] = ctx!
+                codecs[Int32(i)] = codec
+            }
+        }
+        
+        while 0 == av_read_frame(formatContext, packet) {
+            defer {
+                av_packet_unref(packet)
+            }
+            
+            let type = self.type(at: packet.pointee.stream_index)!
+            if let handle = packetHandle {
+                switch handle(type: type, packet: packet) {
+                case .succeed:
+                    continue
+                case .cancelled(let reason):
+                    isErr(reason, "packet decoding cancelled")
+                case .ignored:
+                    break
+                }
+            }
+            
+            if let handle = frameHandle, let ctx = codecContexts[packet.pointee.stream_index] {
+                let return_from_send_packet = avcodec_send_packet(ctx, packet)
+                if AVERROR_CONVERT(EAGAIN) == return_from_send_packet {
+                    continue
+                } else if isErr(return_from_send_packet, "avcodec_send_packet for video") {
+                    break
+                }
+                
+                defer {
+                    av_frame_unref(frame)
+                }
+                let return_from_recieve_frame = avcodec_receive_frame(ctx, frame)
+                if AVERROR_CONVERT(EAGAIN) == return_from_recieve_frame {
+                    continue
+                } else if isErr(return_from_recieve_frame, "avcodec_receive_frame for video") {
+                    break
+                }
+                
+                var result: HandleResult = .ignored
+                switch videoFilter {
+                case let filter?:
                     if filter.applyFilter(frame) {
                         defer {
                             av_frame_unref(filter.filterFrame)
                         }
-                        guard decodeHandle(type: AVMEDIA_TYPE_VIDEO, frame: filter.filterFrame) else {
-                            break
-                        }
-                    } else {
-                        break
+                        result = handle(type: type, frame: filter.filterFrame)
                     }
+                default:
+                    result = handle(type: type, frame: frame)
+                }
+                
+                switch result {
+                case .cancelled(let reason):
+                    isErr(reason, "frame decoding cancelled")
+                default:
+                    break
                 }
             }
             guard completion() else {
                 break
             }
-            av_packet_unref(packet)
         }
+    }
+    
+    func audio_decode_frame(audioCodecContext: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
+        
+        return 0
     }
     
     deinit {
@@ -271,11 +310,11 @@ extension AVByteable where Self: AVData {
     }
 }
 
-extension AVFrame: AVData, AVByteable {}
+extension AVFrame: AVData, AVByteable, AVSizeProtocol {}
 extension AVPicture: AVData, AVByteable {}
 
 
-extension AVCodecContext {
+extension AVCodecContext: AVSizeProtocol {
     var size: CGSize {
         var size = CGSize()
         size.width = self.width.cast()
@@ -426,5 +465,14 @@ struct AVFilterDescriptor: AVFilterDescription {
         var description: String {
             return "smartblur=lr=\(lr):ls=\(ls):lt=\(lt):cr=\(cr):cs=\(cs):ct=\(ct)"
         }
+    }
+}
+
+extension UnsafePointerProtocol where Self.Pointee: AVSizeProtocol {
+    var width: Int32 {
+        return pointee.width
+    }
+    var height: Int32 {
+        return pointee.height
     }
 }

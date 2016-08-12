@@ -231,14 +231,6 @@ struct Tutorial2: Tutorial {
         
         var pFormatCtx = helper.formatContext
         
-        var pCodecCtx = helper.codecContext(forMediaType: AVMEDIA_TYPE_VIDEO)
-        
-        defer {
-            print("close codec context")
-            avcodec_close(pCodecCtx)
-            
-        }
-        
         let screenSize = UIScreen.main.bounds.size
         
         guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
@@ -253,41 +245,42 @@ struct Tutorial2: Tutorial {
         
         let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue | SDL_RENDERER_ACCELERATED.rawValue)
         
-        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), pCodecCtx!.pointee.width, pCodecCtx!.pointee.height)
+        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), helper.width, helper.height)
         defer {
             SDL_DestroyTexture(texture)
             SDL_DestroyRenderer(renderer)
             SDL_DestroyWindow(window)
         }
         
-        var rect = pCodecCtx?.pointee.size.SDL ?? SDL_Rect()
-        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).SDL
+        var rect: SDL_Rect = CGRect(origin: CGPoint(), size: helper.size).rect
+        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).rect
         
-        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE)
         var event = SDL_Event()
         
         // half scale, yuv 420 pixel format, rotate
         var descriptor = AVFilterDescriptor()
         descriptor.add(pixelFormat: AV_PIX_FMT_YUV420P)
         // smartblur filter doesn't exist
-//        descriptor.set(smartblur:AVFilterDescriptor.AVSmartblur(lr: 5, lt: 30, cr: 5, ct: 30))
-        guard helper.setupFilter(filterDesc: descriptor.description) else {
+        //        descriptor.set(smartblur:AVFilterDescriptor.AVSmartblur(lr: 5, lt: 30, cr: 5, ct: 30))
+        guard helper.setupVideoFilter(filterDesc: descriptor.description) else {
             print("setup filter failed")
             return
         }
         
-        helper.decode({ (type, frame) -> Bool in
-            switch type {
-            case AVMEDIA_TYPE_VIDEO:
-                SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
-                SDL_RenderClear(renderer)
-                SDL_RenderCopy(renderer, texture, &rect, &dst_rect)
-                SDL_RenderPresent(renderer)
-                
-            default:
-                break
+        helper.decode(frameHandle: { (type, frame) -> AVHelper.HandleResult in
+            guard let frame = frame, type == AVMEDIA_TYPE_VIDEO else {
+                return .ignored
             }
-            return true
+            if frame.pointee.linesize.2 > 0 {
+                SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
+            } else {
+                SDL_UpdateTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0)
+            }
+            SDL_RenderClear(renderer)
+            SDL_RenderCopy(renderer, texture, &rect, &dst_rect)
+            SDL_RenderPresent(renderer)
+            return .succeed
         }) { () -> Bool in
             SDL_PollEvent(&event)
             if event.type == SDL_QUIT.rawValue {
@@ -304,6 +297,104 @@ struct  Tutorial3: Tutorial {
     var paths: [String]
     
     func run() {
+        guard let helper = AVHelper(inputPath: paths[0]) else {
+            return
+        }
+        guard helper.open() else {
+            return
+        }
         
+        let screenSize = UIScreen.main.bounds.size
+        
+        guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
+            return
+        }
+        // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
+        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        guard nil != window else {
+            print("SDL: couldn't create window")
+            return
+        }
+        
+        let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue | SDL_RENDERER_ACCELERATED.rawValue)
+        
+        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), helper.width, helper.height)
+        defer {
+            SDL_DestroyTexture(texture)
+            SDL_DestroyRenderer(renderer)
+            SDL_DestroyWindow(window)
+        }
+        
+        var rect: SDL_Rect = CGRect(origin: CGPoint(), size: helper.size).rect
+        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).rect
+        
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE)
+        
+        var audio_spec = helper.SDLAudioSpec(callback: { (userData, stream, length) in
+            print("receive audio callback")
+            
+            let helper_ptr: UnsafeMutablePointer<AVHelper> = userData!.cast()!
+            let helper = helper_ptr.pointee
+            
+            var audio_buf: [UInt8] = [UInt8](repeating: 0, count: 192000 * 3 / 2)
+            var audio_buf_size: UInt32 = 0
+            var audio_buf_index: UInt32 = 0
+            
+            var aCodecCtx: UnsafeMutablePointer<AVCodecContext> = userData!.cast()!
+            var len1: Int32 = 0
+            var audio_size: Int32 = 0
+            
+            var len = length
+            while 0 < len {
+                if audio_buf_index >= audio_buf_size {
+                    audio_size = helper.audio_decode_frame(audioCodecContext: aCodecCtx, audio_buf: &audio_buf, buf_size: Int32(sizeof(UInt8) * audio_buf.count))
+                }
+            }
+        })
+        
+        if nil == audio_spec {
+            return
+        }
+        
+        var spec = SDL_AudioSpec()
+        
+        if SDL_OpenAudio(&audio_spec!, &spec).SDLError {
+            return
+        }
+        
+        defer {
+            SDL_CloseAudio()
+        }
+        
+        var queue = PacketQueue()
+        var event = SDL_Event()
+        
+        helper.decode(
+            frameHandle: { (type, frame) -> AVHelper.HandleResult in
+                guard let frame = frame, type == AVMEDIA_TYPE_VIDEO else {
+                    return .ignored
+                }
+                frame.pointee.update(texture: texture, renderer: renderer, toRect: dst_rect)
+                return .succeed
+            },
+            packetHandle: { (type, packet) -> AVHelper.HandleResult in
+                guard let pkt = packet, type == AVMEDIA_TYPE_AUDIO else {
+                    return .ignored
+                }
+                queue.put(packet: pkt.cast()!)
+                return .ignored
+            },
+            completion: { () -> Bool in
+                SDL_PollEvent(&event)
+                switch SDL_EventType(event.type) {
+                case SDL_QUIT:
+                    queue.quit = true
+                    return false
+                case SDL_FINGERDOWN:
+                    return false
+                default:
+                    return true
+                }
+        })
     }
 }

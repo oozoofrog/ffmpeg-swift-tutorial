@@ -10,9 +10,24 @@ import Foundation
 import CoreGraphics
 import SDL
 
-protocol SDLCastable {
-    var SDL: SDL_Rect { get }
-    var rect: CGRect { get }
+protocol SDLRectCastable {}
+
+extension SDLRectCastable where Self:SDLStructure {
+    var rect: CGRect {
+        return CGRect(x: Int(x), y: Int(y), width: Int(w), height: Int(h))
+    }
+}
+
+extension SDLRectCastable where Self: CGSizeable {
+    var rect: SDL_Rect {
+        return SDL_Rect(x: 0, y: 0, w: Int32(width), h: Int32(height))
+    }
+}
+
+extension SDLRectCastable where Self: CGPointable, Self: CGSizeable {
+    var rect: SDL_Rect {
+        return SDL_Rect(x: Int32(origin.x), y: Int32(origin.y), w: Int32(width), h: Int32(height))
+    }
 }
 
 protocol SDLStructure {
@@ -22,33 +37,68 @@ protocol SDLStructure {
     var h: Int32 { get }
 }
 
-extension CGSize: SDLCastable{}
-extension CGRect: SDLCastable{}
-extension SDL_Rect: SDLStructure, SDLCastable{}
+extension CGSize: CGSizeable, SDLRectCastable{}
+extension CGRect: CGSizeable, CGPointable, SDLRectCastable{}
+extension SDL_Rect: SDLStructure, SDLRectCastable{}
 
-extension SDLCastable where Self: SDLStructure {
-    var SDL: SDL_Rect {
-        return self as! SDL_Rect
-    }
-    var rect: CGRect {
-        return CGRect(x: Int(x), y: Int(y), width: Int(w), height: Int(h))
+protocol SDLError {
+    var SDLError: Bool { get }
+}
+
+extension Int32: SDLError {
+    var SDLError: Bool {
+        if 0 > self {
+            print(String(cString: SDL_GetError()))
+            return true
+        }
+        return false
     }
 }
 
-extension SDLCastable where Self: CGSizeStructure {
-    var SDL: SDL_Rect {
-        return SDL_Rect(x: 0, y: 0, w: width.cast(), h: height.cast())
-    }
-    var rect: CGRect {
-        return CGRect(x: 0, y: 0, width: width, height: height)
-    }
+protocol PacketQueueProtocol {
+    var firstPacket: UnsafeMutablePointer<AVPacketList>? { set get }
+    var lastPacket: UnsafeMutablePointer<AVPacketList>? { set get }
+    var nb_packet: Int32 { set get }
+    var size: Int32 { set get }
+    var mutex: OpaquePointer { set get }
+    var cond: OpaquePointer { set get }
+    
+    var quit: Bool { set get }
+}
+struct PacketQueue: PacketQueueProtocol {
+    var firstPacket: UnsafeMutablePointer<AVPacketList>? = nil
+    var lastPacket: UnsafeMutablePointer<AVPacketList>? = nil
+    var nb_packet: Int32 = 0
+    var size: Int32 = 0
+    var mutex: OpaquePointer = SDL_CreateMutex()
+    var cond: OpaquePointer = SDL_CreateCond()
+    
+    var quit: Bool = false
 }
 
-extension SDLCastable where Self: CGPointStructure, Self: CGSizeStructure {
-    var SDL: SDL_Rect {
-        return SDL_Rect(x: x.cast(), y: y.cast(), w: width.cast(), h: height.cast())
-    }
-    var rect: CGRect {
-        return CGRect(x: x, y: y, width: width, height: height)
+
+let SDL_AUDIO_BUFFER_SIZE = 1024
+let MAX_AUDIO_FRAME_SIZE = 192000
+
+extension AVHelper {
+    
+    static var audio_buf: [UInt8] = [UInt8].init(repeating: 0, count: MAX_AUDIO_FRAME_SIZE * 3 / 2)
+    static var audio_buf_size: UInt32 = 0;
+    static var audio_buf_index: UInt32 = 0;
+    
+    func SDLAudioSpec(audio_format: SDL_AudioFormat = AUDIO_S16SYS.cast(), bufferSize: Int = 1024, callback: SDL_AudioCallback) -> SDL_AudioSpec? {
+        
+        let audioParams = self.stream(type: AVMEDIA_TYPE_AUDIO)!.pointee.codecpar!
+        
+        var audio_spec = SDL_AudioSpec()
+        audio_spec.freq = audioParams.pointee.sample_rate
+        audio_spec.channels = UInt8(audioParams.pointee.channels)
+        audio_spec.format = audio_format
+        audio_spec.silence = 0
+        audio_spec.callback = callback
+        audio_spec.samples = bufferSize.cast()
+        var helper: AVHelper = self
+        audio_spec.userdata = withUnsafePointer(&helper){UnsafeMutablePointer<Void>($0)}
+        return audio_spec
     }
 }
