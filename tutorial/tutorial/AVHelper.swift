@@ -8,6 +8,7 @@
 
 import Foundation
 import ffmpeg
+import CoreVideo
 
 /**
  *  
@@ -188,9 +189,9 @@ class AVHelper: AVHelperProtocol, AVHelperCodecProtocol {
         formatContext = avformat_alloc_context()
     }
     
-    func setupFilter(filterDesc: String) -> Bool {
+    func setupFilter(filterDesc: AVFilterDescriptor) -> Bool {
         self.filter = AVFilterHelper();
-        return filter?.setup(formatContext, videoStream: stream(forMediaType: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc) ?? false
+        return filter?.setup(formatContext, videoStream: stream(forMediaType: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc.description) ?? false
     }
     /**
      
@@ -272,3 +273,38 @@ extension AVByteable where Self: AVData {
 
 extension AVFrame: AVData, AVByteable {}
 extension AVPicture: AVData, AVByteable {}
+
+
+extension AVCodecContext {
+    var size: CGSize {
+        var size = CGSize()
+        size.width = self.width.cast()
+        size.height = self.height.cast()
+        return size
+    }
+}
+
+extension AVPixelFormat {
+    var name: String {
+        let name = av_get_pix_fmt_name(self) ?? av_get_pix_fmt_name(AV_PIX_FMT_NONE)!
+        return String(cString: name, encoding: String.Encoding.ascii)!
+    }
+}
+
+struct AVFilterDescriptor {
+    
+    let pix_fmts: [AVPixelFormat]
+    
+    init(pix_fmts: [AVPixelFormat] = []) {
+        self.pix_fmts = pix_fmts
+    }
+    
+    var description: String {
+        var descriptions = [String]()
+        if 0 < pix_fmts.count {
+            let pix_fmts_str = self.pix_fmts.flatMap(){return $0.name}.joined(separator: "|")
+            descriptions.append("format=pix_fmts=\(pix_fmts_str)")
+        }
+        return descriptions.joined(separator: ",")
+    }
+}

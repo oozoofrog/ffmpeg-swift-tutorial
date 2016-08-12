@@ -267,7 +267,7 @@ struct Tutorial2: Tutorial {
         var event = SDL_Event()
         
         // half scale, yuv 420 pixel format, rotate
-        guard helper.setupFilter(filterDesc: "format=pix_fmts=yuv420p") else {
+        guard helper.setupFilter(filterDesc: AVFilterDescriptor(pix_fmts: [helper.pix_fmt!])) else {
             print("setup filter failed")
             return
         }
