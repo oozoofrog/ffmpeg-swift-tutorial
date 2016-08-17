@@ -79,25 +79,54 @@ struct PacketQueue: PacketQueueProtocol {
 let SDL_AUDIO_BUFFER_SIZE = 1024
 let MAX_AUDIO_FRAME_SIZE = 192000
 
+
+//func audio_callback(userData: UnsafeMutableRawPointer?, stream: UnsafeMutablePointer<UInt8>?, length: Int32) -> Void {
+//    print("receive audio callback")
+//    
+//    var stream = stream
+//    
+//    let helper_ptr: UnsafeMutablePointer<AVHelper> = userData!.cast(to: AVHelper.self)
+//    let helper = helper_ptr.pointee
+//    
+//    var audio_buf: [UInt8] = [UInt8](repeating: 0, count: 192000 * 3 / 2)
+//    var audio_buf_size: UInt32 = 0
+//    var audio_buf_index: UInt32 = 0
+//    
+//    let aCodecCtx: UnsafeMutablePointer<AVCodecContext> = userData!.cast(to: AVCodecContext.self)
+//    var len1: Int32 = 0
+//    var audio_size: Int32 = 0
+//    
+//    var len = length
+//    while 0 < len {
+//        if audio_buf_index >= audio_buf_size {
+//            audio_size = helper.audio_decode_frame(audioCodecContext: aCodecCtx, audio_buf: &audio_buf, buf_size: Int32(MemoryLayout<UInt8>.size * audio_buf.count))
+//            if 0 > audio_size {
+//                audio_buf_size = 1024
+//                memset(&audio_buf, 0, Int(audio_buf_size))
+//            } else {
+//                audio_buf_size = UInt32(audio_size)
+//            }
+//            len1 = Int32(audio_buf_size) - Int32(audio_buf_index)
+//            if len1 > len {
+//                len1 = len
+//            }
+//            let buffer = audio_buf.withUnsafeBufferPointer(){$0}.baseAddress?.advanced(by: Int(audio_buf_index))
+//            memcpy(stream, buffer, Int(len1))
+//            len -= len1
+//            stream = stream?.advanced(by: Int(len1))
+//            audio_buf_index += UInt32(len1)
+//        }
+//    }
+//}
+
 extension AVHelper {
     
     static var audio_buf: [UInt8] = [UInt8].init(repeating: 0, count: MAX_AUDIO_FRAME_SIZE * 3 / 2)
     static var audio_buf_size: UInt32 = 0;
     static var audio_buf_index: UInt32 = 0;
     
-    func SDLAudioSpec(audio_format: SDL_AudioFormat = AUDIO_S16SYS.cast(), bufferSize: Int = 1024, callback: SDL_AudioCallback) -> SDL_AudioSpec? {
-        
-        let audioParams = self.stream(type: AVMEDIA_TYPE_AUDIO)!.pointee.codecpar!
-        
-        var audio_spec = SDL_AudioSpec()
-        audio_spec.freq = audioParams.pointee.sample_rate
-        audio_spec.channels = UInt8(audioParams.pointee.channels)
-        audio_spec.format = audio_format
-        audio_spec.silence = 0
-        audio_spec.callback = callback
-        audio_spec.samples = bufferSize.cast()
-        var helper: AVHelper = self
-        audio_spec.userdata = withUnsafePointer(to: &helper){UnsafeMutableRawPointer(mutating: $0)}
-        return audio_spec
+    func SDLAudioSpec(audio_format: SDL_AudioFormat = AUDIO_S16SYS.cast(), bufferSize: Int = 1024) -> SDL_AudioSpec? {
+        let ptr = UnsafeMutableRawPointer.allocate(bytes: MemoryLayout<AVHelper>.stride, alignedTo: 0)
+        return SDLHelper.sdlAudioSpec(ptr, codecpar: self.stream(type: AVMEDIA_TYPE_AUDIO)?.pointee.codecpar, format: audio_format, bufferSize: bufferSize)
     }
 }
