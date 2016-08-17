@@ -14,8 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
-    @nonobjc func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]? = nil) -> Bool {
         // Override point for customization after application launch.
         
         av_register_all()
@@ -88,7 +87,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return
         }
         do {
-            try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
+            let _ = try? FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
             try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
             let noti = UIAlertController(title: "Succeed", message: "Symbolic link of \(self.docPath) make to \(self.documentPathForUserWithAppName)", preferredStyle: .alert)
             noti.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))

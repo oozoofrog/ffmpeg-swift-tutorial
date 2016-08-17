@@ -188,13 +188,12 @@ struct Tutorial1: Tutorial {
                     return
                 }
                 if 0 < frameFinished {
-                    let sourceData = pFrame!.pointee.dataPtr().withMemoryRebound(to: Optional<UnsafePointer<UInt8>>.self, capacity: MemoryLayout<UnsafePointer<UInt8>>.stride) {$0}
                     sws_scale(sws_ctx,
-                              sourceData,
+                              pFrame?.pointee.dataPtr().cast(),
                               pFrame?.pointee.linesizePtr(),
                               0,
                               pCodecCtx!.pointee.height,
-                              UnsafePointer<UnsafeMutablePointer<UInt8>?>(pFrameRGB?.pointee.dataPtr()),
+                              pFrameRGB?.pointee.dataPtr().cast(),
                               pFrameRGB?.pointee.linesizePtr())
                     frameFinished = 0
                 }
@@ -237,7 +236,7 @@ struct Tutorial2: Tutorial {
             return
         }
         // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-        let window = SDL_CreateWindow(String(type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        let window = SDL_CreateWindow(String(describing: type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
         guard nil != window else {
             print("SDL: couldn't create window")
             return
@@ -310,7 +309,7 @@ struct  Tutorial3: Tutorial {
             return
         }
         // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-        let window = SDL_CreateWindow(String(type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        let window = SDL_CreateWindow(String(describing: type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
         guard nil != window else {
             print("SDL: couldn't create window")
             return
@@ -333,21 +332,21 @@ struct  Tutorial3: Tutorial {
         var audio_spec = helper.SDLAudioSpec(callback: { (userData, stream, length) in
             print("receive audio callback")
             
-            let helper_ptr: UnsafeMutablePointer<AVHelper> = userData!.cast()!
+            let helper_ptr: UnsafeMutablePointer<AVHelper> = userData!.cast(to: AVHelper.self)
             let helper = helper_ptr.pointee
             
             var audio_buf: [UInt8] = [UInt8](repeating: 0, count: 192000 * 3 / 2)
             var audio_buf_size: UInt32 = 0
             var audio_buf_index: UInt32 = 0
             
-            var aCodecCtx: UnsafeMutablePointer<AVCodecContext> = userData!.cast()!
+            var aCodecCtx: UnsafeMutablePointer<AVCodecContext> = userData!.cast(to: AVCodecContext.self)
             var len1: Int32 = 0
             var audio_size: Int32 = 0
             
             var len = length
             while 0 < len {
                 if audio_buf_index >= audio_buf_size {
-                    audio_size = helper.audio_decode_frame(audioCodecContext: aCodecCtx, audio_buf: &audio_buf, buf_size: Int32(sizeof(UInt8) * audio_buf.count))
+                    audio_size = helper.audio_decode_frame(audioCodecContext: aCodecCtx, audio_buf: &audio_buf, buf_size: Int32(MemoryLayout<UInt8>.size * audio_buf.count))
                 }
             }
         })

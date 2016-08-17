@@ -561,8 +561,8 @@
 				TargetAttributes = {
 					A96D16EF1D5860C5009F7AC2 = {
 						CreatedOnToolsVersion = 7.3.1;
-						DevelopmentTeam = HY47J4787Q;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Manual;
 					};
 				};
 			};
@@ -752,7 +752,8 @@
 				ASSETCATALOG_COMPILER_OPTIMIZATION = space;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
-				DEVELOPMENT_TEAM = HY47J4787Q;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include",
@@ -769,6 +770,8 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gretech.tutorial;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial/tutorial-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
@@ -783,7 +786,8 @@
 				ASSETCATALOG_COMPILER_OPTIMIZATION = space;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
-				DEVELOPMENT_TEAM = HY47J4787Q;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include",

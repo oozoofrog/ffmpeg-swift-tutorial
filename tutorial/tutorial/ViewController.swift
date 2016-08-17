@@ -55,10 +55,13 @@ class ViewController: UITableViewController {
             return
         }
         self.files = files.filter(){ file in
-            guard let attributes: NSDictionary = try? FileManager.default.attributesOfItem(atPath: documentPath + "/" + file) as? NSDictionary else {
+            guard let attributes = try? FileManager.default.attributesOfItem(atPath: documentPath + "/" + file) else {
                 return !file.hasPrefix(".")
             }
-            return !file.hasPrefix(".") && attributes.fileType() == FileAttributeType.typeRegular.rawValue
+            if let type: String = attributes[.type] as? String, type == FileAttributeType.typeRegular.rawValue {
+                return !file.hasPrefix(".")
+            }
+            return true
         }
         
         self.tableView.reloadData()
