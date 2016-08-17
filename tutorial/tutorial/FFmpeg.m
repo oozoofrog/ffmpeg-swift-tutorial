@@ -83,8 +83,8 @@ BOOL AVFILTER_EOF(int ret) {
 - (BOOL)setup:(AVFormatContext *)fmt_ctx videoStream:(AVStream *)videoStream filterDescription:(NSString *)filterDescription {
     
     AVRational time_base = videoStream->time_base;
-    AVRational pixel_aspect = videoStream->codec->sample_aspect_ratio;
-    NSString *args = [NSString stringWithFormat:@"video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d", videoStream->codec->width, videoStream->codec->height, videoStream->codec->pix_fmt, time_base.num, time_base.den, pixel_aspect.num, pixel_aspect.den];
+    AVRational pixel_aspect = videoStream->codecpar->sample_aspect_ratio;
+    NSString *args = [NSString stringWithFormat:@"video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d", videoStream->codecpar->width, videoStream->codecpar->height, videoStream->codecpar->format, time_base.num, time_base.den, pixel_aspect.num, pixel_aspect.den];
     
     if (isErr(avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args.UTF8String, nil, filter_graph), "create input filter")) {
         return NO;

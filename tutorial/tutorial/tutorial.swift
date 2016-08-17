@@ -138,7 +138,11 @@ struct Tutorial1: Tutorial {
             return
         }
         
-        pCodecCtx = pFormatCtx?.pointee.streams.advanced(by: Int(videoStream)).pointee?.pointee.codec
+        let params: UnsafePointer<AVCodecParameters> = pFormatCtx!.pointee.streams[Int(videoStream)]!.pointee.codecpar.cast()
+        pCodecCtx = avcodec_alloc_context3(pCodec!)
+        if isErr(avcodec_parameters_to_context(pCodecCtx, params), "avcodec_parameters_to_context") {
+            return
+        }
         
         defer {
             print("close codec context")
@@ -161,13 +165,20 @@ struct Tutorial1: Tutorial {
         
         pFrame = av_frame_alloc()
         pFrameRGB = av_frame_alloc()
+        let width: Int32 = params.pointee.width
+        let height: Int32 = params.pointee.height
+        let pix_fmt = AVPixelFormat(rawValue: params.pointee.format)
+        let pix_fmt_name = av_get_pix_fmt_name(pix_fmt)!
+        print(String.init(cString: pix_fmt_name))
         
-        numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, (pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!)
+        numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, width, height, 1)
         buffer = av_malloc(Int(numBytes) * MemoryLayout<UInt8>.stride).assumingMemoryBound(to: UInt8.self)
         
-        sws_ctx = sws_getContext((pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!, (pCodecCtx?.pointee.pix_fmt)!, (pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
+        sws_ctx = sws_getContext(width, height, pix_fmt, width, height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
         
-        avpicture_fill(pFrameRGB?.withMemoryRebound(to: AVPicture.self, capacity: MemoryLayout<AVPicture>.stride){$0}, buffer, AV_PIX_FMT_RGB24, pCodecCtx?.pointee.width ?? 0, pCodecCtx?.pointee.height ?? 0)
+        if isErr(av_image_fill_arrays(pFrameRGB?.pointee.dataPtr().cast(), pFrameRGB?.pointee.linesizePtr().cast(), buffer, AV_PIX_FMT_RGB24, width, height, 1), "av_image_fill_arrays") {
+            return
+        }
         
         defer {
             
@@ -184,19 +195,26 @@ struct Tutorial1: Tutorial {
         }
         while 0 <= av_read_frame(pFormatCtx, &packet) {
             if packet.stream_index == videoStream {
-                if isErr(avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet), "avcodec_decode_video2") {
+                var result: Int32 = 0
+                repeat {
+                    result = avcodec_send_packet(pCodecCtx, &packet)
+                } while result == AVERROR_CONVERT(EAGAIN)
+                if isErr(result, "send packet") {
                     return
                 }
-                if 0 < frameFinished {
-                    sws_scale(sws_ctx,
-                              pFrame?.pointee.dataPtr().cast(),
-                              pFrame?.pointee.linesizePtr(),
-                              0,
-                              pCodecCtx!.pointee.height,
-                              pFrameRGB?.pointee.dataPtr().cast(),
-                              pFrameRGB?.pointee.linesizePtr())
-                    frameFinished = 0
+                repeat {
+                    result = avcodec_receive_frame(pCodecCtx, pFrame)
+                } while result == AVERROR_CONVERT(EAGAIN)
+                if isErr(result, "receive frame") {
+                    return
                 }
+                sws_scale(sws_ctx,
+                          pFrame?.pointee.dataPtr().cast(),
+                          pFrame?.pointee.linesizePtr(),
+                          0,
+                          pCodecCtx!.pointee.height,
+                          pFrameRGB?.pointee.dataPtr().cast(),
+                          pFrameRGB?.pointee.linesizePtr())
                 i += 1
                 if i <= 5 {
                     Saveframe(pFrameRGB!, width: (pCodecCtx?.pointee.width)!, height: (pCodecCtx?.pointee.height)!, iFrame: i)

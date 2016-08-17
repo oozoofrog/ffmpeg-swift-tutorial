@@ -56,12 +56,13 @@ class ViewController: UITableViewController {
         }
         self.files = files.filter(){ file in
             guard let attributes = try? FileManager.default.attributesOfItem(atPath: documentPath + "/" + file) else {
-                return !file.hasPrefix(".")
+                return false
             }
-            if let type: String = attributes[.type] as? String, type == FileAttributeType.typeRegular.rawValue {
-                return !file.hasPrefix(".")
+            guard let type = attributes[.type] as? String else {
+                return false
             }
-            return true
+            
+            return !file.hasPrefix(".") && type == FileAttributeType.typeRegular.rawValue
         }
         
         self.tableView.reloadData()
@@ -109,6 +110,7 @@ class ViewController: UITableViewController {
                     index.runTutorial([path])
                 })
         }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         sheet.popoverPresentationController?.sourceView = tableView
         sheet.popoverPresentationController?.sourceRect = tableView.rectForRow(at: indexPath)
         self.present(sheet, animated: true) {

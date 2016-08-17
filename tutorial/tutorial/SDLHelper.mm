@@ -40,7 +40,7 @@ BOOL isSDLError(int err) {
 }
 
 - (SDL_AudioSpec *)SDLAudioSpec {
-    return nil
+    return nil;
 }
 
 @end
