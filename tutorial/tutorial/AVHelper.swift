@@ -153,11 +153,11 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
     
     func setupVideoFilter(filterDesc: String) -> Bool {
         self.videoFilter = AVFilterHelper();
-        return videoFilter?.setup(formatContext, videoStream: stream(type: AVMEDIA_TYPE_VIDEO)?.mutable()!, filterDescription: filterDesc) ?? false
+        return videoFilter?.setup(formatContext, videoStream: stream(type: AVMEDIA_TYPE_VIDEO), filterDescription: filterDesc) ?? false
     }
     
-    typealias FrameHandle = (type:AVMediaType, frame: UnsafePointer<AVFrame>?) -> HandleResult
-    typealias PacketHandle = (type:AVMediaType, packet: UnsafePointer<AVPacket>?) -> HandleResult
+    typealias FrameHandle = (_ type:AVMediaType, _ frame: UnsafePointer<AVFrame>?) -> HandleResult
+    typealias PacketHandle = (_ type:AVMediaType, _ packet: UnsafePointer<AVPacket>?) -> HandleResult
     
     enum HandleResult {
         case succeed
@@ -222,7 +222,7 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
             
             let type = self.type(at: packet.pointee.stream_index)!
             if let handle = packetHandle {
-                switch handle(type: type, packet: packet) {
+                switch handle(type, packet) {
                 case .succeed:
                     continue
                 case .cancelled(let reason):
@@ -257,10 +257,10 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
                         defer {
                             av_frame_unref(filter.filterFrame)
                         }
-                        result = handle(type: type, frame: filter.filterFrame)
+                        result = handle(type, filter.filterFrame)
                     }
                 default:
-                    result = handle(type: type, frame: frame)
+                    result = handle(type, frame)
                 }
                 
                 switch result {
@@ -301,12 +301,14 @@ protocol AVByteable {
 
 extension AVByteable where Self: AVData {
     mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> {
-        return withUnsafeMutablePointer(&data, { (ptr) -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> in
-            return UnsafeMutablePointer<UnsafeMutablePointer<UInt8>>(ptr)
-        })
+        return withUnsafeMutablePointer(to: &data){
+            $0.withMemoryRebound(to: UnsafeMutablePointer<UInt8>.self, capacity: MemoryLayout<UnsafeMutablePointer<UInt8>>.stride * 8){$0}
+        }
     }
     mutating func linesizePtr() -> UnsafeMutablePointer<Int32> {
-        return withUnsafeMutablePointer(&linesize) {return UnsafeMutablePointer<Int32>($0)}
+        return withUnsafeMutablePointer(to: &linesize) {
+            $0.withMemoryRebound(to: Int32.self, capacity: MemoryLayout<Int32>.stride * 8){$0}
+        }
     }
 }
 
@@ -330,7 +332,7 @@ extension AVPixelFormat {
     }
 }
 
-struct ValueLimiter<Number: Comparable where Number: Hashable> {
+struct ValueLimiter<Number: Comparable> where Number: Hashable {
     let min: Number
     let max: Number
     
@@ -465,14 +467,5 @@ struct AVFilterDescriptor: AVFilterDescription {
         var description: String {
             return "smartblur=lr=\(lr):ls=\(ls):lt=\(lt):cr=\(cr):cs=\(cs):ct=\(ct)"
         }
-    }
-}
-
-extension UnsafePointerProtocol where Self.Pointee: AVSizeProtocol {
-    var width: Int32 {
-        return pointee.width
-    }
-    var height: Int32 {
-        return pointee.height
     }
 }

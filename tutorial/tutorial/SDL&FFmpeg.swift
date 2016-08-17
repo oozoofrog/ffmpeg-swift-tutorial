@@ -11,34 +11,6 @@ import UIKit
 import SDL
 import ffmpeg
 
-extension UnsafeMutablePointer where Pointee: AVSizeProtocol {
-    
-    func SDLAudioSpec(audio_format: SDL_AudioFormat = AUDIO_S16SYS.cast(), bufferSize: Int = 1024, callback: SDL_AudioCallback) -> SDL_AudioSpec? {
-        
-        guard let ptr: UnsafeMutablePointer<AVCodecContext> = self.cast() else {
-            return nil
-        }
-        
-        var audio_spec = SDL_AudioSpec()
-        audio_spec.freq = ptr.pointee.sample_rate.cast()
-        audio_spec.channels = ptr.pointee.channels.cast()
-        audio_spec.format = audio_format
-        audio_spec.silence = 0
-        audio_spec.callback = callback
-        audio_spec.samples = bufferSize.cast()
-        audio_spec.userdata = ptr.cast()
-        return audio_spec
-    }
-
-}
-
-extension UnsafePointer where Pointee: AVSizeProtocol {
-    func SDLAudioSpec(audio_format: SDL_AudioFormat = AUDIO_S16SYS.cast(), bufferSize: Int = 1024, callback: SDL_AudioCallback) -> SDL_AudioSpec? {
-        let pointer: UnsafeMutablePointer<Pointee>? = self.mutable()
-        return pointer?.SDLAudioSpec(audio_format: audio_format, bufferSize: bufferSize, callback: callback)
-    }
-}
-
 protocol PacketQueuePutter {
     mutating func put(packet: UnsafeMutablePointer<AVPacket>) -> Bool
     mutating func get(pkt: inout AVPacket, block: Bool) -> Int
@@ -53,21 +25,22 @@ extension PacketQueuePutter where Self: PacketQueueProtocol {
             return false
         }
         
-        guard let packetList: UnsafeMutablePointer<AVPacketList> = av_malloc(strideof(AVPacketList.self))?.cast() else {
+        guard let packetListPtr: UnsafeMutableRawPointer = av_malloc(MemoryLayout<AVPacketList>.stride) else {
             return false
         }
+        let packetList: UnsafeMutablePointer<AVPacketList> = packetListPtr.assumingMemoryBound(to: AVPacketList.self)
         
         packetList.pointee.pkt = packet.pointee
         packetList.pointee.next = nil
         
         SDL_LockMutex(mutex)
         
-        if let lastPacket: UnsafeMutablePointer<AVPacketList> = lastPacket?.mutable() {
+        if let lastPacket: UnsafeMutablePointer<AVPacketList> = lastPacket {
             lastPacket.pointee.next = packetList
         } else {
-            firstPacket = packetList.cast()
+            firstPacket = packetList
         }
-        lastPacket = packetList.cast()
+        lastPacket = packetList
         nb_packet += 1
         size += packetList.pointee.pkt.size
         SDL_CondSignal(cond)
@@ -92,7 +65,7 @@ extension PacketQueuePutter where Self: PacketQueueProtocol {
             if quit {
                 return -1
             }
-            pktl = firstPacket?.mutable()
+            pktl = firstPacket
             
             if let packetList = pktl {
                 firstPacket = packetList.pointee.next.cast()

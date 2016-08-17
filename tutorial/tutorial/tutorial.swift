@@ -48,7 +48,7 @@ extension Tutorial {
         return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     }
     var writePath: String {
-        return docPath + "/exports/\(String(self.dynamicType))"
+        return docPath + "/exports/\(String(describing: type(of: self)))"
     }
     var screenSize: CGSize {
         return UIScreen.main.bounds.size
@@ -163,11 +163,11 @@ struct Tutorial1: Tutorial {
         pFrameRGB = av_frame_alloc()
         
         numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, (pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!)
-        buffer = UnsafeMutablePointer<UInt8>(av_malloc(Int(numBytes) * sizeof(UInt8.self)))
+        buffer = av_malloc(Int(numBytes) * MemoryLayout<UInt8>.stride).assumingMemoryBound(to: UInt8.self)
         
         sws_ctx = sws_getContext((pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!, (pCodecCtx?.pointee.pix_fmt)!, (pCodecCtx?.pointee.width)!, (pCodecCtx?.pointee.height)!, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
         
-        avpicture_fill(pFrameRGB!.cast(), buffer, AV_PIX_FMT_RGB24, pCodecCtx?.pointee.width ?? 0, pCodecCtx?.pointee.height ?? 0)
+        avpicture_fill(pFrameRGB?.withMemoryRebound(to: AVPicture.self, capacity: MemoryLayout<AVPicture>.stride){$0}, buffer, AV_PIX_FMT_RGB24, pCodecCtx?.pointee.width ?? 0, pCodecCtx?.pointee.height ?? 0)
         
         defer {
             
@@ -188,13 +188,13 @@ struct Tutorial1: Tutorial {
                     return
                 }
                 if 0 < frameFinished {
-                    
+                    let sourceData = pFrame!.pointee.dataPtr().withMemoryRebound(to: Optional<UnsafePointer<UInt8>>.self, capacity: MemoryLayout<UnsafePointer<UInt8>>.stride) {$0}
                     sws_scale(sws_ctx,
-                              pFrame?.pointee.dataPtr().cast(),
+                              sourceData,
                               pFrame?.pointee.linesizePtr(),
                               0,
                               pCodecCtx!.pointee.height,
-                              pFrameRGB?.pointee.dataPtr().cast(),
+                              UnsafePointer<UnsafeMutablePointer<UInt8>?>(pFrameRGB?.pointee.dataPtr()),
                               pFrameRGB?.pointee.linesizePtr())
                     frameFinished = 0
                 }
@@ -237,7 +237,7 @@ struct Tutorial2: Tutorial {
             return
         }
         // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        let window = SDL_CreateWindow(String(type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
         guard nil != window else {
             print("SDL: couldn't create window")
             return
@@ -310,7 +310,7 @@ struct  Tutorial3: Tutorial {
             return
         }
         // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
-        let window = SDL_CreateWindow(String(self.dynamicType), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        let window = SDL_CreateWindow(String(type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
         guard nil != window else {
             print("SDL: couldn't create window")
             return

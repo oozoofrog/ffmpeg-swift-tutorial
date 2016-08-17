@@ -11,43 +11,22 @@ import CoreGraphics
 import SDL
 import AVFoundation
 
-protocol Castable {}
+protocol PointerCastable {}
 
-protocol UnsafePointerProtocol {
+protocol UnsafePointerable {
+    init<U>(_ from: UnsafePointer<U>)
+    init<U>(_ from: UnsafeMutablePointer<U>)
     associatedtype Pointee
-    
-    init<Memory>(_ from: UnsafeMutablePointer<Memory>)
-    init<Memory>(_ from: UnsafePointer<Memory>)
     var pointee: Pointee { get }
 }
 
-extension UnsafeMutablePointer : UnsafePointerProtocol, Castable{}
-extension UnsafePointer : UnsafePointerProtocol, Castable{}
+extension UnsafePointer: PointerCastable, UnsafePointerable {}
 
-extension UnsafePointerProtocol where Self: Castable {
-    func cast<P: UnsafePointerProtocol, M where M == P.Pointee>() -> P? {
-        switch self {
-        case let ptr as UnsafePointer<Pointee>:
-            return P(ptr)
-        case let ptr as UnsafeMutablePointer<Pointee>:
-            return P(ptr)
-        default:
-            return nil
-        }
-    }
-    
-    func mutable<M>() -> UnsafeMutablePointer<M>? {
-        switch self {
-        case let ptr as UnsafePointer<Pointee>:
-            return UnsafeMutablePointer<M>(ptr)
-        case let ptr as UnsafeMutablePointer<Pointee>:
-            return UnsafeMutablePointer<M>(ptr)
-        default:
-            return nil
-        }
+extension PointerCastable where Self: UnsafePointerable {
+    func cast<P: UnsafePointerable, M>() -> P? where P.Pointee == M {
+        return nil
     }
 }
-
 
 protocol Pointerable {
     associatedtype Element
@@ -134,7 +113,7 @@ extension ArithmeticCastable {
         case let n as CGFloat:
             return R(n)
         default:
-            assertionFailure("Couldn't cast to \(String(R.self)) from \(String(self))")
+            assertionFailure("Couldn't cast to \(String(describing: R.self)) from \(String(describing: self))")
             return R(0)
         }
     }

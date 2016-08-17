@@ -55,7 +55,7 @@ class ViewController: UITableViewController {
             return
         }
         self.files = files.filter(){ file in
-            guard let attributes: NSDictionary = try? FileManager.default.attributesOfItem(atPath: documentPath + "/" + file) else {
+            guard let attributes: NSDictionary = try? FileManager.default.attributesOfItem(atPath: documentPath + "/" + file) as? NSDictionary else {
                 return !file.hasPrefix(".")
             }
             return !file.hasPrefix(".") && attributes.fileType() == FileAttributeType.typeRegular.rawValue

@@ -98,7 +98,7 @@ extension AVHelper {
         audio_spec.callback = callback
         audio_spec.samples = bufferSize.cast()
         var helper: AVHelper = self
-        audio_spec.userdata = withUnsafePointer(&helper){UnsafeMutablePointer<Void>($0)}
+        audio_spec.userdata = withUnsafePointer(to: &helper){UnsafeMutableRawPointer(mutating: $0)}
         return audio_spec
     }
 }
