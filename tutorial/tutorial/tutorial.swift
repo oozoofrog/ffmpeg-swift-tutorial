@@ -347,6 +347,11 @@ struct  Tutorial3: Tutorial {
             while 0 < len {
                 if audio_buf_index >= audio_buf_size {
                     audio_size = helper.audio_decode_frame(audioCodecContext: aCodecCtx, audio_buf: &audio_buf, buf_size: Int32(MemoryLayout<UInt8>.size * audio_buf.count))
+                    if 0 > audio_size {
+                        audio_buf_size = 1024
+                        memset(&audio_buf, 0, Int(audio_buf_size))
+                        
+                    }
                 }
             }
         })
