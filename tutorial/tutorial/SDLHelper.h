@@ -7,11 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "SDL_audio.h"
 
 BOOL isSDLError(int err);
 
 @interface SDLHelper : NSObject
 
 - (BOOL)SDL_init:(UInt32)flags;
+- (SDL_AudioSpec *)SDLAudioSpec;
 
 @end

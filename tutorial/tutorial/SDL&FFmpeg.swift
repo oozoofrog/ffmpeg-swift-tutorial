@@ -62,7 +62,7 @@ extension PacketQueuePutter where Self: PacketQueueProtocol {
         
         while true {
             
-            if quit {
+            if PacketQueueQuit {
                 return -1
             }
             pktl = firstPacket

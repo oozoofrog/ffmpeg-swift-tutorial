@@ -62,9 +62,10 @@ protocol PacketQueueProtocol {
     var size: Int32 { set get }
     var mutex: OpaquePointer { set get }
     var cond: OpaquePointer { set get }
-    
-    var quit: Bool { set get }
 }
+
+var PacketQueueQuit: Bool = false
+
 struct PacketQueue: PacketQueueProtocol {
     var firstPacket: UnsafeMutablePointer<AVPacketList>? = nil
     var lastPacket: UnsafeMutablePointer<AVPacketList>? = nil
@@ -72,8 +73,6 @@ struct PacketQueue: PacketQueueProtocol {
     var size: Int32 = 0
     var mutex: OpaquePointer = SDL_CreateMutex()
     var cond: OpaquePointer = SDL_CreateCond()
-    
-    var quit: Bool = false
 }
 
 

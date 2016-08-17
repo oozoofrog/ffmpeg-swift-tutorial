@@ -39,4 +39,8 @@ BOOL isSDLError(int err) {
     return YES;
 }
 
+- (SDL_AudioSpec *)SDLAudioSpec {
+    return nil
+}
+
 @end

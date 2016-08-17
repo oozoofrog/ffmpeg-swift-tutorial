@@ -332,6 +332,8 @@ struct  Tutorial3: Tutorial {
         var audio_spec = helper.SDLAudioSpec(callback: { (userData, stream, length) in
             print("receive audio callback")
             
+            var stream = stream
+            
             let helper_ptr: UnsafeMutablePointer<AVHelper> = userData!.cast(to: AVHelper.self)
             let helper = helper_ptr.pointee
             
@@ -350,8 +352,18 @@ struct  Tutorial3: Tutorial {
                     if 0 > audio_size {
                         audio_buf_size = 1024
                         memset(&audio_buf, 0, Int(audio_buf_size))
-                        
+                    } else {
+                        audio_buf_size = UInt32(audio_size)
                     }
+                    len1 = Int32(audio_buf_size) - Int32(audio_buf_index)
+                    if len1 > len {
+                        len1 = len
+                    }
+                    let buffer = audio_buf.withUnsafeBufferPointer(){$0}.baseAddress?.advanced(by: Int(audio_buf_index))
+                    memcpy(stream, buffer, Int(len1))
+                    len -= len1
+                    stream = stream?.advanced(by: Int(len1))
+                    audio_buf_index += UInt32(len1)
                 }
             }
         })
@@ -370,7 +382,7 @@ struct  Tutorial3: Tutorial {
             SDL_CloseAudio()
         }
         
-        var queue = PacketQueue()
+        var queue = helper.audio_queue
         var event = SDL_Event()
         
         helper.decode(
@@ -385,14 +397,14 @@ struct  Tutorial3: Tutorial {
                 guard let pkt = packet, type == AVMEDIA_TYPE_AUDIO else {
                     return .ignored
                 }
-                queue.put(packet: pkt.cast()!)
+                let _ = queue.put(packet: pkt.cast()!)
                 return .ignored
             },
             completion: { () -> Bool in
                 SDL_PollEvent(&event)
                 switch SDL_EventType(event.type) {
                 case SDL_QUIT:
-                    queue.quit = true
+                    PacketQueueQuit = true
                     return false
                 case SDL_FINGERDOWN:
                     return false

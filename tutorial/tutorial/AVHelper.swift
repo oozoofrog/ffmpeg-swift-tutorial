@@ -145,6 +145,8 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
         return stream?.pointee.time_base
     }
     
+    var audio_queue = PacketQueue()
+    
     init?(inputPath path: String) {
         self.inputPath = path
         self.outputPath = nil
@@ -276,7 +278,51 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
         }
     }
     
-    func audio_decode_frame(audioCodecContext: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
+    func audio_decode_frame(audioCodecContext ctx: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
+        
+        var pkt: AVPacket = AVPacket()
+        var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
+        var audio_pkt_size: Int32 = 0
+        var frame: AVFrame = AVFrame()
+        
+        var data_size: Int32 = 0
+        while true {
+            while 0 < audio_pkt_size {
+                var result = avcodec_send_packet(ctx, &pkt)
+                if result == AVERROR_CONVERT(EAGAIN) {
+                    continue
+                } else if isErr(result, "audio packet send") {
+                    return result
+                }
+                result = avcodec_receive_frame(ctx, &frame)
+                if result == AVERROR_CONVERT(EAGAIN) {
+                    continue
+                } else if isErr(result, "audio frame receive") {
+                    return result
+                }
+                audio_pkt_data = audio_pkt_data?.advanced(by: Int(result))
+                audio_pkt_size -= result
+                data_size = av_samples_get_buffer_size(nil, ctx.pointee.channels, frame.nb_samples, ctx.pointee.sample_fmt, 1)
+                if 0 >= data_size {
+                    continue
+                }
+                assert(data_size < buf_size)
+                memcpy(audio_buf, frame.data.0, Int(data_size))
+                return data_size
+            }
+            
+            if pkt.data != nil {
+                av_packet_unref(&pkt)
+            }
+            if PacketQueueQuit {
+                return -1
+            }
+            if 0 > audio_queue.get(pkt: &pkt, block: true) {
+                return -1
+            }
+            audio_pkt_data = pkt.data
+            audio_pkt_size = pkt.size
+        }
         
         return 0
     }
