@@ -8,12 +8,10 @@
 
 import Foundation
 import CoreGraphics
-import SDL
-import AVFoundation
 
-protocol PointerCastable {}
+public protocol PointerCastable {}
 
-protocol UnsafePointerable {
+public protocol UnsafePointerable {
     init(_ other: UnsafePointer<Pointee>)
     init?(_ other: UnsafePointer<Pointee>?)
     init(_ other: UnsafeMutablePointer<Pointee>)
@@ -23,10 +21,40 @@ protocol UnsafePointerable {
     func withMemoryRebound<T, Result>(to: T.Type, capacity count: Int, _ body: (UnsafeMutablePointer<T>) throws -> Result) rethrows -> Result
 }
 
-extension UnsafePointer: PointerCastable, UnsafePointerable {}
-extension UnsafeMutablePointer: PointerCastable, UnsafePointerable {}
+public protocol MutablePointerShortener {
+    associatedtype Pointee
+    /// meaning for o(bject)
+    var o: Pointee { get set }
+    var pointee: Pointee { get set }
+}
+public protocol PointerShortener {
+    associatedtype Pointee
+    /// meaning for o(bject)
+    var o: Pointee { get }
+    var pointee: Pointee { get }
+}
 
-protocol UnsafeRawPointerable{
+extension MutablePointerShortener where Self: UnsafePointerable {
+    public var o: Pointee {
+        set {
+            self.pointee = newValue
+        }
+        get {
+            return self.pointee
+        }
+    }
+}
+
+extension PointerShortener where Self: UnsafePointerable {
+    public var o: Pointee {
+        return self.pointee
+    }
+}
+
+extension UnsafePointer: PointerCastable, UnsafePointerable, PointerShortener {}
+extension UnsafeMutablePointer: PointerCastable, UnsafePointerable, MutablePointerShortener {}
+
+public protocol UnsafeRawPointerable{
     init<T>(_ other: UnsafePointer<T>)
     init?<T>(_ other: UnsafePointer<T>?)
     init<T>(_ other: UnsafeMutablePointer<T>)
@@ -37,21 +65,21 @@ extension UnsafeRawPointer: UnsafeRawPointerable, PointerCastable {}
 extension UnsafeMutableRawPointer: UnsafeRawPointerable, PointerCastable {}
 
 extension PointerCastable where Self: UnsafePointerable {
-    func cast<P: UnsafePointerable, M>() -> P? where P.Pointee == M {
+    public func cast<P: UnsafePointerable, M>() -> P? where P.Pointee == M {
         if self is P {
             return self as? P
         }
         let ptr = self.withMemoryRebound(to: M.self, capacity: MemoryLayout<M>.stride){$0}
         return P(ptr)
     }
-    func cast<P: UnsafePointerable, M>() -> P where P.Pointee == M {
+    public func cast<P: UnsafePointerable, M>() -> P where P.Pointee == M {
         if self is P {
             return self as! P
         }
         let ptr = self.withMemoryRebound(to: M.self, capacity: MemoryLayout<M>.stride){$0}
         return P(ptr)
     }
-    func castRaw<R: UnsafeRawPointerable, T>(from: T.Type) -> R? {
+    public func castRaw<R: UnsafeRawPointerable, T>(from: T.Type) -> R? {
         if R.self == UnsafeRawPointer.self {
             let ptr: UnsafePointer<T> = self.cast()
             return R(ptr)
@@ -59,7 +87,7 @@ extension PointerCastable where Self: UnsafePointerable {
         let ptr: UnsafeMutablePointer<T> = self.cast()
         return R(ptr)
     }
-    func castRaw<R: UnsafeRawPointerable, T>(from: T.Type) -> R {
+    public func castRaw<R: UnsafeRawPointerable, T>(from: T.Type) -> R {
         if R.self == UnsafeRawPointer.self {
             let ptr: UnsafePointer<T> = self.cast()
             return R(ptr)
@@ -70,7 +98,18 @@ extension PointerCastable where Self: UnsafePointerable {
 }
 
 extension PointerCastable where Self: UnsafeRawPointerable {
-    func cast<P: UnsafePointerable, M>(to: M.Type) -> P where P.Pointee == M {
+    public func cast<P: UnsafePointerable, M>(to: M.Type) -> P where P.Pointee == M {
+        if self is UnsafeRawPointer {
+            let raw = self as! UnsafeRawPointer
+            let ptr = raw.assumingMemoryBound(to: M.self)
+            return P(ptr)
+        } else {
+            let raw: UnsafeMutableRawPointer = self as! UnsafeMutableRawPointer
+            let ptr = raw.assumingMemoryBound(to: M.self)
+            return P(ptr)
+        }
+    }
+    public func cast<P: UnsafePointerable, M>(to: M.Type) -> P? where P.Pointee == M {
         if self is UnsafeRawPointer {
             let raw = self as! UnsafeRawPointer
             let ptr = raw.assumingMemoryBound(to: M.self)
@@ -84,7 +123,7 @@ extension PointerCastable where Self: UnsafeRawPointerable {
 }
 
 
-protocol Pointerable {
+public protocol Pointerable {
     associatedtype Element
     var pointer: UnsafePointer<Element>? {get}
 }
@@ -97,7 +136,7 @@ extension ArraySlice : Pointerable {
 }
 
 extension Pointerable where Self: Sequence {
-    var pointer: UnsafePointer<Element>? {
+    public var pointer: UnsafePointer<Element>? {
         switch self {
         case let a as Array<Element>:
             return UnsafePointer<Element>(a)
@@ -109,7 +148,7 @@ extension Pointerable where Self: Sequence {
     }
 }
 
-protocol ArithmeticCastable: Comparable, Equatable, Hashable {
+public protocol ArithmeticCastable: Comparable, Equatable, Hashable {
     init(_ value: Int)
     init(_ value: Int8)
     init(_ value: Int16)

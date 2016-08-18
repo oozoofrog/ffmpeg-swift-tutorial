@@ -11,6 +11,14 @@ import ffmpeg
 import SDL
 import AVFoundation
 
+func cPrint(cString: UnsafePointer<UInt8>) {
+    print(String(cString: cString))
+}
+
+func cPrint(cString: UnsafePointer<Int8>) {
+    print(String(cString: cString))
+}
+
 enum TutorialIndex: Int {
     case tutorial1 = 1
     case tutorial2, tutorial3
@@ -289,23 +297,16 @@ struct Tutorial2: Tutorial {
             guard let frame = frame, type == AVMEDIA_TYPE_VIDEO else {
                 return .ignored
             }
-            if frame.pointee.linesize.2 > 0 {
-                SDL_UpdateYUVTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
-            } else {
-                SDL_UpdateTexture(texture, &rect, frame.pointee.data.0, frame.pointee.linesize.0)
-            }
-            SDL_RenderClear(renderer)
-            SDL_RenderCopy(renderer, texture, &rect, &dst_rect)
-            SDL_RenderPresent(renderer)
+            frame.pointee.update(texture: texture, renderer: renderer, toRect: dst_rect)
             return .succeed
         }) { () -> Bool in
             SDL_PollEvent(&event)
-            if event.type == SDL_QUIT.rawValue {
+            switch SDL_EventType(rawValue: event.type) {
+            case SDL_QUIT, SDL_FINGERDOWN:
                 return false
-            } else if event.type == SDL_FINGERDOWN.rawValue {
-                return false
+            default:
+                return true
             }
-            return true
         }
     }
 }
@@ -313,8 +314,288 @@ struct Tutorial2: Tutorial {
 struct  Tutorial3: Tutorial {
     var paths: [String]
     
-    func run() {
-        let t3 = T3(path: paths[0])
-        t3?.run();
+    static let SDL_AUDIO_BUFFER_SIZE: Int32 = 1024
+    static let MAX_AUDIO_FRAME_SIZE: Int32 = 192000
+    
+    struct PacketQueue {
+        var first_pkt: UnsafeMutablePointer<AVPacketList>? = nil
+        var last_pkt: UnsafeMutablePointer<AVPacketList>? = nil
+        var nb_packet: Int32 = 0
+        var size: Int32 = 0
+        var mutex: OpaquePointer = SDL_CreateMutex()
+        var cond: OpaquePointer = SDL_CreateCond()
     }
+    
+    static var audioq: PacketQueue = PacketQueue()
+    static var quit: Int32 = 0
+    
+    static func packet_queue_put(q: UnsafeMutablePointer<PacketQueue>?, pkt: UnsafeMutablePointer<AVPacket>?) -> Int32 {
+        var q = q
+        if nil == pkt {
+            if isErr(av_packet_ref(pkt, av_packet_alloc()), "packet queue put ref packet") {
+                return -1
+            }
+        }
+        
+        let pkt1: UnsafeMutablePointer<AVPacketList> = av_malloc(MemoryLayout<AVPacketList>.stride).bindMemory(to: AVPacketList.self, capacity: MemoryLayout<AVPacketList>.stride)
+   
+        if let pkt = pkt {
+            pkt1.pointee.pkt = pkt.pointee
+        }
+        pkt1.pointee.next = nil
+        SDL_LockMutex(q?.pointee.mutex)
+        
+        if nil == q?.pointee.last_pkt {
+            q?.pointee.first_pkt = pkt1
+        } else {
+            q?.pointee.last_pkt?.pointee.next = pkt1
+        }
+        
+        q?.pointee.last_pkt = pkt1
+        q?.pointee.nb_packet += 1
+        q?.o.size += pkt1.o.pkt.size
+        SDL_CondSignal(q?.o.cond)
+        SDL_UnlockMutex(q?.o.mutex)
+        return 0
+    }
+    
+    static func packet_queue_get(q: UnsafeMutablePointer<PacketQueue>?, pkt: inout UnsafeMutablePointer<AVPacket>?, block: Int32) -> Int32 {
+        guard let queue = q else {
+            return 0
+        }
+        var q = queue
+        var pkt1: UnsafeMutablePointer<AVPacketList>? = nil
+        var ret: Int32 = 0
+        SDL_LockMutex(q.o.mutex)
+        while true {
+            if 1 == quit {
+                ret = -1
+                break
+            }
+            
+            pkt1 = q.o.first_pkt
+            if let pkt1 = pkt1 {
+                q.o.first_pkt = pkt1.o.next
+                if nil == q.o.first_pkt {
+                    q.o.last_pkt = nil
+                }
+                q.o.nb_packet -= 1
+                q.o.size -= pkt1.o.pkt.size
+                pkt?.o = pkt1.o.pkt
+                av_free(pkt1.castRaw(from: AVPacketList.self))
+                ret = 1
+                break
+            } else if 0 == block {
+                ret = 0
+                break
+            } else {
+                SDL_CondWait(q.o.cond, q.o.mutex)
+            }
+        }
+        SDL_UnlockMutex(q.o.mutex)
+        return ret
+    }
+    
+    static var pkt: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+    static var frame: UnsafeMutablePointer<AVFrame> = av_frame_alloc()
+    static var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
+    static var audio_pkt_size: Int32 = 0
+    
+    static func audio_decode_frame(aCodecCtx: UnsafeMutablePointer<AVCodecContext>?, audio_buf: UnsafeMutablePointer<UInt8>?, buf_size: Int32) -> Int32 {
+
+        guard let aCodecCtx = aCodecCtx else {
+            return 0
+        }
+        
+        var len1: Int32 = 0
+        var data_size: Int32 = 0
+        
+        while true {
+            while 0 < audio_pkt_size {
+                var ret: Int32 = 0
+                repeat {
+                    ret = avcodec_send_packet(aCodecCtx, pkt)
+                } while ret == AVERROR_CONVERT(EAGAIN)
+                if isErr(ret, "send audio packet") {
+                    break
+                }
+                repeat {
+                    ret = avcodec_receive_frame(aCodecCtx, frame)
+                } while ret == AVERROR_CONVERT(EAGAIN)
+                if isErr(ret, "receive audio frame") {
+                    break
+                }
+                len1 = frame.o.pkt_size
+                if 0 > len1 {
+                    audio_pkt_size = 0
+                    break
+                }
+                if let data = audio_pkt_data {
+                    audio_pkt_data = data.advanced(by: Int(len1))
+                }
+                audio_pkt_size -= len1
+                
+                data_size = av_samples_get_buffer_size(nil, aCodecCtx.o.channels, frame.o.nb_samples, aCodecCtx.o.sample_fmt, 1)
+                SDL_MixAudio(audio_buf, frame.o.data.0, Uint32(data_size), SDL_MIX_MAXVOLUME / 2)
+                av_packet_unref(pkt)
+                av_frame_unref(frame)
+                if 0 >= data_size {
+                    continue
+                }
+                return data_size
+            }
+            if let _ = pkt?.o.data {
+                av_packet_unref(pkt)
+            }
+            if 1 == quit {
+                return -1
+            }
+            
+            if 0 > packet_queue_get(q: &audioq, pkt: &pkt, block: 1) {
+                return -1
+            }
+            
+            audio_pkt_data = pkt?.o.data
+            audio_pkt_size = pkt?.o.size ?? 0
+        }
+    }
+    
+    static var audio_buf = [UInt8](repeating: 0, count: Int(MAX_AUDIO_FRAME_SIZE * 3 / 2))
+    static var audio_buf_size: UInt32 = 0
+    static var audio_buf_index: UInt32 = 0
+    static var audio_callback:SDL_AudioCallback = { (userdata, stream, len) -> Void in
+        let aCodecCtx: UnsafeMutablePointer<AVCodecContext>? = userdata?.cast(to: AVCodecContext.self)
+        var len1: Int32 = 0
+        var audio_size: Int32 = 0
+        
+        var len: Int32 = len
+        var stream = stream
+        while 0 < len {
+            if audio_buf_index >= audio_buf_size {
+                audio_size = audio_decode_frame(aCodecCtx: aCodecCtx, audio_buf: audio_buf.withUnsafeMutableBufferPointer(){$0}.baseAddress, buf_size: Int32(audio_buf_size))
+                if 0 > audio_size {
+                    audio_buf_size = 1024
+                    memset(audio_buf.withUnsafeMutableBufferPointer(){$0}.baseAddress, 0, MemoryLayout<UInt8>.stride * Int(audio_buf_size))
+                } else {
+                    audio_buf_size = UInt32(audio_size)
+                }
+                audio_buf_index = 0
+            }
+            len1 = Int32(audio_buf_size - audio_buf_index)
+            if len1 > len {
+                len1 = len
+            }
+            SDL_MixAudio(stream, audio_buf.withUnsafeMutableBufferPointer(){$0}.baseAddress?.advanced(by: Int(audio_buf_index)), UInt32(len1), 32)
+            len -= len1
+            stream = stream?.advanced(by: Int(len1))
+            audio_buf_index += UInt32(len1)
+        }
+    }
+    
+    func run() {
+        guard let helper = AVHelper(inputPath: paths[0]) else {
+            return
+        }
+        
+        guard helper.open() else {
+            return
+        }
+        
+        var pFormatCtx = helper.formatContext
+        
+        let screenSize = UIScreen.main.bounds.size
+        
+        guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
+            return
+        }
+        // SDL has multiple window no use SDL_SetVideoMode for SDL_Surface
+        let window = SDL_CreateWindow(String(describing: type(of: self)), SDL_WINDOWPOS_UNDEFINED_MASK | 0, SDL_WINDOWPOS_UNDEFINED_MASK | 0, Int32(UIScreen.main.bounds.width), Int32(UIScreen.main.bounds.height), SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_BORDERLESS.rawValue)
+        guard nil != window else {
+            print("SDL: couldn't create window")
+            return
+        }
+        
+        let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE.rawValue | SDL_RENDERER_ACCELERATED.rawValue)
+        
+        let texture = SDL_CreateTexture(renderer, UInt32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), helper.width, helper.height)
+        defer {
+            SDL_DestroyTexture(texture)
+            SDL_DestroyRenderer(renderer)
+            SDL_DestroyWindow(window)
+        }
+        
+        var rect: SDL_Rect = CGRect(origin: CGPoint(), size: helper.size).rect
+        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).rect
+        
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE)
+        
+        // AUDIO
+        
+        let aparam = helper.params(type: AVMEDIA_TYPE_AUDIO)!
+        var wanted_spec:SDL_AudioSpec = SDL_AudioSpec()
+        wanted_spec.freq = aparam.o.sample_rate
+        wanted_spec.channels = aparam.o.channels.cast()
+        wanted_spec.format = AUDIO_S16SYS.cast()
+        wanted_spec.silence = 0
+        wanted_spec.size = Tutorial3.SDL_AUDIO_BUFFER_SIZE.cast()
+        wanted_spec.callback = Tutorial3.audio_callback
+        wanted_spec.userdata = helper.codecCtx(at: helper.streamIndex(type: AVMEDIA_TYPE_AUDIO))?.castRaw(from: AVCodecContext.self)
+        var spec: SDL_AudioSpec = SDL_AudioSpec()
+        
+        guard 0 == SDL_OpenAudio(&wanted_spec, &spec) else {
+            cPrint(cString: SDL_GetError())
+            return
+        }
+        
+        SDL_PauseAudio(0)
+        
+        defer {
+            SDL_PauseAudio(1)
+        }
+        
+        var event = SDL_Event()
+        let audioIndex = helper.streamIndex(type: AVMEDIA_TYPE_AUDIO)
+        let videoIndex = helper.streamIndex(type: AVMEDIA_TYPE_VIDEO)
+        var pkt: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+        var frm: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
+        
+        read: while 0 <= av_read_frame(helper.formatContext, pkt) {
+            guard let pkt = pkt else {
+                break
+            }
+            let ctx = helper.codecCtx(at: pkt.o.stream_index)
+            switch pkt.o.stream_index {
+            case videoIndex:
+                guard send_packet(ctx, pkt: pkt) else {
+                    av_packet_unref(pkt)
+                    break
+                }
+                guard receive_frame(ctx, frm: frm) else {
+                    av_frame_unref(frm)
+                    break
+                }
+                frm?.o.update(texture: texture, renderer: renderer, toRect: dst_rect)
+                av_packet_unref(pkt)
+                av_frame_unref(frm)
+            case audioIndex:
+                Tutorial3.packet_queue_put(q: &Tutorial3.audioq, pkt: pkt)
+                continue
+            default:
+                av_packet_unref(pkt)
+                continue
+            }
+            
+            SDL_PollEvent(&event)
+            let type = SDL_EventType(rawValue: event.type)
+            switch type {
+            case SDL_QUIT, SDL_FINGERDOWN:
+                Tutorial3.quit = 1
+                break read
+            default:
+                continue
+            }
+        }
+      
+    }
+    
 }

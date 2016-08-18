@@ -56,11 +56,18 @@ extension AVHelperProtocol where Self: AVHelper {
 }
 
 protocol AVCodecParametersGetter {
+    var codecs: [Int32: UnsafeMutablePointer<AVCodec>] {get set}
+    var codecCtxes: [Int32: UnsafeMutablePointer<AVCodecContext>] {get set}
+    
     func params(at: Int32, type: AVMediaType?) -> UnsafeMutablePointer<AVCodecParameters>?
     func params(type: AVMediaType) -> UnsafeMutablePointer<AVCodecParameters>?
+    
+    func codec(at: Int32, type: AVMediaType?) -> UnsafeMutablePointer<AVCodec>?
+    func codecCtx(at: Int32, type: AVMediaType?) -> UnsafeMutablePointer<AVCodecContext>?
 }
 
 extension AVCodecParametersGetter where Self: AVHelper {
+    
     func params(type: AVMediaType) -> UnsafeMutablePointer<AVCodecParameters>? {
         let index = av_find_best_stream(formatContext, type, -1, -1, nil, 0)
         return params(at: index, type: type)
@@ -78,6 +85,39 @@ extension AVCodecParametersGetter where Self: AVHelper {
         }
         return param
     }
+    
+    func codec(at: Int32, type: AVMediaType? = nil) -> UnsafeMutablePointer<AVCodec>? {
+        if codecs.contains(where: {$0.0 == at}) {
+            return codecs[at]
+        }
+        guard let param = params(at: at, type: type) else {
+            return nil
+        }
+        guard let codec = avcodec_find_decoder(param.o.codec_id) else {
+            return nil
+        }
+        codecs[at] = codec
+        return codec
+    }
+    func codecCtx(at: Int32, type: AVMediaType? = nil) -> UnsafeMutablePointer<AVCodecContext>? {
+        if codecCtxes.contains(where: {$0.0 == at}) {
+            return codecCtxes[at]
+        }
+        guard let param = params(at: at, type: type), let codec = codec(at: at, type: type) else {
+            return nil
+        }
+        var ctx = avcodec_alloc_context3(codec)
+        guard false == isErr(avcodec_parameters_to_context(ctx, param), "params to ctx") else {
+            avcodec_free_context(&ctx)
+            return nil
+        }
+        if 0 == avcodec_is_open(ctx) {
+            isErr(avcodec_open2(ctx, codec, nil), "open codec -> \(String(cString: avcodec_get_name(codec.o.id)))")
+        }
+        self.codecCtxes[at] = ctx
+        return ctx
+    }
+    
 }
 
 protocol AVStreamGetter {
@@ -114,9 +154,35 @@ extension AVStreamGetter where Self: AVHelper, Self: AVCodecParametersGetter {
     }
 }
 
+func send_packet(_ ctx: UnsafeMutablePointer<AVCodecContext>?, pkt: UnsafeMutablePointer<AVPacket>?) -> Bool {
+    var read: Int32 = 0
+    repeat {
+        read = avcodec_send_packet(ctx, pkt)
+    } while read == AVERROR_CONVERT(EAGAIN)
+    if isErr(read, "send packet for \(String(cString:avcodec_get_name(ctx?.o.codec_id ?? AV_CODEC_ID_NONE)))") {
+        return false
+    }
+    return true
+}
+
+func receive_frame(_ ctx: UnsafeMutablePointer<AVCodecContext>?, frm: UnsafeMutablePointer<AVFrame>?) -> Bool {
+    var read: Int32 = 0
+    repeat {
+        read = avcodec_receive_frame(ctx, frm)
+    } while read == AVERROR_CONVERT(EAGAIN)
+    if isErr(read, "receive frame for \(String(cString:avcodec_get_name(ctx?.o.codec_id ?? AV_CODEC_ID_NONE)))") {
+        return false
+    }
+    return true
+}
+
+
 class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSizeProtocol {
     let inputPath: String
     var outputPath: String?
+    
+    internal(set) var codecs: [Int32 : UnsafeMutablePointer<AVCodec>] = [:]
+    internal(set) var codecCtxes: [Int32 : UnsafeMutablePointer<AVCodecContext>] = [:]
     
     var formatContext: UnsafeMutablePointer<AVFormatContext>?
     
@@ -185,37 +251,6 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
             return
         }
         
-        var codecContexts: [Int32: UnsafeMutablePointer<AVCodecContext>] = [:]
-        var codecs: [Int32: UnsafeMutablePointer<AVCodec>] = [:]
-        
-        for i in 0..<(formatContext?.pointee.nb_streams ?? 0) {
-            let index = Int(i)
-            guard let stream = formatContext?.pointee.streams[index] else {
-                continue
-            }
-            guard let codecpar = stream.pointee.codecpar else {
-                continue
-            }
-            guard let codec = avcodec_find_decoder(codecpar.pointee.codec_id) else {
-                continue
-            }
-            let ctx = avcodec_alloc_context3(codec)
-            if isErr(avcodec_parameters_to_context(ctx, codecpar), "param to contex") {
-                var freed = ctx
-                avcodec_free_context(&freed)
-                continue
-            }
-            if 0 < avcodec_is_open(ctx) {
-                codecContexts[Int32(i)] = ctx!
-                codecs[Int32(i)] = codec
-            } else {
-                guard false == isErr(avcodec_open2(ctx, codec, nil), "failed \(avcodec_get_name(codec.pointee.id)) open") else {
-                    continue
-                }
-                codecContexts[Int32(i)] = ctx!
-                codecs[Int32(i)] = codec
-            }
-        }
         
         while 0 == av_read_frame(formatContext, packet) {
             defer {
@@ -234,21 +269,18 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
                 }
             }
             
-            if let handle = frameHandle, let ctx = codecContexts[packet.pointee.stream_index] {
-                let return_from_send_packet = avcodec_send_packet(ctx, packet)
-                if AVERROR_CONVERT(EAGAIN) == return_from_send_packet {
-                    continue
-                } else if isErr(return_from_send_packet, "avcodec_send_packet for video") {
+            if let handle = frameHandle, let ctx = self.codecCtx(at: packet.o.stream_index) {
+                defer {
+                    av_packet_unref(packet)
+                }
+                guard send_packet(ctx, pkt: packet) else {
                     break
                 }
                 
                 defer {
                     av_frame_unref(frame)
                 }
-                let return_from_recieve_frame = avcodec_receive_frame(ctx, frame)
-                if AVERROR_CONVERT(EAGAIN) == return_from_recieve_frame {
-                    continue
-                } else if isErr(return_from_recieve_frame, "avcodec_receive_frame for video") {
+                guard receive_frame(ctx, frm: frame) else {
                     break
                 }
                 

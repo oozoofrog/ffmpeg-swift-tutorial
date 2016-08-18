@@ -124,6 +124,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A94E9B841D658FB600E87579 /* ffplay.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = "../../FFmpeg-iOS-build-script/ffmpeg-3.1.1/ffplay.c"; sourceTree = "<group>"; };
 		A96BD6261D59702A0095C84C /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../SDL-iOS/lib/libSDL2.a"; sourceTree = "<group>"; };
 		A96BD6281D59705A0095C84C /* begin_code.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = begin_code.h; path = "../../SDL-iOS/include/begin_code.h"; sourceTree = "<group>"; };
 		A96BD6291D59705A0095C84C /* close_code.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = close_code.h; path = "../../SDL-iOS/include/close_code.h"; sourceTree = "<group>"; };
@@ -224,7 +225,6 @@
 		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
 		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
-		A9EBA8A21D64098A005265F8 /* MpegGround.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = MpegGround.playground; sourceTree = "<group>"; };
 		D88046771D5F904C00896792 /* CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreGraphics.swift; sourceTree = "<group>"; };
 		D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SDL&FFmpeg.swift"; sourceTree = "<group>"; };
 		D8D5DFE31D64A14700B01025 /* T3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = T3.h; sourceTree = "<group>"; };
@@ -277,7 +277,6 @@
 		A96D16E71D5860C5009F7AC2 = {
 			isa = PBXGroup;
 			children = (
-				A9EBA8A21D64098A005265F8 /* MpegGround.playground */,
 				A96BD6B21D599B450095C84C /* OpenGLES.framework */,
 				A96BD6B01D599B330095C84C /* CoreAudio.framework */,
 				A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */,
@@ -435,6 +434,7 @@
 		D880467B1D5F92B300896792 /* sources */ = {
 			isa = PBXGroup;
 			children = (
+				A94E9B841D658FB600E87579 /* ffplay.c */,
 				A999BE7C1D5C1E0400097E95 /* examples */,
 				A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */,
 			);

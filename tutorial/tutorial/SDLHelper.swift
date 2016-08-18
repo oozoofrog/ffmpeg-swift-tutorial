@@ -79,6 +79,11 @@ struct PacketQueue: PacketQueueProtocol {
 let SDL_AUDIO_BUFFER_SIZE = 1024
 let MAX_AUDIO_FRAME_SIZE = 192000
 
+extension SDL_AudioSpec {
+    mutating func setAudioCallback(_ callback: SDL_AudioCallback) {
+        self.callback = callback
+    }
+}
 
 //func audio_callback(userData: UnsafeMutableRawPointer?, stream: UnsafeMutablePointer<UInt8>?, length: Int32) -> Void {
 //    print("receive audio callback")
