@@ -11,5 +11,6 @@
 @interface T3 : NSObject
 
 - (instancetype)initWithPath:(NSString *)path;
+- (int)run;
 
 @end

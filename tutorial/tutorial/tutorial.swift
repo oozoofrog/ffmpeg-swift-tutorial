@@ -314,6 +314,7 @@ struct  Tutorial3: Tutorial {
     var paths: [String]
     
     func run() {
-        
+        let t3 = T3(path: paths[0])
+        t3?.run();
     }
 }
