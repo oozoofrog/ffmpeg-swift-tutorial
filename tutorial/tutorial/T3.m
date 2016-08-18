@@ -202,8 +202,7 @@ void audio_callback(void *userdata, UInt8 *stream, int len) {
     int             i, videoStream, audioStream;
     AVCodecContext  *pCodecCtx = NULL;
     AVCodec         *pCodec = NULL;
-    AVFrame         *pFrame = NULL;
-    AVPacket        packet;
+    
     int             frameFinished;
     //float           aspect_ratio;
     
@@ -276,16 +275,16 @@ void audio_callback(void *userdata, UInt8 *stream, int len) {
         fprintf(stderr, "SDL_OpenAudio: %s\n", SDL_GetError());
         return -1;
     }
+    // audio_st = pFormatCtx->streams[index]
+    packet_queue_init(&audioq);
+    SDL_PauseAudio(0);
+    
     aCodec = avcodec_find_decoder(aCodecCtx->codec_id);
     if(!aCodec) {
         fprintf(stderr, "Unsupported codec!\n");
         return -1;
     }
     avcodec_open2(aCodecCtx, aCodec, &audioOptionsDict);
-    
-    // audio_st = pFormatCtx->streams[index]
-    packet_queue_init(&audioq);
-    SDL_PauseAudio(0);
     
     // Get a pointer to the codec context for the video stream
     pCodecCtx=pFormatCtx->streams[videoStream]->codec;
@@ -299,9 +298,6 @@ void audio_callback(void *userdata, UInt8 *stream, int len) {
     // Open codec
     if(avcodec_open2(pCodecCtx, pCodec, &videoOptionsDict)<0)
         return -1; // Could not open codec
-    
-    // Allocate video frame
-    pFrame=av_frame_alloc();
     
     // Make a screen to put our video
     window = SDL_CreateWindow("Tutorial3", 0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
@@ -325,44 +321,60 @@ void audio_callback(void *userdata, UInt8 *stream, int len) {
     
     // Read frames and save first five frames to disk
     i=0;
-    while(av_read_frame(pFormatCtx, &packet)>=0) {
-        // Is this a packet from the video stream?
-        if(packet.stream_index==videoStream) {
-            // Decode video frame
-            avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished,
-                                  &packet);
-            
-            // Did we get a video frame?
-            if(frameFinished) {
-                SDL_UpdateYUVTexture(texture, &rect, pFrame->data[0], pFrame->linesize[0], pFrame->data[1], pFrame->linesize[1], pFrame->data[2], pFrame->linesize[2]);
-                SDL_RenderClear(renderer);
-                SDL_RenderCopy(renderer, texture, &rect, &dst_rect);
-                SDL_RenderPresent(renderer);
-                
-                av_free_packet(&packet);
-            }
-        } else if(packet.stream_index==audioStream) {
-            packet_queue_put(&audioq, &packet);
-        } else {
-            av_free_packet(&packet);
-        }
-        // Free the packet that was allocated by av_read_frame
-        SDL_PollEvent(&event);
-        switch(event.type) {
-            case SDL_FINGERDOWN:
-            case SDL_QUIT:
-                quit = 1;
-                SDL_Quit();
-                exit(0);
+    int reads = 0;
+    AVPacket *packet = av_packet_alloc();
+    AVFrame *frame = av_frame_alloc();
+    while (0 <= av_read_frame(pFormatCtx, packet)) {
+        if (packet->stream_index == videoStream) {
+            do {
+                reads = avcodec_send_packet(pCodecCtx, packet);
+            } while (reads == AVERROR(EAGAIN));
+            if (isErr(reads, "send paket")) {
+                av_packet_unref(packet);
                 break;
+            }
+            do {
+                reads = avcodec_receive_frame(pCodecCtx, frame);
+            } while (reads == AVERROR(EAGAIN));
+            if (isErr(reads, "receive frame")) {
+                av_packet_unref(packet);
+                av_frame_unref(frame);
+                break;
+            }
+            SDL_UpdateYUVTexture(texture, &rect, frame->data[0], frame->linesize[0], frame->data[1], frame->linesize[1], frame->data[2], frame->linesize[2]);
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture, &rect, &dst_rect);
+            SDL_RenderPresent(renderer);
+            
+            av_packet_unref(packet);
+            av_frame_unref(frame);
+        }
+        else if(packet->stream_index == audioStream) {
+            av_packet_unref(packet);
+        }
+        else {
+            av_packet_unref(packet);
+        }
+        
+        SDL_PollEvent(&event);
+        switch (event.type) {
+            case SDL_QUIT:
+            case SDL_FINGERDOWN:
+                quit = 1;
+                goto end;
+                break;
+                
             default:
                 break;
         }
-        
+        SDL_Delay(10);
     }
     
-    // Free the YUV frame
-    av_free(pFrame);
+end:
+    av_packet_free(&packet);
+    av_frame_free(&frame);
+    
+    isErr(reads, "loop finished");
     
     // Close the codec
     avcodec_close(pCodecCtx);
@@ -370,9 +382,12 @@ void audio_callback(void *userdata, UInt8 *stream, int len) {
     // Close the video file
     avformat_close_input(&pFormatCtx);
     
+    SDL_CloseAudio();
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    
+    SDL_Quit();
     
     return 0;
 }

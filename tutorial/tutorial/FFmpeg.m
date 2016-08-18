@@ -35,10 +35,10 @@ BOOL isErr(int err, const char* desc) {
 
 void print_err(int err, const char *desc) {
     if (NULL == desc) {
-        printf("😱 LIBAV ERR -> %s", av_err2str(err));
+        printf("😱 LIBAV ERR -> %s\n", av_err2str(err));
     }
     else {
-        printf("😱 LIBAV ERR(%s) -> %s", desc, av_err2str(err));
+        printf("😱 LIBAV ERR(%s) -> %s\n", desc, av_err2str(err));
     }
 }
 
