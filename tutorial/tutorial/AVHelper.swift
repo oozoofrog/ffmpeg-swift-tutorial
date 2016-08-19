@@ -93,7 +93,7 @@ extension AVCodecParametersGetter where Self: AVHelper {
         guard let param = params(at: at, type: type) else {
             return nil
         }
-        guard let codec = avcodec_find_decoder(param.o.codec_id) else {
+        guard let codec = avcodec_find_decoder(param.p.codec_id) else {
             return nil
         }
         codecs[at] = codec
@@ -112,7 +112,7 @@ extension AVCodecParametersGetter where Self: AVHelper {
             return nil
         }
         if 0 == avcodec_is_open(ctx) {
-            isErr(avcodec_open2(ctx, codec, nil), "open codec -> \(String(cString: avcodec_get_name(codec.o.id)))")
+            isErr(avcodec_open2(ctx, codec, nil), "open codec -> \(String(cString: avcodec_get_name(codec.p.id)))")
         }
         self.codecCtxes[at] = ctx
         return ctx
@@ -160,9 +160,9 @@ func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMu
     var ret: Int32 = 0
     
     // looping while packet size bigger than 0 or have got_picture and packet have nil data and ret is greater than or equal 0
-    while (0 < packet?.o.size ?? 0 || (nil == packet?.o.data && 1 == got_picture)) && 0 <= ret {
+    while (0 < packet?.p.size ?? 0 || (nil == packet?.p.data && 1 == got_picture)) && 0 <= ret {
         got_picture = 0
-        switch ctx!.o.codec_type {
+        switch ctx!.p.codec_type {
         case AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO:
             // send packet to codec context
             ret = avcodec_send_packet(ctx, packet)
@@ -173,7 +173,7 @@ func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMu
             // make packet size zero by condition for ret is greater than or equal 0
             if 0 <= ret {
                 var packet = packet
-                packet?.o.size = 0
+                packet?.p.size = 0
             }
             
             // receive frame from codec context
@@ -190,13 +190,13 @@ func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMu
         if 0 <= ret {
             if 1 == got_picture {
                 var st = stream
-                st?.o.nb_decoded_frames += 1
+                st?.p.nb_decoded_frames += 1
             }
             ret = got_picture
         }
     }
     
-    if nil == packet?.o.data && 1 != got_picture {
+    if nil == packet?.p.data && 1 != got_picture {
         return false
     }
     
@@ -296,12 +296,12 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
                 }
             }
             
-            if let handle = frameHandle, let ctx = self.codecCtx(at: packet.o.stream_index) {
+            if let handle = frameHandle, let ctx = self.codecCtx(at: packet.p.stream_index) {
                 
                 defer {
                     av_frame_unref(frame)
                 }
-                guard decode_codec(ctx, stream: self.stream(at: packet.o.stream_index), packet: packet, frame: frame) else {
+                guard decode_codec(ctx, stream: self.stream(at: packet.p.stream_index), packet: packet, frame: frame) else {
                     break
                 }
                 

@@ -48,18 +48,18 @@ public protocol UnsafePointerable {
 public protocol MutablePointerShortener {
     associatedtype Pointee
     /// meaning for o(bject)
-    var o: Pointee { get set }
+    var p: Pointee { get set }
     var pointee: Pointee { get set }
 }
 public protocol PointerShortener {
     associatedtype Pointee
     /// meaning for o(bject)
-    var o: Pointee { get }
+    var p: Pointee { get }
     var pointee: Pointee { get }
 }
 
 extension MutablePointerShortener where Self: UnsafePointerable {
-    public var o: Pointee {
+    public var p: Pointee {
         set {
             self.pointee = newValue
         }
@@ -70,7 +70,7 @@ extension MutablePointerShortener where Self: UnsafePointerable {
 }
 
 extension PointerShortener where Self: UnsafePointerable {
-    public var o: Pointee {
+    public var p: Pointee {
         return self.pointee
     }
 }
@@ -146,10 +146,10 @@ extension PointerCastable where Self: UnsafeRawPointerable {
     }
 }
 
-
 public protocol Pointerable {
     associatedtype Element
-    var pointer: UnsafePointer<Element>? {get}
+    var ptr: UnsafePointer<Element>? {get}
+    func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R
 }
 
 extension Array : Pointerable {}
@@ -160,15 +160,9 @@ extension ArraySlice : Pointerable {
 }
 
 extension Pointerable where Self: Sequence {
-    public var pointer: UnsafePointer<Element>? {
-        switch self {
-        case let a as Array<Element>:
-            return UnsafePointer<Element>(a)
-        case let s as ArraySlice<Element>:
-            return UnsafePointer<Element>(s.array())
-        default:
-            return nil
-        }
+    public var ptr: UnsafePointer<Element>? {
+        let buffer_ptr = withUnsafeBufferPointer(){$0}
+        return buffer_ptr.baseAddress
     }
 }
 
@@ -203,6 +197,10 @@ extension Double: ArithmeticCastable{}
 extension CGFloat: ArithmeticCastable{}
 
 extension ArithmeticCastable {
+    func cast<R: ArithmeticCastable>() -> R? {
+        let c: R = cast()
+        return c
+    }
     func cast<R: ArithmeticCastable>() -> R {
         switch self {
         case let n as Int:

@@ -96,13 +96,13 @@ func update(frame:UnsafeMutablePointer<AVFrame>?, texture: OpaquePointer?, rende
         return
     }
     var rect: SDL_Rect = SDL_Rect()
-    rect.w = frame.o.width
-    rect.h = frame.o.height
+    rect.w = frame.p.width
+    rect.h = frame.p.height
     var toRect = toRect
-    if frame.o.linesize.2 > 0 {
-        SDL_UpdateYUVTexture(texture, &rect, frame.o.data.0, frame.o.linesize.0, frame.o.data.1, frame.o.linesize.1, frame.o.data.2, frame.o.linesize.2)
+    if frame.p.linesize.2 > 0 {
+        SDL_UpdateYUVTexture(texture, &rect, frame.p.data.0, frame.p.linesize.0, frame.p.data.1, frame.p.linesize.1, frame.p.data.2, frame.p.linesize.2)
     } else {
-        SDL_UpdateTexture(texture, &rect, frame.o.data.0, frame.o.linesize.0)
+        SDL_UpdateTexture(texture, &rect, frame.p.data.0, frame.p.linesize.0)
     }
     SDL_RenderClear(renderer)
     SDL_RenderCopy(renderer, texture, &rect, &toRect)

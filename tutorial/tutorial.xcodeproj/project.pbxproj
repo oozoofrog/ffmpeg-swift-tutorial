@@ -101,6 +101,7 @@
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
 		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
+		D87FB18A1D6751D200103AC7 /* Tutorial4.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87FB1891D6751D200103AC7 /* Tutorial4.swift */; };
 		D89657211D5DC0AE00F1DECB /* SDL&FFmpeg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */; };
 		D8DC59371D5D6D9200AADB7C /* SDLHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */; };
 		D8E9FE691D5D45B60095C53C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E9FE681D5D45B60095C53C /* AVFoundation.framework */; };
@@ -222,6 +223,7 @@
 		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
 		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
+		D87FB1891D6751D200103AC7 /* Tutorial4.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tutorial4.swift; sourceTree = "<group>"; };
 		D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SDL&FFmpeg.swift"; sourceTree = "<group>"; };
 		D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDLHelper.swift; sourceTree = "<group>"; };
 		D8E9FE681D5D45B60095C53C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -296,6 +298,7 @@
 				A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */,
 				A96D16F51D5860C5009F7AC2 /* ViewController.swift */,
 				A96D17571D5876CD009F7AC2 /* tutorial.swift */,
+				D87FB1891D6751D200103AC7 /* Tutorial4.swift */,
 				A96D17461D5875F0009F7AC2 /* tutorial-Bridging-Header.h */,
 				A96D175B1D587725009F7AC2 /* sample.mp4 */,
 				A96D16F71D5860C5009F7AC2 /* Main.storyboard */,
@@ -626,6 +629,7 @@
 				D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */,
 				A96BD6B71D599C3E0095C84C /* SDLHelper.mm in Sources */,
 				A96D16F41D5860C5009F7AC2 /* AppDelegate.swift in Sources */,
+				D87FB18A1D6751D200103AC7 /* Tutorial4.swift in Sources */,
 				D8DC59371D5D6D9200AADB7C /* SDLHelper.swift in Sources */,
 				A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */,
 				A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */,
