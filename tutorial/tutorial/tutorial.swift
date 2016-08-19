@@ -21,7 +21,7 @@ func cPrint(cString: UnsafePointer<Int8>) {
 
 enum TutorialIndex: Int {
     case tutorial1 = 1
-    case tutorial2, tutorial3
+    case tutorial2, tutorial3, tutorial4
     case tutorialNumber
     
     func runTutorial(_ paths:[String]) {
@@ -33,6 +33,8 @@ enum TutorialIndex: Int {
             tutorial = Tutorial2(paths: paths)
         case .tutorial3:
             tutorial = Tutorial3(paths: paths)
+        case .tutorial4:
+            tutorial = Tutorial4(paths: paths)
         default:
             break
         }
@@ -537,7 +539,7 @@ struct  Tutorial3: Tutorial {
         wanted_spec.channels = aparam.o.channels.cast()
         wanted_spec.format = AUDIO_S16SYS.cast()
         wanted_spec.silence = 0
-        wanted_spec.size = Tutorial3.SDL_AUDIO_BUFFER_SIZE.cast()
+        wanted_spec.samples = Tutorial3.SDL_AUDIO_BUFFER_SIZE.cast()
         wanted_spec.callback = Tutorial3.audio_callback
         wanted_spec.userdata = helper.codecCtx(at: helper.streamIndex(type: AVMEDIA_TYPE_AUDIO))?.castRaw(from: AVCodecContext.self)
         var spec: SDL_AudioSpec = SDL_AudioSpec()
@@ -596,6 +598,179 @@ struct  Tutorial3: Tutorial {
             }
         }
       
+    }
+    
+}
+
+struct  Tutorial4: Tutorial {
+    var paths: [String]
+    
+    static let SDL_AUDIO_BUFFER_SIZE: Int32 = 1024
+    static let MAX_AUDIO_FRAME_SIZE: Int32 = 192000
+    
+    struct PacketQueue {
+        var first_pkt: UnsafeMutablePointer<AVPacketList>? = nil
+        var last_pkt: UnsafeMutablePointer<AVPacketList>? = nil
+        var nb_packet: Int32 = 0
+        var size: Int32 = 0
+        var mutex: OpaquePointer = SDL_CreateMutex()
+        var cond: OpaquePointer = SDL_CreateCond()
+    }
+    
+    struct VideoPicture {
+        /// SDL_Texture
+        var texture: OpaquePointer? = nil
+        var width: Int32 = 0, height: Int32 = 0
+        var allocated: Int32 = 0
+    }
+    
+    struct VideoState {
+        var pFormatCtx: UnsafeMutablePointer<AVFormatContext>? = nil
+        var videoStream: Int32 = 0
+        var audioStream: Int32 = 0
+        var audio_st: UnsafeMutablePointer<AVStream>? = nil
+        var audio_ctx: UnsafeMutablePointer<AVCodecContext>? = nil
+        var audioq: PacketQueue = PacketQueue()
+        var audio_buf: [UInt8] = [UInt8](repeating: 0, count: (MAX_AUDIO_FRAME_SIZE.cast() * 3) / 2)
+        var audio_buf_size: UInt32 = 0
+        var audio_buf_index: UInt32 = 0
+        var audio_pkt: AVPacket = AVPacket()
+        var audio_pkt_data: UnsafeMutableRawPointer? = nil
+        var video_st: UnsafeMutablePointer<AVStream>? = nil
+        var video_ctx: UnsafeMutablePointer<AVCodecContext>? = nil
+        var videoq: PacketQueue = PacketQueue()
+        
+        var pictq:[VideoPicture] = [VideoPicture](repeating: VideoPicture(), count: Tutorial4.VIDEO_PICTURE_QUEUE_SIZE)
+        var pictq_size: Int32 = 0
+        var pictq_rindex: Int32 = 0
+        var pictq_windex: Int32 = 0
+        
+        var pictq_mutex: OpaquePointer = SDL_CreateMutex()
+        var pictq_cond: OpaquePointer = SDL_CreateCond()
+        
+        var parse_tid: OpaquePointer? = nil
+        var video_tid: OpaquePointer? = nil
+        
+        var filename: UnsafePointer<CChar>? = nil
+        var quit: Int32 = 0
+    }
+    
+    static let VIDEO_PICTURE_QUEUE_SIZE = 1
+    
+    func schedule_refresh(vs: UnsafeMutablePointer<VideoState>, refresh_rate: Int32) {
+        
+    }
+    
+    var decode_thread: SDL_ThreadFunction = { (user_ctx) in
+    }
+    
+    var video_thread: SDL_ThreadFunction = { (user_ctx) in
+    }
+    
+    static var audio_callback:SDL_AudioCallback = { (userdata, stream, len) -> Void in
+        
+    }
+    
+    func stream_component_open(vs: UnsafeMutablePointer<VideoState>, stream_index: Int32) -> Int32 {
+        var vs: UnsafeMutablePointer<VideoState> = vs
+        guard let pFormatCtx = vs.o.pFormatCtx else {
+            return -1
+        }
+        var codec: UnsafeMutablePointer<AVCodec>? = nil
+        var wanted_spec: SDL_AudioSpec = SDL_AudioSpec()
+        var spec: SDL_AudioSpec = SDL_AudioSpec()
+        
+        if stream_index < 0 || stream_index >= pFormatCtx.o.nb_streams.cast() {
+            return -1
+        }
+        
+        guard let codecpar = pFormatCtx.o.streams[stream_index.cast()]?.o.codecpar else {
+            return -1
+        }
+        
+        codec = avcodec_find_encoder(codecpar.o.codec_id)
+        if nil == codec {
+            print("Unsupported codec \(String(cString: avcodec_get_name(codecpar.o.codec_id)))")
+            return -1
+        }
+        
+        guard let codecCtx: UnsafeMutablePointer<AVCodecContext> = avcodec_alloc_context3(codec) else {
+            return -1
+        }
+        if isErr(avcodec_parameters_to_context(codecCtx, codecpar), "param to context") {
+            return -1
+        }
+        
+        
+        
+        if codecCtx.o.codec_type == AVMEDIA_TYPE_AUDIO {
+            wanted_spec.freq = codecCtx.o.sample_rate
+            wanted_spec.format = AUDIO_S16SYS.cast()
+            wanted_spec.channels = codecCtx.o.channels.cast()
+            wanted_spec.silence = 0
+            wanted_spec.callback = Tutorial4.audio_callback
+            wanted_spec.samples = Tutorial4.SDL_AUDIO_BUFFER_SIZE.cast()
+            wanted_spec.userdata = vs.castRaw(from: VideoState.self)
+            
+            if 0 > SDL_OpenAudio(&wanted_spec, &spec) {
+                cPrint(cString: SDL_GetError())
+                return -1
+            }
+        }
+        
+        if isErr(avcodec_open2(codecCtx, codec, nil), "open codec") {
+            print("Unsupported codec \(String(cString: avcodec_get_name(codecpar.o.codec_id)))")
+            return -1
+        }
+        
+        switch  codecpar.o.codec_type {
+        case AVMEDIA_TYPE_AUDIO:
+            vs.o.audioStream = stream_index
+            vs.o.audio_st = pFormatCtx.o.streams[stream_index.cast()]
+            vs.o.audio_ctx = codecCtx
+            vs.o.audio_buf_size = 0
+            vs.o.audio_buf_index = 0
+            memset(&vs.o.audio_pkt, 0, MemoryLayout<AVPacket>.stride)
+            SDL_PauseAudio(0)
+        case AVMEDIA_TYPE_VIDEO:
+            vs.o.videoStream = stream_index
+            vs.o.video_st = pFormatCtx.o.streams[stream_index.cast()]
+            vs.o.video_ctx = codecCtx
+            
+            vs.o.video_tid = SDL_CreateThread(video_thread, "video thread", vs.castRaw(from: VideoState.self))
+        default:
+            break
+        }
+        
+        return 0
+    }
+    
+    func run() {
+        guard let helper = AVHelper(inputPath: paths[0]) else {
+            return
+        }
+        
+        guard helper.open() else {
+            return
+        }
+        
+        guard  SDLHelper().sdl_init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) else {
+            return
+        }
+        
+        var event: SDL_Event = SDL_Event()
+        var vs: VideoState = VideoState()
+        
+        vs.filename = paths[0].cString(using: .utf8)?.withUnsafeBufferPointer(){$0}.baseAddress
+        
+        schedule_refresh(vs: &vs, refresh_rate: 40)
+        
+        guard let parse_tid = SDL_CreateThread(decode_thread, "video_thread", withUnsafeMutablePointer(to: &vs){$0}.castRaw(from: VideoState.self)) else {
+            cPrint(cString: SDL_GetError())
+            return
+        }
+        vs.parse_tid = parse_tid
+        
     }
     
 }
