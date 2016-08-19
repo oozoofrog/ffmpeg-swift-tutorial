@@ -9,6 +9,30 @@
 import Foundation
 import CoreGraphics
 
+/// pinter cast operator
+prefix operator <&
+prefix operator <<&
+prefix func <& <T>(target: inout T) -> UnsafePointer<T> {
+    return withUnsafePointer(to: &target){$0}
+}
+prefix func <<& <T>(target: inout T) -> UnsafeMutablePointer<T> {
+    return withUnsafeMutablePointer(to:&target){$0}
+}
+prefix func <& <T>(target: inout T?) -> UnsafePointer<T>? {
+    if nil == target {
+        return nil
+    }
+    var target = target!
+    return <&target
+}
+prefix func <<& <T>(target: inout T?) -> UnsafeMutablePointer<T>? {
+    if nil == target {
+        return nil
+    }
+    var target = target!
+    return <<&target
+}
+
 public protocol PointerCastable {}
 
 public protocol UnsafePointerable {

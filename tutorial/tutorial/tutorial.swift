@@ -186,7 +186,11 @@ struct Tutorial1: Tutorial {
         
         sws_ctx = sws_getContext(width, height, pix_fmt, width, height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nil, nil, nil)
         
-        if isErr(av_image_fill_arrays(pFrameRGB?.pointee.dataPtr().cast(), pFrameRGB?.pointee.linesizePtr().cast(), buffer, AV_PIX_FMT_RGB24, width, height, 1), "av_image_fill_arrays") {
+        var data = pFrameRGB?.o.data
+        let rgbDataPtr = withUnsafeMutablePointer(to: &data){$0}
+        var linesize = pFrameRGB?.o.linesize
+        let rgbLinesizePtr = withUnsafeMutablePointer(to: &linesize){$0}
+        if isErr(av_image_fill_arrays(rgbDataPtr.cast(), rgbLinesizePtr.cast(), buffer, AV_PIX_FMT_RGB24, width, height, 1), "av_image_fill_arrays") {
             return
         }
         
@@ -218,13 +222,17 @@ struct Tutorial1: Tutorial {
                 if isErr(result, "receive frame") {
                     return
                 }
+                var data = pFrame?.o.data
+                var linesize = pFrame?.o.linesize
+                let dataPtr = <<&data
+                let linesizePtr = <<&linesize
                 sws_scale(sws_ctx,
-                          pFrame?.pointee.dataPtr().cast(),
-                          pFrame?.pointee.linesizePtr(),
+                          dataPtr?.cast(),
+                          linesizePtr?.cast(),
                           0,
                           pCodecCtx!.pointee.height,
-                          pFrameRGB?.pointee.dataPtr().cast(),
-                          pFrameRGB?.pointee.linesizePtr())
+                          rgbDataPtr.cast(),
+                          rgbLinesizePtr.cast())
                 i += 1
                 if i <= 5 {
                     Saveframe(pFrameRGB!, width: (pCodecCtx?.pointee.width)!, height: (pCodecCtx?.pointee.height)!, iFrame: i)
@@ -279,27 +287,17 @@ struct Tutorial2: Tutorial {
             SDL_DestroyWindow(window)
         }
         
-        var rect: SDL_Rect = CGRect(origin: CGPoint(), size: helper.size).rect
-        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).rect
+        let rect: SDL_Rect = SDL_Rect(x: 0, y: 0, w: helper.size.width.cast(), h: helper.size.height.cast())// CGRect(origin: CGPoint(), size: helper.size).rect
+        let dst_rect = aspectFit(rect: rect, inside: UIScreen.main.bounds)
         
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE)
         var event = SDL_Event()
-        
-        // half scale, yuv 420 pixel format, rotate
-        var descriptor = AVFilterDescriptor()
-        descriptor.add(pixelFormat: AV_PIX_FMT_YUV420P)
-        // smartblur filter doesn't exist
-        //        descriptor.set(smartblur:AVFilterDescriptor.AVSmartblur(lr: 5, lt: 30, cr: 5, ct: 30))
-        guard helper.setupVideoFilter(filterDesc: descriptor.description) else {
-            print("setup filter failed")
-            return
-        }
-        
+        1
         helper.decode(frameHandle: { (type, frame) -> AVHelper.HandleResult in
             guard let frame = frame, type == AVMEDIA_TYPE_VIDEO else {
                 return .ignored
             }
-            frame.pointee.update(texture: texture, renderer: renderer, toRect: dst_rect)
+            update(frame: frame.cast(), texture: texture, renderer: renderer, toRect: dst_rect)
             return .succeed
         }) { () -> Bool in
             SDL_PollEvent(&event)
@@ -526,8 +524,8 @@ struct  Tutorial3: Tutorial {
             SDL_DestroyWindow(window)
         }
         
-        var rect: SDL_Rect = CGRect(origin: CGPoint(), size: helper.size).rect
-        var dst_rect = UIScreen.main.bounds.aspectFit(aspectRatio: rect.rect.size).rect
+        var rect: SDL_Rect = SDL_Rect(x: 0, y: 0, w: helper.size.width.cast(), h: helper.size.height.cast())
+        var dst_rect = aspectFit(rect: rect, inside: UIScreen.main.bounds)
         
         SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE)
         
@@ -576,7 +574,7 @@ struct  Tutorial3: Tutorial {
                     av_frame_unref(frm)
                     break
                 }
-                frm?.o.update(texture: texture, renderer: renderer, toRect: dst_rect)
+                update(frame: frm, texture: texture, renderer: renderer, toRect: dst_rect)
                 av_packet_unref(pkt)
                 av_frame_unref(frm)
             case audioIndex:
@@ -636,6 +634,11 @@ struct  Tutorial4: Tutorial {
         var audio_buf_index: UInt32 = 0
         var audio_pkt: AVPacket = AVPacket()
         var audio_pkt_data: UnsafeMutableRawPointer? = nil
+        var audio_pkt_size: Int32 {
+            return self.audio_pkt.size
+        }
+        var audio_frame: AVFrame = AVFrame()
+        
         var video_st: UnsafeMutablePointer<AVStream>? = nil
         var video_ctx: UnsafeMutablePointer<AVCodecContext>? = nil
         var videoq: PacketQueue = PacketQueue()
@@ -655,16 +658,124 @@ struct  Tutorial4: Tutorial {
         var quit: Int32 = 0
     }
     
+    static var global_video_state: VideoState = VideoState()
+    
+    static func packet_queue_put(q: UnsafeMutablePointer<PacketQueue>?, pkt: UnsafeMutablePointer<AVPacket>?) -> Int32 {
+        var q = q
+        if nil == pkt {
+            if isErr(av_packet_ref(pkt, av_packet_alloc()), "packet queue put ref packet") {
+                return -1
+            }
+        }
+        
+        let pkt1: UnsafeMutablePointer<AVPacketList> = av_malloc(MemoryLayout<AVPacketList>.stride).bindMemory(to: AVPacketList.self, capacity: MemoryLayout<AVPacketList>.stride)
+        
+        if let pkt = pkt {
+            pkt1.pointee.pkt = pkt.pointee
+        }
+        pkt1.pointee.next = nil
+        SDL_LockMutex(q?.pointee.mutex)
+        
+        if nil == q?.pointee.last_pkt {
+            q?.pointee.first_pkt = pkt1
+        } else {
+            q?.pointee.last_pkt?.pointee.next = pkt1
+        }
+        
+        q?.pointee.last_pkt = pkt1
+        q?.pointee.nb_packet += 1
+        q?.o.size += pkt1.o.pkt.size
+        SDL_CondSignal(q?.o.cond)
+        SDL_UnlockMutex(q?.o.mutex)
+        return 0
+    }
+    
+    static func packet_queue_get(q: UnsafeMutablePointer<PacketQueue>?, pkt: inout UnsafeMutablePointer<AVPacket>?, block: Int32) -> Int32 {
+        guard let queue = q else {
+            return 0
+        }
+        var q = queue
+        var pkt1: UnsafeMutablePointer<AVPacketList>? = nil
+        var ret: Int32 = 0
+        SDL_LockMutex(q.o.mutex)
+        while true {
+            if 1 == global_video_state.quit {
+                ret = -1
+                break
+            }
+            
+            pkt1 = q.o.first_pkt
+            if let pkt1 = pkt1 {
+                q.o.first_pkt = pkt1.o.next
+                if nil == q.o.first_pkt {
+                    q.o.last_pkt = nil
+                }
+                q.o.nb_packet -= 1
+                q.o.size -= pkt1.o.pkt.size
+                pkt?.o = pkt1.o.pkt
+                av_free(pkt1.castRaw(from: AVPacketList.self))
+                ret = 1
+                break
+            } else if 0 == block {
+                ret = 0
+                break
+            } else {
+                SDL_CondWait(q.o.cond, q.o.mutex)
+            }
+        }
+        SDL_UnlockMutex(q.o.mutex)
+        return ret
+    }
+    
+    static func audio_decode_frame(vs: UnsafeMutablePointer<VideoState>) -> Int32 {
+        var vs = vs
+        guard let aCodecCtx = vs.o.audio_ctx else {
+            return 0
+        }
+        
+        var len1: Int32 = 0
+        var data_size: Int32 = 0
+        
+        var pkt = <<&vs.o.audio_pkt
+        var frm = <<&vs.o.audio_frame
+        while true {
+            while vs.o.audio_pkt_size > 0 {
+                defer {
+                    av_packet_unref(pkt)
+                }
+                guard send_packet(vs.o.audio_ctx, pkt: pkt) else {
+                    break
+                }
+                defer {
+                    av_frame_unref(frm)
+                }
+                guard receive_frame(vs.o.audio_ctx, frm: frm) else {
+                    break
+                }
+                guard 0 <= vs.o.audio_pkt_size else {
+                    break
+                }
+                len1 = vs.o.audio_pkt_size
+                
+                
+            }
+        }
+        
+        return 0
+    }
+    
     static let VIDEO_PICTURE_QUEUE_SIZE = 1
     
     func schedule_refresh(vs: UnsafeMutablePointer<VideoState>, refresh_rate: Int32) {
         
     }
     
-    var decode_thread: SDL_ThreadFunction = { (user_ctx) in
+    var decode_thread: SDL_ThreadFunction = { (user_ctx) -> Int32 in
+        return 0
     }
     
-    var video_thread: SDL_ThreadFunction = { (user_ctx) in
+    var video_thread: SDL_ThreadFunction = { (user_ctx) -> Int32 in
+        return 0
     }
     
     static var audio_callback:SDL_AudioCallback = { (userdata, stream, len) -> Void in
@@ -743,6 +854,10 @@ struct  Tutorial4: Tutorial {
         }
         
         return 0
+    }
+    
+    init(paths: [String]) {
+        self.paths = paths
     }
     
     func run() {

@@ -20,10 +20,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         av_register_all()
         avfilter_register_all()
         
-        let documentPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
-        let documentSamplePath = "\(documentPath)/sample.mp4"
+        let documentPath: String = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let documentSamplePath: String = "\(documentPath)/sample.mp4"
         if false == FileManager.default.fileExists(atPath: documentSamplePath) {
-            guard let samplePath = Bundle.main.path(forResource: "sample", ofType: "mp4") else {
+            guard let samplePath: String = Bundle.main.path(forResource: "sample", ofType: "mp4") else {
                 return true
             }
             do {
@@ -82,16 +82,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return documentPathForUser + "/ffmpeg_tutorial"
     }
     
+    var linkOfDocumentPathForUserWithAppName: String {
+        return (try? FileManager.default.destinationOfSymbolicLink(atPath: documentPathForUserWithAppName)) ?? ""
+    }
+    
     func createSymbolickLinkForDocuments() {
-        if FileManager.default.fileExists(atPath: self.documentPathForUserWithAppName) {
-            return
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName), let type: FileAttributeType = attributes[.type] as? FileAttributeType {
+            if type == .typeSymbolicLink && (self.docPath as String) == self.linkOfDocumentPathForUserWithAppName {
+                return
+            }
         }
         do {
-            let _ = try? FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
-            try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
-            let noti = UIAlertController(title: "Succeed", message: "Symbolic link of \(self.docPath) make to \(self.documentPathForUserWithAppName)", preferredStyle: .alert)
-            noti.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
-            self.window?.rootViewController?.present(noti, animated: true, completion: nil)
+            let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName)
+            if let attributes = attributes {
+                
+                let type: FileAttributeType = attributes[.type] as! FileAttributeType
+                if type == .typeSymbolicLink {
+                    try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
+                    try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+                }
+                else {
+                    try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
+                    try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+                }
+            } else {
+                try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+            }
+            
         } catch let err as NSError {
             assertionFailure(err.localizedDescription)
         }

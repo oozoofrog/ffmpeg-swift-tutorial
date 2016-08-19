@@ -91,26 +91,20 @@ protocol AVFrameSDLTextureRenderable {
     func update(texture: OpaquePointer?, renderer: OpaquePointer?, toRect: SDL_Rect)
 }
 
-extension SDLRectCastable where Self: AVSizeProtocol {
-    var SDL: SDL_Rect {
-        return SDL_Rect(x: 0, y: 0, w: width, h: height)
+func update(frame:UnsafeMutablePointer<AVFrame>?, texture: OpaquePointer?, renderer: OpaquePointer?, toRect: SDL_Rect) {
+    guard let frame = frame else {
+        return
     }
-    var rect: CGRect {
-        return CGRect(x: 0, y: 0, width: Int(width), height: Int(height))
+    var rect: SDL_Rect = SDL_Rect()
+    rect.w = frame.o.width
+    rect.h = frame.o.height
+    var toRect = toRect
+    if frame.o.linesize.2 > 0 {
+        SDL_UpdateYUVTexture(texture, &rect, frame.o.data.0, frame.o.linesize.0, frame.o.data.1, frame.o.linesize.1, frame.o.data.2, frame.o.linesize.2)
+    } else {
+        SDL_UpdateTexture(texture, &rect, frame.o.data.0, frame.o.linesize.0)
     }
-}
-
-extension AVFrame: AVFrameSDLTextureRenderable, SDLRectCastable {
-    func update(texture: OpaquePointer?, renderer: OpaquePointer?, toRect: SDL_Rect) {
-        var rect = self.SDL
-        var toRect = toRect
-        if linesize.2 > 0 {
-            SDL_UpdateYUVTexture(texture, &rect, data.0, linesize.0, data.1, linesize.1, data.2, linesize.2)
-        } else {
-            SDL_UpdateTexture(texture, &rect, data.0, linesize.0)
-        }
-        SDL_RenderClear(renderer)
-        SDL_RenderCopy(renderer, texture, &rect, &toRect)
-        SDL_RenderPresent(renderer)
-    }
+    SDL_RenderClear(renderer)
+    SDL_RenderCopy(renderer, texture, &rect, &toRect)
+    SDL_RenderPresent(renderer)
 }

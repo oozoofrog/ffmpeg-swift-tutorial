@@ -35,15 +35,19 @@ BOOL isErr(int err, const char* desc) {
 
 void print_err(int err, const char *desc) {
     if (NULL == desc) {
-        printf("😱 LIBAV ERR -> %s\n", av_err2str(err));
+        printf("😱 LIBAV ERR -> %s(%d)\n", av_err2str(err), err);
     }
     else {
-        printf("😱 LIBAV ERR(%s) -> %s\n", desc, av_err2str(err));
+        printf("😱 LIBAV ERR(%s) -> %s(%d)\n", desc, av_err2str(err), err);
     }
 }
 
 int AVERROR_CONVERT(int err) {
     return AVERROR(err);
+}
+
+BOOL IS_AVERROR_EOF(int err) {
+    return err == AVERROR_EOF;
 }
 
 BOOL AVFILTER_EOF(int ret) {

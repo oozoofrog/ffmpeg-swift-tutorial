@@ -23,6 +23,7 @@ BOOL isErr(int err, const char* desc);
 void print_err(int err, const char* desc);
 
 int AVERROR_CONVERT(int err);
+BOOL IS_AVERROR_EOF(int err);
 
 BOOL AVFILTER_EOF(int ret);
 

@@ -154,28 +154,54 @@ extension AVStreamGetter where Self: AVHelper, Self: AVCodecParametersGetter {
     }
 }
 
-func send_packet(_ ctx: UnsafeMutablePointer<AVCodecContext>?, pkt: UnsafeMutablePointer<AVPacket>?) -> Bool {
-    var read: Int32 = 0
-    repeat {
-        read = avcodec_send_packet(ctx, pkt)
-    } while read == AVERROR_CONVERT(EAGAIN)
-    if isErr(read, "send packet for \(String(cString:avcodec_get_name(ctx?.o.codec_id ?? AV_CODEC_ID_NONE)))") {
+/// from try_decode_frame in utils.c -> https://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02847
+func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMutablePointer<AVStream>?, packet: UnsafeMutablePointer<AVPacket>?, frame: UnsafeMutablePointer<AVFrame>?) -> Bool {
+    var got_picture: Int32 = 1
+    var ret: Int32 = 0
+    
+    // looping while packet size bigger than 0 or have got_picture and packet have nil data and ret is greater than or equal 0
+    while (0 < packet?.o.size ?? 0 || (nil == packet?.o.data && 1 == got_picture)) && 0 <= ret {
+        got_picture = 0
+        switch ctx!.o.codec_type {
+        case AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO:
+            // send packet to codec context
+            ret = avcodec_send_packet(ctx, packet)
+            // leave loop for result is minus and resource is available and not end of file
+            if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && !IS_AVERROR_EOF(ret) {
+                break
+            }
+            // make packet size zero by condition for ret is greater than or equal 0
+            if 0 <= ret {
+                var packet = packet
+                packet?.o.size = 0
+            }
+            
+            // receive frame from codec context
+            ret = avcodec_receive_frame(ctx, frame)
+            if 0 <= ret {
+                got_picture = 1
+            }
+            if ret == AVERROR_CONVERT(EAGAIN) || IS_AVERROR_EOF(ret) {
+                ret = 0
+            }
+        default:
+            break
+        }
+        if 0 <= ret {
+            if 1 == got_picture {
+                var st = stream
+                st?.o.nb_decoded_frames += 1
+            }
+            ret = got_picture
+        }
+    }
+    
+    if nil == packet?.o.data && 1 != got_picture {
         return false
     }
+    
     return true
 }
-
-func receive_frame(_ ctx: UnsafeMutablePointer<AVCodecContext>?, frm: UnsafeMutablePointer<AVFrame>?) -> Bool {
-    var read: Int32 = 0
-    repeat {
-        read = avcodec_receive_frame(ctx, frm)
-    } while read == AVERROR_CONVERT(EAGAIN)
-    if isErr(read, "receive frame for \(String(cString:avcodec_get_name(ctx?.o.codec_id ?? AV_CODEC_ID_NONE)))") {
-        return false
-    }
-    return true
-}
-
 
 class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSizeProtocol {
     let inputPath: String
@@ -252,6 +278,7 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
         }
         
         
+        var got_frame: Int32 = 1
         while 0 == av_read_frame(formatContext, packet) {
             defer {
                 av_packet_unref(packet)
@@ -270,17 +297,11 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
             }
             
             if let handle = frameHandle, let ctx = self.codecCtx(at: packet.o.stream_index) {
-                defer {
-                    av_packet_unref(packet)
-                }
-                guard send_packet(ctx, pkt: packet) else {
-                    break
-                }
                 
                 defer {
                     av_frame_unref(frame)
                 }
-                guard receive_frame(ctx, frm: frame) else {
+                guard decode_codec(ctx, stream: self.stream(at: packet.o.stream_index), packet: packet, frame: frame) else {
                     break
                 }
                 
@@ -364,52 +385,6 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
     }
 }
 
-
-protocol AVData {
-    var data: (UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?, UnsafeMutablePointer<UInt8>?) {set get}
-    
-    var linesize: (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32) {set get}
-    
-}
-
-protocol AVByteable {
-    mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>>
-    mutating func linesizePtr() -> UnsafeMutablePointer<Int32>
-}
-
-extension AVByteable where Self: AVData {
-    mutating func dataPtr() -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>> {
-        return withUnsafeMutablePointer(to: &data){
-            $0.withMemoryRebound(to: UnsafeMutablePointer<UInt8>.self, capacity: MemoryLayout<UnsafeMutablePointer<UInt8>>.stride * 8){$0}
-        }
-    }
-    mutating func linesizePtr() -> UnsafeMutablePointer<Int32> {
-        return withUnsafeMutablePointer(to: &linesize) {
-            $0.withMemoryRebound(to: Int32.self, capacity: MemoryLayout<Int32>.stride * 8){$0}
-        }
-    }
-}
-
-extension AVFrame: AVData, AVByteable, AVSizeProtocol {}
-extension AVPicture: AVData, AVByteable {}
-
-
-extension AVCodecContext: AVSizeProtocol {
-    var size: CGSize {
-        var size = CGSize()
-        size.width = self.width.cast()
-        size.height = self.height.cast()
-        return size
-    }
-}
-
-extension AVPixelFormat {
-    var name: String {
-        let name = av_get_pix_fmt_name(self) ?? av_get_pix_fmt_name(AV_PIX_FMT_NONE)!
-        return String(cString: name, encoding: String.Encoding.ascii)!
-    }
-}
-
 struct ValueLimiter<Number: Comparable> where Number: Hashable {
     let min: Number
     let max: Number
@@ -458,7 +433,7 @@ struct AVFilterDescriptor: AVFilterDescription {
     var description: String {
         var descriptions = [String]()
         if 0 < pix_fmts.count {
-            let pix_fmts_str = self.pix_fmts.flatMap(){return $0.name}.joined(separator: "|")
+            let pix_fmts_str = self.pix_fmts.flatMap(){return String(cString:av_get_pix_fmt_name($0))}.joined(separator: "|")
             descriptions.append("format=pix_fmts=\(pix_fmts_str)")
         }
         if let smartblur = self.smartblur {
