@@ -551,6 +551,7 @@ struct  Tutorial3: Tutorial {
         
         defer {
             SDL_PauseAudio(1)
+            SDL_CloseAudio()
         }
         
         var event = SDL_Event()
@@ -564,24 +565,17 @@ struct  Tutorial3: Tutorial {
                 break
             }
             let ctx = helper.codecCtx(at: pkt.o.stream_index)
+            let st = helper.stream(at: pkt.o.stream_index)
             switch pkt.o.stream_index {
             case videoIndex:
-                guard send_packet(ctx, pkt: pkt) else {
-                    av_packet_unref(pkt)
-                    break
-                }
-                guard receive_frame(ctx, frm: frm) else {
-                    av_frame_unref(frm)
+                guard decode_codec(ctx, stream: st, packet: pkt, frame: frm) else {
                     break
                 }
                 update(frame: frm, texture: texture, renderer: renderer, toRect: dst_rect)
-                av_packet_unref(pkt)
-                av_frame_unref(frm)
             case audioIndex:
                 Tutorial3.packet_queue_put(q: &Tutorial3.audioq, pkt: pkt)
                 continue
             default:
-                av_packet_unref(pkt)
                 continue
             }
             
@@ -633,10 +627,8 @@ struct  Tutorial4: Tutorial {
         var audio_buf_size: UInt32 = 0
         var audio_buf_index: UInt32 = 0
         var audio_pkt: AVPacket = AVPacket()
-        var audio_pkt_data: UnsafeMutableRawPointer? = nil
-        var audio_pkt_size: Int32 {
-            return self.audio_pkt.size
-        }
+        var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
+        var audio_pkt_size: Int32 = 0
         var audio_frame: AVFrame = AVFrame()
         
         var video_st: UnsafeMutablePointer<AVStream>? = nil
@@ -729,36 +721,48 @@ struct  Tutorial4: Tutorial {
     
     static func audio_decode_frame(vs: UnsafeMutablePointer<VideoState>) -> Int32 {
         var vs = vs
-        guard let aCodecCtx = vs.o.audio_ctx else {
+        guard let aCodecCtx = vs.o.audio_ctx, let st = vs.o.audio_st else {
             return 0
         }
         
         var len1: Int32 = 0
         var data_size: Int32 = 0
         
-        var pkt = <<&vs.o.audio_pkt
+        var pkt: UnsafeMutablePointer<AVPacket>? = <<&vs.o.audio_pkt
         var frm = <<&vs.o.audio_frame
         while true {
             while vs.o.audio_pkt_size > 0 {
-                defer {
-                    av_packet_unref(pkt)
-                }
-                guard send_packet(vs.o.audio_ctx, pkt: pkt) else {
+                guard decode_codec(aCodecCtx, stream: vs.o.audio_st, packet: <<&vs.o.audio_pkt, frame: <<&vs.o.audio_frame) else {
                     break
                 }
-                defer {
-                    av_frame_unref(frm)
-                }
-                guard receive_frame(vs.o.audio_ctx, frm: frm) else {
-                    break
-                }
-                guard 0 <= vs.o.audio_pkt_size else {
-                    break
-                }
+                
                 len1 = vs.o.audio_pkt_size
+                if 0 > len1 {
+                    vs.o.audio_pkt_size = 0
+                }
                 
-                
+                data_size = av_samples_get_buffer_size(nil, st.o.codecpar.o.channels, frm.o.nb_samples, AVSampleFormat(rawValue: st.o.codecpar.o.format), 1)
+                let pointer = vs.o.audio_buf.pointer
+                SDL_MixAudio(pointer?.cast(), frm.o.data.0, data_size.cast(), 32)
+                vs.o.audio_pkt_data = vs.o.audio_pkt_data?.advanced(by: Int(len1))
+                vs.o.audio_pkt_size -= len1
+                if 0 >= data_size {
+                    continue
+                }
+                return data_size
             }
+            if nil != pkt?.o.data {
+                av_packet_unref(pkt)
+            }
+            if 1 == vs.o.quit {
+                return -1
+            }
+            
+            if 0 > Tutorial4.packet_queue_get(q: <<&vs.o.audioq, pkt: &pkt, block: 1) {
+                return -1
+            }
+            vs.o.audio_pkt_data = pkt?.o.data
+            vs.o.audio_pkt_size -= pkt?.o.size ?? 0
         }
         
         return 0
