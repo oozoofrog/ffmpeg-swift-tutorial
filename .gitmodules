@@ -1,6 +1,6 @@
 [submodule "ffmpeg-tutorial"]
 	path = ffmpeg-tutorial
-	url = git@github.com:mpenkov/ffmpeg-tutorial.git
+url=git@github.com:singcodes/ffmpeg-tutorial.git
 [submodule "FFmpeg-iOS-build-script"]
 	path = FFmpeg-iOS-build-script
 	url = git@github.com:kewlbear/FFmpeg-iOS-build-script.git
