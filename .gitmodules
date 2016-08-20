@@ -3,4 +3,4 @@
 url=git@github.com:singcodes/ffmpeg-tutorial.git
 [submodule "FFmpeg-iOS-build-script"]
 	path = FFmpeg-iOS-build-script
-	url = git@github.com:kewlbear/FFmpeg-iOS-build-script.git
+url=git@github.com:singcodes/FFmpeg-iOS-build-script.git
