@@ -203,188 +203,6 @@ func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMu
     return true
 }
 
-class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSizeProtocol {
-    let inputPath: String
-    var outputPath: String?
-    
-    internal(set) var codecs: [Int32 : UnsafeMutablePointer<AVCodec>] = [:]
-    internal(set) var codecCtxes: [Int32 : UnsafeMutablePointer<AVCodecContext>] = [:]
-    
-    var formatContext: UnsafeMutablePointer<AVFormatContext>?
-    
-    var videoFilter: AVFilterHelper?
-    
-    var width: Int32 {
-        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.width ?? 0
-    }
-    var height: Int32 {
-        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.height ?? 0
-    }
-    var pix_fmt: AVPixelFormat? {
-        guard let param: UnsafeMutablePointer<AVCodecParameters> = params(type: AVMEDIA_TYPE_VIDEO) else {
-            return AV_PIX_FMT_NONE
-        }
-        return AVPixelFormat(rawValue: param.pointee.format)
-    }
-    
-    var pixel_aspect: AVRational? {
-        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.sample_aspect_ratio
-    }
-    
-    func time_base(forMediaType type: AVMediaType) -> AVRational? {
-        let index = streamIndex(type: type)
-        let stream: UnsafeMutablePointer<AVStream>? = self.stream(at: index)
-        return stream?.pointee.time_base
-    }
-    
-    var audio_queue = PacketQueue()
-    
-    init?(inputPath path: String) {
-        self.inputPath = path
-        self.outputPath = nil
-        formatContext = avformat_alloc_context()
-    }
-    
-    func setupVideoFilter(filterDesc: String) -> Bool {
-        self.videoFilter = AVFilterHelper();
-        return videoFilter?.setup(formatContext, videoStream: stream(type: AVMEDIA_TYPE_VIDEO), filterDescription: filterDesc) ?? false
-    }
-    
-    typealias FrameHandle = (_ type:AVMediaType, _ frame: UnsafePointer<AVFrame>?) -> HandleResult
-    typealias PacketHandle = (_ type:AVMediaType, _ packet: UnsafePointer<AVPacket>?) -> HandleResult
-    
-    enum HandleResult {
-        case succeed
-        case ignored
-        case cancelled(reason: Int32)
-    }
-    
-    var frame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
-    var packet: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
-    
-    func decode(frameHandle: FrameHandle? = nil,
-                packetHandle: PacketHandle? = nil,
-                completion: () -> Bool) {
-        defer {
-            av_frame_free(&frame)
-            av_packet_free(&packet)
-        }
-        
-        guard let frame = frame else {
-            return
-        }
-        guard let packet = packet else {
-            return
-        }
-        
-        
-        var got_frame: Int32 = 1
-        while 0 == av_read_frame(formatContext, packet) {
-            defer {
-                av_packet_unref(packet)
-            }
-            
-            let type = self.type(at: packet.pointee.stream_index)!
-            if let handle = packetHandle {
-                switch handle(type, packet) {
-                case .succeed:
-                    continue
-                case .cancelled(let reason):
-                    isErr(reason, "packet decoding cancelled")
-                case .ignored:
-                    break
-                }
-            }
-            
-            if let handle = frameHandle, let ctx = self.codecCtx(at: packet.p.stream_index) {
-                
-                defer {
-                    av_frame_unref(frame)
-                }
-                guard decode_codec(ctx, stream: self.stream(at: packet.p.stream_index), packet: packet, frame: frame) else {
-                    break
-                }
-                
-                var result: HandleResult = .ignored
-                switch videoFilter {
-                case let filter?:
-                    if filter.applyFilter(frame) {
-                        defer {
-                            av_frame_unref(filter.filterFrame)
-                        }
-                        result = handle(type, filter.filterFrame)
-                    }
-                default:
-                    result = handle(type, frame)
-                }
-                
-                switch result {
-                case .cancelled(let reason):
-                    isErr(reason, "frame decoding cancelled")
-                default:
-                    break
-                }
-            }
-            guard completion() else {
-                break
-            }
-        }
-    }
-    
-    func audio_decode_frame(audioCodecContext ctx: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
-        
-        var pkt: AVPacket = AVPacket()
-        var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
-        var audio_pkt_size: Int32 = 0
-        var frame: AVFrame = AVFrame()
-        
-        var data_size: Int32 = 0
-        while true {
-            while 0 < audio_pkt_size {
-                var result = avcodec_send_packet(ctx, &pkt)
-                if result == AVERROR_CONVERT(EAGAIN) {
-                    continue
-                } else if isErr(result, "audio packet send") {
-                    return result
-                }
-                result = avcodec_receive_frame(ctx, &frame)
-                if result == AVERROR_CONVERT(EAGAIN) {
-                    continue
-                } else if isErr(result, "audio frame receive") {
-                    return result
-                }
-                audio_pkt_data = audio_pkt_data?.advanced(by: Int(result))
-                audio_pkt_size -= result
-                data_size = av_samples_get_buffer_size(nil, ctx.pointee.channels, frame.nb_samples, ctx.pointee.sample_fmt, 1)
-                if 0 >= data_size {
-                    continue
-                }
-                assert(data_size < buf_size)
-                memcpy(audio_buf, frame.data.0, Int(data_size))
-                return data_size
-            }
-            
-            if pkt.data != nil {
-                av_packet_unref(&pkt)
-            }
-            if PacketQueueQuit {
-                return -1
-            }
-            if 0 > audio_queue.get(pkt: &pkt, block: true) {
-                return -1
-            }
-            audio_pkt_data = pkt.data
-            audio_pkt_size = pkt.size
-        }
-        
-        return 0
-    }
-    
-    deinit {
-        close()
-    }
-}
-
 struct ValueLimiter<Number: Comparable> where Number: Hashable {
     let min: Number
     let max: Number
@@ -521,4 +339,191 @@ struct AVFilterDescriptor: AVFilterDescription {
             return "smartblur=lr=\(lr):ls=\(ls):lt=\(lt):cr=\(cr):cs=\(cs):ct=\(ct)"
         }
     }
+}
+
+//MARK:- AVHelper
+/// AVHelper class
+class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSizeProtocol {
+    let inputPath: String
+    var outputPath: String?
+    
+    internal(set) var codecs: [Int32 : UnsafeMutablePointer<AVCodec>] = [:]
+    internal(set) var codecCtxes: [Int32 : UnsafeMutablePointer<AVCodecContext>] = [:]
+    
+    var formatContext: UnsafeMutablePointer<AVFormatContext>?
+    
+    var videoFilter: AVFilterHelper?
+    
+    var width: Int32 {
+        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.width ?? 0
+    }
+    var height: Int32 {
+        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.height ?? 0
+    }
+    var pix_fmt: AVPixelFormat? {
+        guard let param: UnsafeMutablePointer<AVCodecParameters> = params(type: AVMEDIA_TYPE_VIDEO) else {
+            return AV_PIX_FMT_NONE
+        }
+        return AVPixelFormat(rawValue: param.pointee.format)
+    }
+    
+    var pixel_aspect: AVRational? {
+        return params(type: AVMEDIA_TYPE_VIDEO)?.pointee.sample_aspect_ratio
+    }
+    
+    func time_base(forMediaType type: AVMediaType) -> AVRational? {
+        let index = streamIndex(type: type)
+        let stream: UnsafeMutablePointer<AVStream>? = self.stream(at: index)
+        return stream?.pointee.time_base
+    }
+    
+    var audio_queue = PacketQueue()
+    
+    init?(inputPath path: String) {
+        self.inputPath = path
+        self.outputPath = nil
+        formatContext = avformat_alloc_context()
+    }
+    
+    func setupVideoFilter(filterDesc: String) -> Bool {
+        self.videoFilter = AVFilterHelper();
+        return videoFilter?.setup(formatContext, videoStream: stream(type: AVMEDIA_TYPE_VIDEO), filterDescription: filterDesc) ?? false
+    }
+    
+    typealias FrameHandle = (_ type:AVMediaType, _ frame: UnsafePointer<AVFrame>?) -> HandleResult
+    typealias PacketHandle = (_ type:AVMediaType, _ packet: UnsafePointer<AVPacket>?) -> HandleResult
+    
+    enum HandleResult {
+        case succeed
+        case ignored
+        case cancelled(reason: Int32)
+    }
+    
+    var frame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
+    var packet: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+    
+    func audio_decode_frame(audioCodecContext ctx: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
+        
+        var pkt: AVPacket = AVPacket()
+        var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
+        var audio_pkt_size: Int32 = 0
+        var frame: AVFrame = AVFrame()
+        
+        var data_size: Int32 = 0
+        while true {
+            while 0 < audio_pkt_size {
+                var result = avcodec_send_packet(ctx, &pkt)
+                if result == AVERROR_CONVERT(EAGAIN) {
+                    continue
+                } else if isErr(result, "audio packet send") {
+                    return result
+                }
+                result = avcodec_receive_frame(ctx, &frame)
+                if result == AVERROR_CONVERT(EAGAIN) {
+                    continue
+                } else if isErr(result, "audio frame receive") {
+                    return result
+                }
+                audio_pkt_data = audio_pkt_data?.advanced(by: Int(result))
+                audio_pkt_size -= result
+                data_size = av_samples_get_buffer_size(nil, ctx.pointee.channels, frame.nb_samples, ctx.pointee.sample_fmt, 1)
+                if 0 >= data_size {
+                    continue
+                }
+                assert(data_size < buf_size)
+                memcpy(audio_buf, frame.data.0, Int(data_size))
+                return data_size
+            }
+            
+            if pkt.data != nil {
+                av_packet_unref(&pkt)
+            }
+            if PacketQueueQuit {
+                return -1
+            }
+            if 0 > audio_queue.get(pkt: &pkt, block: true) {
+                return -1
+            }
+            audio_pkt_data = pkt.data
+            audio_pkt_size = pkt.size
+        }
+        
+        return 0
+    }
+    
+    deinit {
+        close()
+    }
+    
+    
+    func decode(frameHandle: FrameHandle? = nil,
+                packetHandle: PacketHandle? = nil,
+                completion: () -> Bool) {
+        defer {
+            av_frame_free(&frame)
+            av_packet_free(&packet)
+        }
+        
+        guard let frame = frame else {
+            return
+        }
+        guard let packet = packet else {
+            return
+        }
+        
+        
+        var got_frame: Int32 = 1
+        while 0 == av_read_frame(formatContext, packet) {
+            defer {
+                av_packet_unref(packet)
+            }
+            
+            let type = self.type(at: packet.pointee.stream_index)!
+            if let handle = packetHandle {
+                switch handle(type, packet) {
+                case .succeed:
+                    continue
+                case .cancelled(let reason):
+                    isErr(reason, "packet decoding cancelled")
+                case .ignored:
+                    break
+                }
+            }
+            
+            if let handle = frameHandle, let ctx = self.codecCtx(at: packet.p.stream_index) {
+                
+                defer {
+                    av_frame_unref(frame)
+                }
+                guard decode_codec(ctx, stream: self.stream(at: packet.p.stream_index), packet: packet, frame: frame) else {
+                    break
+                }
+                
+                var result: HandleResult = .ignored
+                switch videoFilter {
+                case let filter?:
+                    if filter.applyFilter(frame) {
+                        defer {
+                            av_frame_unref(filter.filterFrame)
+                        }
+                        result = handle(type, filter.filterFrame)
+                    }
+                default:
+                    result = handle(type, frame)
+                }
+                
+                switch result {
+                case .cancelled(let reason):
+                    isErr(reason, "frame decoding cancelled")
+                default:
+                    break
+                }
+            }
+            guard completion() else {
+                break
+            }
+        }
+    }
+    
+    
 }
