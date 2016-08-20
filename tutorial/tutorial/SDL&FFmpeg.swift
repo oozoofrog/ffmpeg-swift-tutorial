@@ -108,3 +108,10 @@ func update(frame:UnsafeMutablePointer<AVFrame>?, texture: OpaquePointer?, rende
     SDL_RenderCopy(renderer, texture, &rect, &toRect)
     SDL_RenderPresent(renderer)
 }
+
+func sdl_rect(from: UnsafeMutablePointer<AVFrame>?) -> SDL_Rect {
+    var rect: SDL_Rect = SDL_Rect()
+    rect.w = from?.p.width ?? 0
+    rect.h = from?.p.height ?? 0
+    return rect
+}

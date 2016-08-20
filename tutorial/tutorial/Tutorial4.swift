@@ -38,9 +38,16 @@ struct  Tutorial4: Tutorial {
     
     struct VideoPicture {
         /// SDL_Texture
-        var texture: OpaquePointer? = nil
-        var width: Int32 = 0, height: Int32 = 0
-        var allocated: Int32 = 0
+        var frame: UnsafeMutablePointer<AVFrame>? = nil
+        var width: Int32 {
+            return frame?.p.width ?? 0
+        }
+        var height: Int32 {
+            return frame?.p.height ?? 0
+        }
+        var allocated: Bool {
+            return nil != frame
+        }
     }
     
     struct VideoState {
@@ -60,8 +67,16 @@ struct  Tutorial4: Tutorial {
         
         var video_st: UnsafeMutablePointer<AVStream>? = nil
         var video_ctx: UnsafeMutablePointer<AVCodecContext>? = nil
+        var w: Int32 {
+            return video_ctx?.p.width ?? 0
+        }
+        var h: Int32 {
+            return video_ctx?.p.height ?? 0
+        }
         var videoq: PacketQueue = PacketQueue()
+        var window: OpaquePointer? = nil
         var renderer: OpaquePointer? = nil
+        var texture: OpaquePointer? = nil
         
         var pictq:[VideoPicture] = [VideoPicture](repeating: VideoPicture(), count: Tutorial4.VIDEO_PICTURE_QUEUE_SIZE)
         var pictq_size: Int32 = 0
@@ -248,9 +263,9 @@ struct  Tutorial4: Tutorial {
         
         vp = vs.p.pictq.ptr?.cast()
         
-        if let t = vp?.p.texture {
-            var width: Double = vs.p.video_st?.p.codecpar.p.width.cast() ?? 0.0
-            var height: Double = vs.p.video_st?.p.codecpar.p.height.cast() ?? 0.0
+        if let frame = vp?.p.frame {
+            let width: Double = frame.p.width.cast()
+            let height: Double = frame.p.height.cast()
             if 0 == vs.p.video_st?.p.codecpar.p.sample_aspect_ratio.num {
                 aspect_ratio = 0
             } else {
@@ -271,9 +286,10 @@ struct  Tutorial4: Tutorial {
             
             rect = p
             
+            var src_rect: SDL_Rect = SDL_Rect(x: 0, y: 0, w: frame.p.width, h: frame.p.height)
+            SDL_UpdateYUVTexture(vs.p.texture, &src_rect, frame.p.data.0, frame.p.linesize.0, frame.p.data.1, frame.p.linesize.1, frame.p.data.2, frame.p.linesize.2)
             SDL_RenderClear(vs.p.renderer)
-            var src_rect: SDL_Rect = SDL_Rect(x: 0, y: 0, w: vs.p.video_st?.p.codecpar.p.width ?? 0, h: vs.p.video_st?.p.codecpar.p.height ?? 0)
-            SDL_RenderCopy(vs.p.renderer, vp?.p.texture, &src_rect, &rect)
+            SDL_RenderCopy(vs.p.renderer, vs.p.texture, &src_rect, &rect)
             SDL_RenderPresent(vs.p.renderer)
         }
     }
@@ -355,6 +371,81 @@ struct  Tutorial4: Tutorial {
             vs.p.video_tid = SDL_CreateThread(video_thread, "video thread", vs.castRaw(from: VideoState.self))
         default:
             break
+        }
+        
+        return 0
+    }
+    
+    func video_refresh_timer(userdata: UnsafeMutableRawPointer) {
+        var vs: UnsafeMutablePointer<VideoState> = userdata.cast(to: VideoState.self)
+        if let st = vs.p.video_st {
+            if vs.p.pictq_size == 0 {
+                Tutorial4.schedule_refresh(vs: vs, delay: 1)
+            } else {
+                Tutorial4.schedule_refresh(vs: vs, delay: 80)
+                video_display(vs: vs)
+                vs.p.pictq_rindex += 1
+                if vs.p.pictq_rindex == Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() {
+                    vs.p.pictq_rindex = 0
+                }
+                SDL_LockMutex(vs.p.pictq_mutex)
+                vs.p.pictq_size -= 1
+                SDL_CondSignal(vs.p.pictq_cond)
+                SDL_UnlockMutex(vs.p.pictq_mutex)
+            }
+        } else {
+            Tutorial4.schedule_refresh(vs: vs, delay: 100)
+        }
+    }
+    
+    func alloc_picture(userdata: UnsafeMutableRawPointer) {
+        var vs:UnsafeMutablePointer<VideoState> = userdata.cast(to: VideoState.self)
+        var vp: UnsafeMutablePointer<VideoPicture>? = vs.p.pictq.ptr?.advanced(by: vs.p.pictq_windex.cast()).cast()
+ 
+        if nil != vp?.p.frame {
+            av_frame_free(<<&vp!.p.frame)
+        }
+        
+        vp?.p.frame = av_frame_alloc()
+        SDL_LockMutex(vs.p.pictq_mutex)
+        SDL_CondSignal(vs.p.pictq_cond)
+        SDL_UnlockMutex(vs.p.pictq_mutex)
+    }
+    
+    func queue_picture(vs: UnsafeMutablePointer<VideoState>, pFrame: UnsafeMutablePointer<AVFrame>) -> Int32 {
+        SDL_LockMutex(vs.p.pictq_mutex)
+        while vs.p.pictq_size >= Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() && 1 != vs.p.quit {
+            SDL_CondWait(vs.p.pictq_cond, vs.p.pictq_mutex)
+        }
+        SDL_UnlockMutex(vs.p.pictq_mutex)
+        if 1 == vs.p.quit {
+            return -1
+        }
+        var vp: UnsafeMutablePointer<VideoPicture>? = vs.p.pictq.ptr?.advanced(by: Int(vs.p.pictq_windex)).cast()
+        if nil == vp?.p.frame || vp?.p.width != vs.p.w || vp?.p.height != vs.p.h {
+            var event: SDL_Event = SDL_Event()
+            if nil != vp?.p.frame {
+                av_frame_free(&vp!.p.frame)
+                vp?.p.frame = nil
+            }
+            event.type = Tutorial4.FF_ALLOC_EVENT.rawValue
+            event.user.data1 = vs.castRaw(from: VideoState.self)
+            SDL_PushEvent(&event)
+            
+            SDL_LockMutex(vs.p.pictq_mutex)
+            while false == vp?.p.allocated && 1 != vs.p.quit {
+                SDL_CondWait(vs.p.pictq_cond, vs.p.pictq_mutex)
+            }
+            SDL_UnlockMutex(vs.p.pictq_mutex)
+            if 1 == vs.p.quit {
+                return -1
+            }
+        }
+        
+        if let frame = vp?.p.frame {
+            var rect: SDL_Rect = sdl_rect(from: frame)
+            SDL_UpdateYUVTexture(vs.p.texture, &rect, frame.p.data.0, frame.p.linesize.0, frame.p.data.1, frame.p.linesize.1, frame.p.data.2, frame.p.linesize.2)
+            
         }
         
         return 0
