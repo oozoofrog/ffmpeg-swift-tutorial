@@ -493,6 +493,7 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
             if let handle = frameHandle, let ctx = self.codecCtx(at: packet.p.stream_index) {
                 
                 defer {
+                    av_packet_unref(packet)
                     av_frame_unref(frame)
                 }
                 guard decode_codec(ctx, stream: self.stream(at: packet.p.stream_index), packet: packet, frame: frame) else {

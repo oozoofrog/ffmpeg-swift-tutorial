@@ -294,13 +294,112 @@ struct  Tutorial4: Tutorial {
         }
     }
     
-    var decode_thread: SDL_ThreadFunction = { (user_ctx) -> Int32 in
+    func video_refresh_timer(userdata: UnsafeMutableRawPointer) {
+        var vs: UnsafeMutablePointer<VideoState> = userdata.cast(to: VideoState.self)
+        if let st = vs.p.video_st {
+            if vs.p.pictq_size == 0 {
+                Tutorial4.schedule_refresh(vs: vs, delay: 1)
+            } else {
+                Tutorial4.schedule_refresh(vs: vs, delay: 80)
+                video_display(vs: vs)
+                vs.p.pictq_rindex += 1
+                if vs.p.pictq_rindex == Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() {
+                    vs.p.pictq_rindex = 0
+                }
+                SDL_LockMutex(vs.p.pictq_mutex)
+                vs.p.pictq_size -= 1
+                SDL_CondSignal(vs.p.pictq_cond)
+                SDL_UnlockMutex(vs.p.pictq_mutex)
+            }
+        } else {
+            Tutorial4.schedule_refresh(vs: vs, delay: 100)
+        }
+    }
+    
+    func alloc_picture(userdata: UnsafeMutableRawPointer) {
+        var vs:UnsafeMutablePointer<VideoState> = userdata.cast(to: VideoState.self)
+        var vp: UnsafeMutablePointer<VideoPicture>? = vs.p.pictq.ptr?.advanced(by: vs.p.pictq_windex.cast()).cast()
+ 
+        if nil != vp?.p.frame {
+            av_frame_free(<<&vp!.p.frame)
+        }
+        
+        vp?.p.frame = av_frame_alloc()
+        SDL_LockMutex(vs.p.pictq_mutex)
+        SDL_CondSignal(vs.p.pictq_cond)
+        SDL_UnlockMutex(vs.p.pictq_mutex)
+    }
+    
+    static func queue_picture(vs: UnsafeMutablePointer<VideoState>, pFrame: UnsafeMutablePointer<AVFrame>) -> Int32 {
+        SDL_LockMutex(vs.p.pictq_mutex)
+        while vs.p.pictq_size >= Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() && 1 != vs.p.quit {
+            SDL_CondWait(vs.p.pictq_cond, vs.p.pictq_mutex)
+        }
+        SDL_UnlockMutex(vs.p.pictq_mutex)
+        if 1 == vs.p.quit {
+            return -1
+        }
+        var vp: UnsafeMutablePointer<VideoPicture>? = vs.p.pictq.ptr?.advanced(by: Int(vs.p.pictq_windex)).cast()
+        if nil == vp?.p.frame || vp?.p.width != vs.p.w || vp?.p.height != vs.p.h {
+            var event: SDL_Event = SDL_Event()
+            if nil != vp?.p.frame {
+                av_frame_free(&vp!.p.frame)
+                vp?.p.frame = nil
+            }
+            event.type = Tutorial4.FF_ALLOC_EVENT.rawValue
+            event.user.data1 = vs.castRaw(from: VideoState.self)
+            SDL_PushEvent(&event)
+            
+            SDL_LockMutex(vs.p.pictq_mutex)
+            while false == vp?.p.allocated && 1 != vs.p.quit {
+                SDL_CondWait(vs.p.pictq_cond, vs.p.pictq_mutex)
+            }
+            SDL_UnlockMutex(vs.p.pictq_mutex)
+            if 1 == vs.p.quit {
+                return -1
+            }
+        }
+        
+        if let frame = vp?.p.frame {
+            var vs = vs
+            av_frame_copy(frame, pFrame)
+            vs.p.pictq_windex += 1
+            if Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() <= vs.p.pictq_windex {
+                vs.p.pictq_windex = 0
+            }
+            SDL_LockMutex(vs.p.pictq_mutex)
+            vs.p.pictq_size += 1
+            SDL_UnlockMutex(vs.p.pictq_mutex)
+        }
+        
         return 0
     }
     
     var video_thread: SDL_ThreadFunction = { (user_ctx) -> Int32 in
+        var vs: UnsafeMutablePointer<VideoState>? = user_ctx?.cast(to: VideoState.self)
+        var packet: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+        var pFrame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
+        defer {
+            av_frame_free(&pFrame)
+        }
+        var videoq: UnsafeMutablePointer<PacketQueue> = <<&vs!.p.videoq
+        while true {
+            guard 0 <= Tutorial4.packet_queue_get(q: videoq, pkt: &packet, block: 1) else {
+                break
+            }
+            guard decode_codec(vs?.p.video_ctx, stream: vs?.p.video_st, packet: packet, frame: pFrame) else {
+                break
+            }
+            defer {
+                av_packet_unref(packet)
+            }
+            guard 0 <= Tutorial4.queue_picture(vs: vs!, pFrame: pFrame!) else {
+                break
+            }
+        }
         return 0
     }
+    
     
     func stream_component_open(vs: UnsafeMutablePointer<VideoState>, stream_index: Int32) -> Int32 {
         var vs: UnsafeMutablePointer<VideoState> = vs
@@ -331,8 +430,6 @@ struct  Tutorial4: Tutorial {
         if isErr(avcodec_parameters_to_context(codecCtx, codecpar), "param to context") {
             return -1
         }
-        
-        
         
         if codecCtx.p.codec_type == AVMEDIA_TYPE_AUDIO {
             wanted_spec.freq = codecCtx.p.sample_rate
@@ -376,78 +473,12 @@ struct  Tutorial4: Tutorial {
         return 0
     }
     
-    func video_refresh_timer(userdata: UnsafeMutableRawPointer) {
-        var vs: UnsafeMutablePointer<VideoState> = userdata.cast(to: VideoState.self)
-        if let st = vs.p.video_st {
-            if vs.p.pictq_size == 0 {
-                Tutorial4.schedule_refresh(vs: vs, delay: 1)
-            } else {
-                Tutorial4.schedule_refresh(vs: vs, delay: 80)
-                video_display(vs: vs)
-                vs.p.pictq_rindex += 1
-                if vs.p.pictq_rindex == Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() {
-                    vs.p.pictq_rindex = 0
-                }
-                SDL_LockMutex(vs.p.pictq_mutex)
-                vs.p.pictq_size -= 1
-                SDL_CondSignal(vs.p.pictq_cond)
-                SDL_UnlockMutex(vs.p.pictq_mutex)
-            }
-        } else {
-            Tutorial4.schedule_refresh(vs: vs, delay: 100)
-        }
+    func decode_interrupt_cb() -> Int32 {
+        return 1 == Tutorial4.global_video_state.quit ? 1 : 0
     }
     
-    func alloc_picture(userdata: UnsafeMutableRawPointer) {
-        var vs:UnsafeMutablePointer<VideoState> = userdata.cast(to: VideoState.self)
-        var vp: UnsafeMutablePointer<VideoPicture>? = vs.p.pictq.ptr?.advanced(by: vs.p.pictq_windex.cast()).cast()
- 
-        if nil != vp?.p.frame {
-            av_frame_free(<<&vp!.p.frame)
-        }
-        
-        vp?.p.frame = av_frame_alloc()
-        SDL_LockMutex(vs.p.pictq_mutex)
-        SDL_CondSignal(vs.p.pictq_cond)
-        SDL_UnlockMutex(vs.p.pictq_mutex)
-    }
-    
-    func queue_picture(vs: UnsafeMutablePointer<VideoState>, pFrame: UnsafeMutablePointer<AVFrame>) -> Int32 {
-        SDL_LockMutex(vs.p.pictq_mutex)
-        while vs.p.pictq_size >= Tutorial4.VIDEO_PICTURE_QUEUE_SIZE.cast() && 1 != vs.p.quit {
-            SDL_CondWait(vs.p.pictq_cond, vs.p.pictq_mutex)
-        }
-        SDL_UnlockMutex(vs.p.pictq_mutex)
-        if 1 == vs.p.quit {
-            return -1
-        }
-        var vp: UnsafeMutablePointer<VideoPicture>? = vs.p.pictq.ptr?.advanced(by: Int(vs.p.pictq_windex)).cast()
-        if nil == vp?.p.frame || vp?.p.width != vs.p.w || vp?.p.height != vs.p.h {
-            var event: SDL_Event = SDL_Event()
-            if nil != vp?.p.frame {
-                av_frame_free(&vp!.p.frame)
-                vp?.p.frame = nil
-            }
-            event.type = Tutorial4.FF_ALLOC_EVENT.rawValue
-            event.user.data1 = vs.castRaw(from: VideoState.self)
-            SDL_PushEvent(&event)
-            
-            SDL_LockMutex(vs.p.pictq_mutex)
-            while false == vp?.p.allocated && 1 != vs.p.quit {
-                SDL_CondWait(vs.p.pictq_cond, vs.p.pictq_mutex)
-            }
-            SDL_UnlockMutex(vs.p.pictq_mutex)
-            if 1 == vs.p.quit {
-                return -1
-            }
-        }
-        
-        if let frame = vp?.p.frame {
-            var rect: SDL_Rect = sdl_rect(from: frame)
-            SDL_UpdateYUVTexture(vs.p.texture, &rect, frame.p.data.0, frame.p.linesize.0, frame.p.data.1, frame.p.linesize.1, frame.p.data.2, frame.p.linesize.2)
-            
-        }
-        
+    var decode_thread: SDL_ThreadFunction = { (user_ctx) -> Int32 in
+        var vs: UnsafeMutablePointer<VideoState>? = user_ctx?.cast()
         return 0
     }
     
