@@ -154,14 +154,21 @@ extension AVStreamGetter where Self: AVHelper, Self: AVCodecParametersGetter {
     }
 }
 
+func decode_codec(_ st: UnsafeMutablePointer<AVStream>, frame: UnsafeMutablePointer<AVFrame>, packet: UnsafeMutablePointer<AVPacket>, pkt_size: inout Int32) -> Bool {
+    let result = decode_codec(st.p.codec, stream: st, packet: packet, frame: frame)
+    pkt_size = result.packet_size
+    return result.decoded
+}
+
 /// from try_decode_frame in utils.c -> https://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02847
-func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMutablePointer<AVStream>?, packet: UnsafeMutablePointer<AVPacket>?, frame: UnsafeMutablePointer<AVFrame>?) -> Bool {
-    var got_picture: Int32 = 1
+func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMutablePointer<AVStream>?, packet: UnsafeMutablePointer<AVPacket>?, frame: UnsafeMutablePointer<AVFrame>?) -> (decoded: Bool, packet_size: Int32) {
+    var got_picture: Bool = true
     var ret: Int32 = 0
-    
+    var packet_size: Int32 = 0
     // looping while packet size bigger than 0 or have got_picture and packet have nil data and ret is greater than or equal 0
-    while (0 < packet?.p.size ?? 0 || (nil == packet?.p.data && 1 == got_picture)) && 0 <= ret {
-        got_picture = 0
+    while (0 < packet?.p.size ?? 0 || (nil == packet?.p.data && got_picture)) && 0 <= ret {
+        got_picture = false
+        packet_size = 0
         switch ctx!.p.codec_type {
         case AVMEDIA_TYPE_VIDEO, AVMEDIA_TYPE_AUDIO:
             // send packet to codec context
@@ -170,6 +177,7 @@ func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMu
             if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && !IS_AVERROR_EOF(ret) {
                 break
             }
+  
             // make packet size zero by condition for ret is greater than or equal 0
             if 0 <= ret {
                 var packet = packet
@@ -179,28 +187,30 @@ func decode_codec(_ ctx: UnsafeMutablePointer<AVCodecContext>?, stream: UnsafeMu
             // receive frame from codec context
             ret = avcodec_receive_frame(ctx, frame)
             if 0 <= ret {
-                got_picture = 1
+                got_picture = true
             }
             if ret == AVERROR_CONVERT(EAGAIN) || IS_AVERROR_EOF(ret) {
+                print_err(ret, "avcodec_receive_frame");
                 ret = 0
             }
+            packet_size = frame?.p.pkt_size ?? 0
         default:
             break
         }
         if 0 <= ret {
-            if 1 == got_picture {
+            if got_picture {
                 var st = stream
                 st?.p.nb_decoded_frames += 1
             }
-            ret = got_picture
+            ret = got_picture ? 1 : 0
         }
     }
     
-    if nil == packet?.p.data && 1 != got_picture {
-        return false
+    if nil == packet?.p.data && got_picture {
+        return (decoded: false, packet_size: packet_size)
     }
     
-    return true
+    return (decoded: true, packet_size: packet_size)
 }
 
 struct ValueLimiter<Number: Comparable> where Number: Hashable {
@@ -377,8 +387,6 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
         return stream?.pointee.time_base
     }
     
-    var audio_queue = PacketQueue()
-    
     init?(inputPath path: String) {
         self.inputPath = path
         self.outputPath = nil
@@ -401,55 +409,6 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
     
     var frame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
     var packet: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
-    
-    func audio_decode_frame(audioCodecContext ctx: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
-        
-        var pkt: AVPacket = AVPacket()
-        var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
-        var audio_pkt_size: Int32 = 0
-        var frame: AVFrame = AVFrame()
-        
-        var data_size: Int32 = 0
-        while true {
-            while 0 < audio_pkt_size {
-                var result = avcodec_send_packet(ctx, &pkt)
-                if result == AVERROR_CONVERT(EAGAIN) {
-                    continue
-                } else if isErr(result, "audio packet send") {
-                    return result
-                }
-                result = avcodec_receive_frame(ctx, &frame)
-                if result == AVERROR_CONVERT(EAGAIN) {
-                    continue
-                } else if isErr(result, "audio frame receive") {
-                    return result
-                }
-                audio_pkt_data = audio_pkt_data?.advanced(by: Int(result))
-                audio_pkt_size -= result
-                data_size = av_samples_get_buffer_size(nil, ctx.pointee.channels, frame.nb_samples, ctx.pointee.sample_fmt, 1)
-                if 0 >= data_size {
-                    continue
-                }
-                assert(data_size < buf_size)
-                memcpy(audio_buf, frame.data.0, Int(data_size))
-                return data_size
-            }
-            
-            if pkt.data != nil {
-                av_packet_unref(&pkt)
-            }
-            if PacketQueueQuit {
-                return -1
-            }
-            if 0 > audio_queue.get(pkt: &pkt, block: true) {
-                return -1
-            }
-            audio_pkt_data = pkt.data
-            audio_pkt_size = pkt.size
-        }
-        
-        return 0
-    }
     
     deinit {
         close()
@@ -496,7 +455,7 @@ class AVHelper: AVHelperProtocol, AVCodecParametersGetter, AVStreamGetter, AVSiz
                     av_packet_unref(packet)
                     av_frame_unref(frame)
                 }
-                guard decode_codec(ctx, stream: self.stream(at: packet.p.stream_index), packet: packet, frame: frame) else {
+                guard decode_codec(ctx, stream: self.stream(at: packet.p.stream_index), packet: packet, frame: frame).decoded else {
                     break
                 }
                 

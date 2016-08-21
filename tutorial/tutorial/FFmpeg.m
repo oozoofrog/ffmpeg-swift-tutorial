@@ -25,6 +25,14 @@ Test* alloc_test() {
     return test;
 }
 
+BOOL av_success(int ret) {
+    if (0 <= ret) {
+        return YES;
+    }
+    printf("🤔 %s\n", av_err2str(ret));
+    return NO;
+}
+
 BOOL isErr(int err, const char* desc) {
     if (err >= 0) {
         return NO;
@@ -52,6 +60,23 @@ BOOL IS_AVERROR_EOF(int err) {
 
 BOOL AVFILTER_EOF(int ret) {
     return ret == AVERROR(EAGAIN) || ret == AVERROR_EOF;
+}
+
+NSString* codec_name_for_codec_id(enum AVCodecID codec_id) {
+    return [NSString stringWithCString:avcodec_get_name(codec_id) encoding:NSASCIIStringEncoding];
+}
+NSString* codec_name_for_stream(AVStream* stream) {
+    return codec_name_for_codec_id(stream->codecpar->codec_id);
+}
+NSString* codec_name_for_codec_parameters(AVCodecParameters *codecpar) {
+    return codec_name_for_codec_id(codecpar->codec_id);
+}
+
+NSString* codec_name_for_codec(AVCodec *codec) {
+    return codec_name_for_codec_id(codec->id);
+}
+NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
+    return codec_name_for_codec_id(ctx->codec_id);
 }
 
 @implementation FFmpegHelper

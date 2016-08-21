@@ -145,7 +145,13 @@ extension PointerCastable where Self: UnsafeRawPointerable {
         }
     }
     
+    public func cast<P:UnsafePointerable, M>() -> P where P.Pointee == M {
+        return cast(to: M.self)
+    }
     
+    public func cast<P:UnsafePointerable, M>() -> P? where P.Pointee == M {
+        return cast(to: M.self)
+    }
 }
 
 public protocol Pointerable {

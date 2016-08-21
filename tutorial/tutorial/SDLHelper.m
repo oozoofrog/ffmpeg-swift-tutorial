@@ -18,8 +18,12 @@ BOOL isSDLError(int err) {
     return NO;
 }
 
-void audio_callback(void *userdata, UInt8 *stream, int length) {
-    NSLog(@"audio_callback");
+BOOL sdl_success(int ret) {
+    if (0 > ret) {
+        printf("🤔 %s\n", SDL_GetError());
+        return NO;
+    }
+    return YES;
 }
 
 @implementation SDLHelper
@@ -41,20 +45,6 @@ void audio_callback(void *userdata, UInt8 *stream, int length) {
         return NO;
     }
     return YES;
-}
-
-+ (SDL_AudioSpec)SDLAudioSpec:(void *)userData codecpar:(AVCodecParameters *)codecpar format:(SDL_AudioFormat)format bufferSize: (size_t)bufferSize {
-    SDL_AudioSpec audio_spec;
-    
-    audio_spec.freq = codecpar->sample_rate;
-    audio_spec.channels = codecpar->channels;
-    audio_spec.format = format;
-    audio_spec.silence = 0;
-    audio_spec.samples = bufferSize;
-    audio_spec.userdata = userData;
-    audio_spec.callback = audio_callback;
-    
-    return audio_spec;
 }
 
 @end

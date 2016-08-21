@@ -19,6 +19,7 @@ Test* alloc_test();
 
 struct AVDictionary;
 
+BOOL av_success(int ret);
 BOOL isErr(int err, const char* desc);
 void print_err(int err, const char* desc);
 
@@ -26,6 +27,12 @@ int AVERROR_CONVERT(int err);
 BOOL IS_AVERROR_EOF(int err);
 
 BOOL AVFILTER_EOF(int ret);
+
+NSString* codec_name_for_codec_id(enum AVCodecID codec_id);
+NSString* codec_name_for_stream(AVStream* stream);
+NSString* codec_name_for_codec_parameters(AVCodecParameters *codecpar);
+NSString* codec_name_for_codec(AVCodec *codec);
+NSString* codec_name_for_codec_ctx(AVCodecContext *ctx);
 
 @interface FFmpegHelper : NSObject
 
