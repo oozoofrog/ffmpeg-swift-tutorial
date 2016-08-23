@@ -10,6 +10,7 @@
 #import <libavformat/avformat.h>
 #import <libavfilter/avfilter.h>
 #import <libavfilter/avfiltergraph.h>
+#import <libavfilter/buffersrc.h>
 
 typedef struct Test{
     int values[8];

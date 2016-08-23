@@ -8,7 +8,93 @@
 
 import Foundation
 
+func pset<P>(_ target: UnsafeMutablePointer<P>, value: P) {
+    target.pointee = value
+}
+
+func cast<P>(_ target: UnsafeMutablePointer<P>) -> P {
+    return target.pointee
+}
+
+func cast<P>(_ target: UnsafePointer<P>) -> P {
+    return target.pointee
+}
+
 @objc public class tutorial4: NSObject {
+    
+    static public func packet_queue_init(q: UnsafeMutablePointer<PacketQueue>) {
+        memset(q, 0, MemoryLayout<PacketQueue>.stride)
+        q.pointee.mutex = SDL_CreateMutex()
+        q.pointee.cond = SDL_CreateCond()
+    }
+    
+    static public func packet_queue_put(q: UnsafeMutablePointer<PacketQueue>, pkt: UnsafeMutablePointer<AVPacket>?) -> Int32 {
+        var pkt1: UnsafeMutablePointer<AVPacketList>!
+        if nil == pkt?.pointee.data {
+            guard av_success(av_packet_ref(pkt, av_packet_alloc())) else {
+                return -1
+            }
+        }
+        
+        pkt1 = av_malloc(MemoryLayout<AVPacketList>.stride).assumingMemoryBound(to: AVPacketList.self)
+        if let pkt = pkt {
+            pkt1.pointee.pkt = pkt.pointee
+        }
+        pkt1.pointee.next = nil
+        
+        SDL_LockMutex(q.pointee.mutex)
+        
+        if nil == q.pointee.last_pkt {
+            q.pointee.first_pkt = pkt1
+        } else {
+            q.pointee.last_pkt.pointee.next = pkt1
+        }
+        q.pointee.last_pkt = pkt1
+        q.pointee.nb_packets += 1
+        q.pointee.size += pkt1.pointee.pkt.size
+        SDL_CondSignal(q.pointee.cond)
+        
+        SDL_UnlockMutex(q.pointee.mutex)
+        
+        return 0
+    }
+    
+    static public func packet_queue_get(is vs: UnsafeMutablePointer<VideoState>, q: UnsafeMutablePointer<PacketQueue>, pkt: UnsafeMutablePointer<AVPacket>, block: Int32) -> Int32 {
+        var pkt1: UnsafeMutablePointer<AVPacketList>? = nil
+        var ret: Int32 = 0
+        
+        SDL_LockMutex(q.pointee.mutex)
+        
+        while true {
+            if vs.pointee.quit == 1 {
+                ret = -1
+                break
+            }
+            
+            pkt1 = q.pointee.first_pkt
+            if let pkt1 = pkt1 {
+                q.pointee.first_pkt = pkt1.pointee.next
+                if nil == q.pointee.first_pkt {
+                    q.pointee.last_pkt = nil
+                }
+                q.pointee.nb_packets -= 1
+                q.pointee.size -= pkt1.pointee.pkt.size
+                pkt.pointee = pkt1.pointee.pkt
+                av_free(pkt1)
+                ret = 1
+                break
+            } else if (0 == block) {
+                ret = 0
+                break
+            } else {
+                SDL_CondWait(q.pointee.cond, q.pointee.mutex)
+            }
+        }
+        
+        SDL_UnlockMutex(q.pointee.mutex)
+        
+        return ret
+    }
     
     static public func video_thread(arg: UnsafeMutableRawPointer) -> Int32 {
         

@@ -103,6 +103,8 @@
 		A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
 		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
+		A98B2F771D6D25CC00AD314E /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
+		A98B2F7B1D6D260E00AD314E /* FFmpeg.h in Headers */ = {isa = PBXBuildFile; fileRef = A96D17471D5875F1009F7AC2 /* FFmpeg.h */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
 		A9B7A0741D6C39E40060ADF4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A9B7A0731D6C39E40060ADF4 /* main.m */; };
 		A9B7A0811D6C3A080060ADF4 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A0781D6C3A080060ADF4 /* libavcodec.a */; };
@@ -672,6 +674,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A98B2F7A1D6D260200AD314E /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A98B2F7B1D6D260E00AD314E /* FFmpeg.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -699,6 +709,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A9B7A0751D6C39E40060ADF4 /* Build configuration list for PBXNativeTarget "tutorial4" */;
 			buildPhases = (
+				A98B2F7A1D6D260200AD314E /* Headers */,
 				A9B7A06D1D6C39E40060ADF4 /* Sources */,
 				A9B7A06E1D6C39E40060ADF4 /* Frameworks */,
 				A9B7A06F1D6C39E40060ADF4 /* CopyFiles */,
@@ -835,6 +846,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A98B2F771D6D25CC00AD314E /* FFmpeg.m in Sources */,
 				A9B7A08E1D6C3AFF0060ADF4 /* tutorial4.swift in Sources */,
 				A9B7A0741D6C39E40060ADF4 /* main.m in Sources */,
 			);
