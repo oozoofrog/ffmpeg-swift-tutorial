@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "tutorial4-Swift.h"
+#import <AVFoundation/AVFoundation.h>
 
 // tutorial04.c
 // A pedagogical video player that will stream through every video frame as fast as it can,
@@ -284,7 +285,7 @@ void video_display(VideoState *is) {
                              vp->uvPitch
                              );
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, vp->texture, NULL, NULL);
+        SDL_RenderCopy(renderer, vp->texture, &is->src_rect, &is->dst_rect);
         SDL_RenderPresent(renderer);
         SDL_UnlockMutex(screen_mutex);
         
@@ -331,9 +332,6 @@ void alloc_picture(void *userdata) {
     
     VideoState *is = (VideoState *)userdata;
     VideoPicture *vp;
-    float aspect_ratio;
-    int w, h, x, y;
-    int scr_w, scr_h;
     
     vp = &is->pictq[is->pictq_windex];
     if(vp->texture) {
@@ -343,36 +341,15 @@ void alloc_picture(void *userdata) {
     }
     // Allocate a place to put our YUV image on that screen
     SDL_LockMutex(screen_mutex);
-    
-    if(is->video_ctx->sample_aspect_ratio.num == 0) {
-        aspect_ratio = 0;
-    } else {
-        aspect_ratio = av_q2d(is->video_ctx->sample_aspect_ratio) *
-        is->video_ctx->width / is->video_ctx->height;
-    }
-    if(aspect_ratio <= 0.0) {
-        aspect_ratio = (float)is->video_ctx->width /
-        (float)is->video_ctx->height;
-    }
-    SDL_GetWindowSize(screen, &scr_w, &scr_h);
-    h = scr_h;
-    w = ((int)rint(h * aspect_ratio)) & -3;
-    if(w > scr_w) {
-        w = scr_w;
-        h = ((int)rint(w / aspect_ratio)) & -3;
-    }
-    x = (scr_w - w) / 2;
-    y = (scr_h - h) / 2;
-    printf("screen final size: %dx%d\n", w, h);
-    
+    int w, h;
+    w = is->video_ctx->width;
+    h = is->video_ctx->height;
     vp->texture = SDL_CreateTexture(
                                     renderer,
                                     SDL_PIXELFORMAT_YV12,
                                     SDL_TEXTUREACCESS_STREAMING,
-                                    /* is->video_ctx->width, */
-                                    w,
-                                    /* is->video_ctx->height */
-                                    h
+                                    is->video_ctx->width,
+                                    is->video_ctx->height
                                     );
     vp->yPlaneSz = w * h;
     /* vp->yPlaneSz = is->video_ctx->width * is->video_ctx->height; */
@@ -387,10 +364,7 @@ void alloc_picture(void *userdata) {
     }
     
     vp->uvPitch = is->video_ctx->width / 2;
-    /* vp->bmp = SDL_CreateYUVOverlay(is->video_ctx->width, */
-    /* is->video_ctx->height, */
-    /* SDL_YV12_OVERLAY, */
-    /* screen); */
+    
     SDL_UnlockMutex(screen_mutex);
     
     vp->width = is->video_ctx->width;
@@ -424,10 +398,6 @@ int stream_component_open(VideoState *is, int stream_index) {
     if(avcodec_parameters_to_context(codecCtx, pFormatCtx->streams[stream_index]->codecpar) != 0) {
         fprintf(stderr, "Couldn't copy codec context");
         return -1; // Error copying codec context
-    }
-    
-    if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
-        SDL_SetWindowSize(screen, codecCtx->width, codecCtx->height);
     }
     
     
@@ -468,6 +438,21 @@ int stream_component_open(VideoState *is, int stream_index) {
             is->video_ctx = codecCtx;
             packet_queue_init(&is->videoq);
             is->video_tid = SDL_CreateThread(video_thread, "video_thread", is);
+            
+            is->src_rect.w = codecCtx->width;
+            is->src_rect.h = codecCtx->height;
+            
+            int w, h;
+            w = h = 0;
+            SDL_GetWindowSize(screen, &w, &h);
+            
+            CGSize screenSize = CGSizeMake(is->src_rect.w, is->src_rect.h);
+            CGRect dstRect = AVMakeRectWithAspectRatioInsideRect(screenSize, CGRectMake(0, 0, w, h));
+            is->dst_rect.x = dstRect.origin.x;
+            is->dst_rect.y = dstRect.origin.y;
+            is->dst_rect.w = dstRect.size.width;
+            is->dst_rect.h = dstRect.size.height;
+            
             break;
         default:
             break;
@@ -649,7 +634,7 @@ int main(int argc, char *argv[]) {
                               0,
                               1280,
                               800,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_FULLSCREEN_DESKTOP
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS
                               );
     
     

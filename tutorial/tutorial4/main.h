@@ -83,6 +83,9 @@ typedef struct VideoState {
     AVCodecContext  *video_ctx;
     PacketQueue     videoq;
     
+    SDL_Rect        src_rect;
+    SDL_Rect        dst_rect;
+    
     VideoPicture    pictq[VIDEO_PICTURE_QUEUE_SIZE];
     int             pictq_size, pictq_rindex, pictq_windex;
     SDL_mutex       *pictq_mutex;

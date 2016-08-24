@@ -193,6 +193,24 @@ func cast<P>(_ target: UnsafePointer<P>) -> P {
         return resampled_data_size
     }
     
+    static public func audio_decode_frame(vs: UnsafeMutablePointer<VideoState>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
+        
+        var len1: Int32 = 0
+        var data_size: Int32 = 0
+        var pkt = withUnsafeMutablePointer(to: &vs.pointee.audio_pkt){$0}
+        
+        while true {
+            while vs.pointee.audio_pkt_size > 0 {
+                guard av_success(decode_frame(vs.pointee.audio_ctx, &vs.pointee.audio_pkt, &vs.pointee.audio_frame)) else {
+                    break
+                }
+                
+            }
+        }
+        
+        return 0
+    }
+    
     static public func video_thread(arg: UnsafeMutableRawPointer) -> Int32 {
         
         let vs: UnsafeMutablePointer<VideoState> = arg.assumingMemoryBound(to: VideoState.self)
