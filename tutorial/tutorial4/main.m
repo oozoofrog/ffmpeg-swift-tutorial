@@ -37,33 +37,33 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-void audio_callback(void *userdata, Uint8 *stream, int len) {
-    
-    VideoState *is = (VideoState *)userdata;
-    int len1, audio_size;
-    
-    while(len > 0) {
-        if(is->audio_buf_index >= is->audio_buf_size) {
-            /* We have already sent all our data; get more */
-            audio_size = [tutorial4 audio_decode_frameWithVs:is audio_buf:is->audio_buf buf_size:sizeof(is->audio_buf)];
-            if(audio_size < 0) {
-                /* If error, output silence */
-                is->audio_buf_size = 1024;
-                memset(is->audio_buf, 0, is->audio_buf_size);
-            } else {
-                is->audio_buf_size = audio_size;
-            }
-            is->audio_buf_index = 0;
-        }
-        len1 = is->audio_buf_size - is->audio_buf_index;
-        if(len1 > len)
-            len1 = len;
-        memcpy(stream, (uint8_t *)is->audio_buf + is->audio_buf_index, len1);
-        len -= len1;
-        stream += len1;
-        is->audio_buf_index += len1;
-    }
-}
+//void audio_callback(void *userdata, Uint8 *stream, int len) {
+//    
+//    VideoState *is = (VideoState *)userdata;
+//    int len1, audio_size;
+//    
+//    while(len > 0) {
+//        if(is->audio_buf_index >= is->audio_buf_size) {
+//            /* We have already sent all our data; get more */
+//            audio_size = [tutorial4 audio_decode_frameWithVs:is audio_buf:is->audio_buf buf_size:sizeof(is->audio_buf)];
+//            if(audio_size < 0) {
+//                /* If error, output silence */
+//                is->audio_buf_size = 1024;
+//                memset(is->audio_buf, 0, is->audio_buf_size);
+//            } else {
+//                is->audio_buf_size = audio_size;
+//            }
+//            is->audio_buf_index = 0;
+//        }
+//        len1 = is->audio_buf_size - is->audio_buf_index;
+//        if(len1 > len)
+//            len1 = len;
+//        memcpy(stream, (uint8_t *)is->audio_buf + is->audio_buf_index, len1);
+//        len -= len1;
+//        stream += len1;
+//        is->audio_buf_index += len1;
+//    }
+//}
 
 static Uint32 sdl_refresh_timer_cb(Uint32 interval, void *opaque) {
     SDL_Event event;
@@ -222,7 +222,7 @@ int stream_component_open(VideoState *is, int stream_index) {
         wanted_spec.channels = codecCtx->channels;
         wanted_spec.silence = 0;
         wanted_spec.samples = SDL_AUDIO_BUFFER_SIZE;
-        wanted_spec.callback = audio_callback;
+        wanted_spec.callback = [tutorial4 audio_callback]; //audio_callback;
         wanted_spec.userdata = is;
         printf("audio format -> %s\n", av_get_sample_fmt_name(codecCtx->sample_fmt));
         if(SDL_OpenAudio(&wanted_spec, &spec) < 0) {

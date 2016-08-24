@@ -8,18 +8,6 @@
 
 import Foundation
 
-func pset<P>(_ target: UnsafeMutablePointer<P>, value: P) {
-    target.pointee = value
-}
-
-func cast<P>(_ target: UnsafeMutablePointer<P>) -> P {
-    return target.pointee
-}
-
-func cast<P>(_ target: UnsafePointer<P>) -> P {
-    return target.pointee
-}
-
 @objc public class tutorial4: NSObject {
     
     static public func packet_queue_init(q: UnsafeMutablePointer<PacketQueue>) {
@@ -239,11 +227,27 @@ func cast<P>(_ target: UnsafePointer<P>) -> P {
         var audio_size: Int32 = 0
         
         var len = len
+        var stream = stream
         
         while 0 < len {
             if vs.pointee.audio_buf_index >= vs.pointee.audio_buf_size {
                 audio_size = tutorial4.audio_decode_frame(vs: vs, audio_buf: vs.pointee.audio_buf_ptr, buf_size: Int32(vs.pointee.audio_buf_ptr_length))
+                if 0 > audio_size {
+                    vs.pointee.audio_buf_size = 1024
+                    SDL_memset(vs.pointee.audio_buf_ptr, 0, Int(vs.pointee.audio_buf_size))
+                } else {
+                    vs.pointee.audio_buf_size = UInt32(audio_size)
+                }
+                vs.pointee.audio_buf_index = 0
             }
+            len1 = Int32(vs.pointee.audio_buf_size - vs.pointee.audio_buf_index)
+            if len1 > len {
+                len1 = len
+            }
+            SDL_memcpy(stream, vs.pointee.audio_buf_ptr.advanced(by: Int(vs.pointee.audio_buf_index)), Int(len1))
+            len -= len1
+            stream = stream?.advanced(by: Int(len1))
+            vs.pointee.audio_buf_index += UInt32(len1)
         }
     }
     
