@@ -98,12 +98,9 @@ typedef struct VideoState {
     int             quit;
 } VideoState;
 
-static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block);
-int queue_get(PacketQueue *q, AVPacket *pkt, int block);
 
 void alloc_picture(void *userdata);
 
 int decode_frame(AVCodecContext *codec, AVPacket *packet, AVFrame *frame);
-int decode_frame_with_size(AVCodecContext *codec, AVPacket *packet, AVFrame *frame, int *pkt_size);
 
 #endif /* main_h */

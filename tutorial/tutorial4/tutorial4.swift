@@ -197,18 +197,37 @@ func cast<P>(_ target: UnsafePointer<P>) -> P {
         
         var len1: Int32 = 0
         var data_size: Int32 = 0
-        var pkt = withUnsafeMutablePointer(to: &vs.pointee.audio_pkt){$0}
+        let pkt = withUnsafeMutablePointer(to: &vs.pointee.audio_pkt){$0}
         
         while true {
             while vs.pointee.audio_pkt_size > 0 {
-                guard av_success(decode_frame(vs.pointee.audio_ctx, &vs.pointee.audio_pkt, &vs.pointee.audio_frame)) else {
+                len1 = decode_frame(vs.pointee.audio_ctx, pkt, &vs.pointee.audio_frame)
+                if 0 > len1 {
+                    vs.pointee.audio_pkt_size = 0
                     break
                 }
+                data_size = tutorial4.audio_resampling(ctx: vs.pointee.audio_ctx, frame: &vs.pointee.audio_frame, output_format: AV_SAMPLE_FMT_S16, out_channels: vs.pointee.audio_frame.channels, out_sample_rate: vs.pointee.audio_frame.sample_rate, out_buffer: audio_buf);
+                assert(data_size <= buf_size)
                 
+                vs.pointee.audio_pkt_data = vs.pointee.audio_pkt_data.advanced(by: Int(len1))
+                vs.pointee.audio_pkt_size -= len1
+                if 0 >= data_size {
+                    continue
+                }
+                return data_size
             }
+            if nil != pkt.pointee.data {
+                av_packet_unref(pkt)
+            }
+            if vs.pointee.quit == 1 {
+                return -1
+            }
+            guard av_success(packet_queue_get(is: vs, q: &vs.pointee.audioq, pkt: pkt, block: 1)) else {
+                return -1
+            }
+            vs.pointee.audio_pkt_data = pkt.pointee.data
+            vs.pointee.audio_pkt_size += pkt.pointee.size
         }
-        
-        return 0
     }
     
     static public func video_thread(arg: UnsafeMutableRawPointer) -> Int32 {
@@ -220,7 +239,7 @@ func cast<P>(_ target: UnsafePointer<P>) -> P {
         var pFrame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
         
         while true {
-            if 0 > queue_get(&vs.pointee.videoq, packet, 1) {
+            if 0 > packet_queue_get(is: vs, q: &vs.pointee.videoq, pkt: packet, block: 1) {
                 break
             }
             guard 0 <= decode_frame(vs.pointee.video_ctx, packet, pFrame) else {
