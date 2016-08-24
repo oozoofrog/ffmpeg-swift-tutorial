@@ -426,6 +426,8 @@ int main(int argc, char *argv[]) {
     VideoState      *is;
     
     is = av_mallocz(sizeof(VideoState));
+    is->audio_buf_ptr = is->audio_buf;
+    is->audio_buf_ptr_length = sizeof(is->audio_buf);
     
     if(argc < 2) {
         fprintf(stderr, "Usage: test <file>\n");

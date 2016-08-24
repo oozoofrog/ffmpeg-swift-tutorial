@@ -1249,6 +1249,7 @@
 				A98B2F851D6D5A9100AD314E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A9B7A0751D6C39E40060ADF4 /* Build configuration list for PBXNativeTarget "tutorial4" */ = {
 			isa = XCConfigurationList;

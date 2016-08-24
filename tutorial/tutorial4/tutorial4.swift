@@ -230,6 +230,23 @@ func cast<P>(_ target: UnsafePointer<P>) -> P {
         }
     }
     
+    static public var audio_callback: SDL_AudioCallback = { userdata, stream, len in
+        guard let vs: UnsafeMutablePointer<VideoState> = userdata?.assumingMemoryBound(to: VideoState.self) else {
+            return
+        }
+        var state = vs
+        var len1: Int32 = 0
+        var audio_size: Int32 = 0
+        
+        var len = len
+        
+        while 0 < len {
+            if vs.pointee.audio_buf_index >= vs.pointee.audio_buf_size {
+                audio_size = tutorial4.audio_decode_frame(vs: vs, audio_buf: vs.pointee.audio_buf_ptr, buf_size: Int32(vs.pointee.audio_buf_ptr_length))
+            }
+        }
+    }
+    
     static public func video_thread(arg: UnsafeMutableRawPointer) -> Int32 {
         
         let vs: UnsafeMutablePointer<VideoState> = arg.assumingMemoryBound(to: VideoState.self)
