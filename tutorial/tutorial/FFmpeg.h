@@ -21,6 +21,7 @@ Test* alloc_test();
 struct AVDictionary;
 
 BOOL av_success(int ret);
+BOOL av_success_desc(int ret, const char* desc);
 BOOL isErr(int err, const char* desc);
 void print_err(int err, const char* desc);
 

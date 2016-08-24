@@ -14,6 +14,7 @@
 #include <libavutil/samplefmt.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/avstring.h>
+#include <libavutil/channel_layout.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>

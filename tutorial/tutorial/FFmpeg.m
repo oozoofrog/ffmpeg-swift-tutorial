@@ -33,6 +33,14 @@ BOOL av_success(int ret) {
     return NO;
 }
 
+BOOL av_success_desc(int ret, const char* desc) {
+    if (0 <= ret) {
+        return YES;
+    }
+    printf("🤔 %s, %s\n", av_err2str(ret), desc);
+    return NO;
+}
+
 BOOL isErr(int err, const char* desc) {
     if (err >= 0) {
         return NO;

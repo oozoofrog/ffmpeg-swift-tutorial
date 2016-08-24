@@ -194,7 +194,8 @@ int audio_decode_frame(VideoState *is, uint8_t *audio_buf, int buf_size) {
             }
             data_size = 0;
             if(got_frame) {
-                data_size = audio_resampling(is->audio_ctx, &is->audio_frame, AV_SAMPLE_FMT_S16, is->audio_frame.channels, is->audio_frame.sample_rate, audio_buf);
+                data_size = [tutorial4 audio_resamplingWithCtx:is->audio_ctx frame:&is->audio_frame output_format:AV_SAMPLE_FMT_S16 out_channels:is->audio_frame.channels out_sample_rate:is->audio_frame.sample_rate out_buffer:audio_buf];
+                //data_size = audio_resampling(is->audio_ctx, &is->audio_frame, AV_SAMPLE_FMT_S16, is->audio_frame.channels, is->audio_frame.sample_rate, audio_buf);
                 assert(data_size <= buf_size);
             }
             is->audio_pkt_data += len1;
@@ -439,7 +440,7 @@ int stream_component_open(VideoState *is, int stream_index) {
         wanted_spec.samples = SDL_AUDIO_BUFFER_SIZE;
         wanted_spec.callback = audio_callback;
         wanted_spec.userdata = is;
-        
+        printf("audio format -> %s\n", av_get_sample_fmt_name(codecCtx->sample_fmt));
         if(SDL_OpenAudio(&wanted_spec, &spec) < 0) {
             fprintf(stderr, "SDL_OpenAudio: %s\n", SDL_GetError());
             return -1;
@@ -642,26 +643,13 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-    // Make a screen to put our video
-    //
-    /* #ifndef __DARWIN__ */
-    /* screen = SDL_SetVideoMode(640, 480, 0, 0); */
-    /* #else */
-    /* screen = SDL_SetVideoMode(640, 480, 24, 0); */
-    /* #endif */
     screen = SDL_CreateWindow(
                               "FFmpeg Tutorial",
                               0,
                               0,
-                              /* 1280, */
-                              /* 640, */
                               1280,
-                              /* pCodecCtx->width, */
-                              /* 800, */
-                              /* 480, */
                               800,
-                              /* pCodecCtx->height, */
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_FULLSCREEN_DESKTOP
                               );
     
     

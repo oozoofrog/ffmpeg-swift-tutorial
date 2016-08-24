@@ -96,6 +96,103 @@ func cast<P>(_ target: UnsafePointer<P>) -> P {
         return ret
     }
     
+    static public func audio_resampling(ctx: UnsafeMutablePointer<AVCodecContext>, frame: UnsafeMutablePointer<AVFrame>, output_format: AVSampleFormat, out_channels: Int32, out_sample_rate: Int32, out_buffer: UnsafeMutablePointer<UInt8>) -> Int32 {
+        var ret: Int32 = 0
+        var swr_ctx_ptr: OpaquePointer? = swr_alloc()
+        guard swr_ctx_ptr != nil else {
+            print("swr alloc error")
+            return -1
+        }
+        let swr_ctx = UnsafeMutableRawPointer(swr_ctx_ptr)
+        var in_channel_layout = Int64(ctx.pointee.channel_layout)
+        var out_channel_layout = Int64(AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT)
+        var out_nb_channels: Int32 = 0
+        var out_linesize: Int32 = 0
+        var in_nb_samples: Int32 = 0
+        var out_nb_samples: Int32 = 0
+        var max_out_nb_samples: Int32 = 0
+        var resampled_data: UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?>? = nil
+        var resampled_data_size: Int32 = 0
+        
+        in_channel_layout = av_get_default_channel_layout(ctx.pointee.channels)
+        guard 0 < in_channel_layout else {
+            print("in channel layout error")
+            return -1
+        }
+        
+        if 1 == out_channels {
+            out_channel_layout = Int64(AV_CH_LAYOUT_MONO)
+        } else if (2 == out_channels) {
+            out_channel_layout = Int64(AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT)
+        } else {
+            out_channel_layout = Int64(AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT) // AV_CH_LAYOUT_SURROUND
+        }
+        
+        in_nb_samples = frame.pointee.nb_samples
+        guard 0 < in_nb_samples else {
+            print("in_nb_samples error")
+            return -1
+        }
+        
+        av_opt_set_int(swr_ctx, "in_channel_layout", in_channel_layout, 0)
+        av_opt_set_int(swr_ctx, "in_sample_rate", Int64(ctx.pointee.sample_rate), 0)
+        av_opt_set_sample_fmt(swr_ctx, "in_sample_fmt", ctx.pointee.sample_fmt, 0)
+        
+        av_opt_set_int(swr_ctx, "out_channel_layout", out_channel_layout, 0)
+        av_opt_set_int(swr_ctx, "out_sample_rate", Int64(out_sample_rate), 0)
+        av_opt_set_sample_fmt(swr_ctx, "out_sample_fmt", output_format, 0)
+        
+        guard av_success_desc(swr_init(OpaquePointer.init(swr_ctx)), "Failed to initialization the resampling context") else {
+            return -1
+        }
+        
+        // in_nb_samples * out_sample_rate / in_sample_rate and round up
+        out_nb_samples = Int32(av_rescale_rnd(Int64(in_nb_samples), Int64(out_sample_rate), Int64(ctx.pointee.sample_rate), AV_ROUND_UP))
+        max_out_nb_samples = out_nb_samples
+        guard 0 < max_out_nb_samples else {
+            print("av_rescale_rnd error")
+            return -1
+        }
+        
+        out_nb_channels = av_get_channel_layout_nb_channels(UInt64(out_channel_layout))
+        
+        ret = av_samples_alloc_array_and_samples(&resampled_data, &resampled_data_size, out_nb_channels, out_nb_samples, output_format, 0)
+        guard av_success_desc(ret, "av_samples_alloc_array_and_samples") else {
+            return -1
+        }
+        
+        out_nb_samples = Int32(av_rescale_rnd(swr_get_delay(OpaquePointer(swr_ctx), Int64(ctx.pointee.sample_rate)) + Int64(in_nb_samples), Int64(out_sample_rate), Int64(ctx.pointee.sample_rate), AV_ROUND_UP))
+        
+        guard 0 < out_nb_samples else {
+            print("av_rescale_rnd errors")
+            return -1
+        }
+        
+        if out_nb_samples > max_out_nb_samples {
+            av_free(resampled_data?[0])
+            ret = av_samples_alloc(resampled_data, &out_linesize, out_nb_channels, out_nb_samples, output_format, 1)
+            max_out_nb_samples = out_nb_samples
+        }
+        let frame_buffer = withUnsafeMutablePointer(to: &frame.pointee.data){$0}.withMemoryRebound(to: Optional<UnsafePointer<UInt8>>.self, capacity: MemoryLayout<UnsafePointer<UInt8>>.stride * 8){$0}
+        ret = swr_convert(OpaquePointer(swr_ctx), resampled_data, out_nb_samples, frame_buffer, frame.pointee.nb_samples)
+        guard av_success_desc(ret, "swr_conver") else {
+            return -1
+        }
+        
+        resampled_data_size = av_samples_get_buffer_size(&out_linesize, out_nb_channels, ret, output_format, 1)
+        guard av_success_desc(resampled_data_size, "av_samples_get_buffer_size") else {
+            return -1
+        }
+        
+        memcpy(out_buffer, resampled_data?[0], Int(resampled_data_size))
+        
+        av_freep(&resampled_data)
+        resampled_data = nil
+        swr_free(&swr_ctx_ptr)
+        
+        return resampled_data_size
+    }
+    
     static public func video_thread(arg: UnsafeMutableRawPointer) -> Int32 {
         
         let vs: UnsafeMutablePointer<VideoState> = arg.assumingMemoryBound(to: VideoState.self)
