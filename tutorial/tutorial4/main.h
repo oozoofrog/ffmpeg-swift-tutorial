@@ -89,6 +89,7 @@ typedef struct VideoState {
     SDL_Rect        dst_rect;
     
     VideoPicture    pictq[VIDEO_PICTURE_QUEUE_SIZE];
+    VideoPicture*   pictq_ptr;
     int             pictq_size, pictq_rindex, pictq_windex;
     SDL_mutex       *pictq_mutex;
     SDL_cond        *pictq_cond;

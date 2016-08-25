@@ -37,34 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-void video_display(VideoState *is) {
-
-    VideoPicture *vp;
-    
-    vp = &is->pictq[is->pictq_rindex];
-    /* if(vp->bmp) { */
-    if(vp->texture) {
-        
-        SDL_LockMutex(screen_mutex);
-        
-        SDL_UpdateYUVTexture(
-                             vp->texture,
-                             NULL,
-                             vp->yPlane,
-                             is->video_ctx->width,
-                             vp->uPlane,
-                             vp->uvPitch,
-                             vp->vPlane,
-                             vp->uvPitch
-                             );
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, vp->texture, &is->src_rect, &is->dst_rect);
-        SDL_RenderPresent(renderer);
-        SDL_UnlockMutex(screen_mutex);
-        
-    }
-}
-
 void video_refresh_timer(void *userdata) {
     
     VideoState *is = (VideoState *)userdata;
@@ -87,7 +59,7 @@ void video_refresh_timer(void *userdata) {
             [tutorial4 schedule_refreshWithVs:is delay:40];
             
             /* show the picture! */
-            video_display(is);
+            [tutorial4 video_displayWithVs:is mutex:screen_mutex window:screen renderer:renderer];
             
             /* update queue for next picture! */
             if(++is->pictq_rindex == VIDEO_PICTURE_QUEUE_SIZE) {
@@ -390,6 +362,8 @@ int main(int argc, char *argv[]) {
     is = av_mallocz(sizeof(VideoState));
     is->audio_buf_ptr = is->audio_buf;
     is->audio_buf_ptr_length = sizeof(is->audio_buf);
+    
+    is->pictq_ptr = is->pictq;
     
     const char *filename;
     

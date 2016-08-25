@@ -319,20 +319,6 @@ import Foundation
         return 0
     }
     
-    /*
-     static Uint32 sdl_refresh_timer_cb(Uint32 interval, void *opaque) {
-     SDL_Event event;
-     event.type = FF_REFRESH_EVENT;
-     event.user.data1 = opaque;
-     SDL_PushEvent(&event);
-     return 0; /* 0 means stop timer */
-     }
-     
-     /* schedule a video refresh in 'delay' ms */
-     static void schedule_refresh(VideoState *is, int delay) {
-     SDL_AddTimer(delay, sdl_refresh_timer_cb, is);
-     }
- */
     static var sdl_refresh_timer_cb: SDL_TimerCallback = {
         var event = SDL_Event()
         event.type = (SDL_USEREVENT).rawValue
@@ -343,5 +329,24 @@ import Foundation
     
     static func schedule_refresh(vs: UnsafeMutablePointer<VideoState>, delay: Int32) {
         SDL_AddTimer(Uint32(delay), tutorial4.sdl_refresh_timer_cb, vs)
+    }
+    
+    static func video_display(vs: UnsafeMutablePointer<VideoState>,
+                              mutex: OpaquePointer,
+                              window: OpaquePointer,
+                              renderer: OpaquePointer) {
+        let vp = vs.pointee.pictq_ptr.advanced(by: Int(vs.pointee.pictq_rindex))
+        guard let texture = vp.pointee.texture else {
+            return
+        }
+        
+        SDL_LockMutex(mutex)
+        
+        SDL_UpdateYUVTexture(texture, nil, vp.pointee.yPlane, vs.pointee.video_ctx.pointee.width, vp.pointee.uPlane, vp.pointee.uvPitch, vp.pointee.vPlane, vp.pointee.uvPitch)
+        SDL_RenderClear(renderer)
+        SDL_RenderCopy(renderer, texture, &vs.pointee.src_rect, &vs.pointee.dst_rect)
+        SDL_RenderPresent(renderer)
+        
+        SDL_UnlockMutex(mutex)
     }
 }
