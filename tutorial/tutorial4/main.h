@@ -97,7 +97,8 @@ typedef struct VideoState {
     SDL_Thread      *parse_tid;
     SDL_Thread      *video_tid;
     
-    char            filename[1024];
+    char            filename_arr[1024];
+    char*           filename;
     int             quit;
 } VideoState;
 

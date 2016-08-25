@@ -50,8 +50,6 @@ int decode_thread(void *arg) {
     is->videoStream=-1;
     is->audioStream=-1;
     
-    global_video_state = is;
-    
     // Open video file
     printf("here!!decode_thread\n");
     printf("is->filename:  %s\n", is->filename);
@@ -185,6 +183,7 @@ int main(int argc, char *argv[]) {
     VideoState      *is;
     
     is = av_mallocz(sizeof(VideoState));
+    global_video_state = is;
     is->audio_buf_ptr = is->audio_buf;
     is->audio_buf_ptr_length = sizeof(is->audio_buf);
     
@@ -232,7 +231,8 @@ int main(int argc, char *argv[]) {
     [tutorial4 setRenderer:renderer];
     [tutorial4 setScreen_mutex:screen_mutex];
     
-    av_strlcpy(is->filename, filename, sizeof(is->filename));
+    av_strlcpy(is->filename_arr, filename, sizeof(is->filename_arr));
+    is->filename = is->filename_arr;
     printf("is->filename: %s\n", is->filename);
     
     is->pictq_mutex = SDL_CreateMutex();

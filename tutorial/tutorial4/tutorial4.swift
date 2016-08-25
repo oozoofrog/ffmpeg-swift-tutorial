@@ -389,6 +389,19 @@ import AVFoundation
     static public func stream_open(vs: UnsafeMutablePointer<VideoState>, at: Int32) -> Int32 {
         return vs.pointee.stream_open(at: at)
     }
+    
+    static public var decode_thread: SDL_ThreadFunction = { (arg) in
+        var vs: UnsafeMutablePointer<VideoState>? = arg?.assumingMemoryBound(to: VideoState.self)
+        
+        vs?.pointee.videoStream = -1
+        vs?.pointee.audioStream = -1
+        var pFormatCtx: UnsafeMutablePointer<AVFormatContext>? = nil
+        guard 0 <= avformat_open_input(&pFormatCtx, vs?.pointee.filename, nil, nil) else {
+            return -1
+        }
+        
+        return 0
+    }
 }
 
 extension VideoState {
