@@ -37,47 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-//void audio_callback(void *userdata, Uint8 *stream, int len) {
-//    
-//    VideoState *is = (VideoState *)userdata;
-//    int len1, audio_size;
-//    
-//    while(len > 0) {
-//        if(is->audio_buf_index >= is->audio_buf_size) {
-//            /* We have already sent all our data; get more */
-//            audio_size = [tutorial4 audio_decode_frameWithVs:is audio_buf:is->audio_buf buf_size:sizeof(is->audio_buf)];
-//            if(audio_size < 0) {
-//                /* If error, output silence */
-//                is->audio_buf_size = 1024;
-//                memset(is->audio_buf, 0, is->audio_buf_size);
-//            } else {
-//                is->audio_buf_size = audio_size;
-//            }
-//            is->audio_buf_index = 0;
-//        }
-//        len1 = is->audio_buf_size - is->audio_buf_index;
-//        if(len1 > len)
-//            len1 = len;
-//        memcpy(stream, (uint8_t *)is->audio_buf + is->audio_buf_index, len1);
-//        len -= len1;
-//        stream += len1;
-//        is->audio_buf_index += len1;
-//    }
-//}
-
-static Uint32 sdl_refresh_timer_cb(Uint32 interval, void *opaque) {
-    SDL_Event event;
-    event.type = FF_REFRESH_EVENT;
-    event.user.data1 = opaque;
-    SDL_PushEvent(&event);
-    return 0; /* 0 means stop timer */
-}
-
-/* schedule a video refresh in 'delay' ms */
-static void schedule_refresh(VideoState *is, int delay) {
-    SDL_AddTimer(delay, sdl_refresh_timer_cb, is);
-}
-
 void video_display(VideoState *is) {
 
     VideoPicture *vp;
@@ -113,7 +72,8 @@ void video_refresh_timer(void *userdata) {
     
     if(is->video_st) {
         if(is->pictq_size == 0) {
-            schedule_refresh(is, 1);
+            //schedule_refresh(is, 1);
+            [tutorial4 schedule_refreshWithVs:is delay:1];
         } else {
             vp = &is->pictq[is->pictq_rindex];
             /* Now, normally here goes a ton of code
@@ -123,7 +83,8 @@ void video_refresh_timer(void *userdata) {
              the timing - but I don't suggest that ;)
              We'll learn how to do it for real later.
              */
-            schedule_refresh(is, 40);
+            //schedule_refresh(is, 40);
+            [tutorial4 schedule_refreshWithVs:is delay:40];
             
             /* show the picture! */
             video_display(is);
@@ -138,7 +99,8 @@ void video_refresh_timer(void *userdata) {
             SDL_UnlockMutex(is->pictq_mutex);
         }
     } else {
-        schedule_refresh(is, 100);
+        //schedule_refresh(is, 100);
+        [tutorial4 schedule_refreshWithVs:is delay:100];
     }
 }
 
@@ -470,7 +432,8 @@ int main(int argc, char *argv[]) {
     is->pictq_mutex = SDL_CreateMutex();
     is->pictq_cond = SDL_CreateCond();
     
-    schedule_refresh(is, 40);
+    //schedule_refresh(is, 40);
+    [tutorial4 schedule_refreshWithVs:is delay:40];
     
     is->parse_tid = SDL_CreateThread(decode_thread, "decode_thread", is);
     if(!is->parse_tid) {

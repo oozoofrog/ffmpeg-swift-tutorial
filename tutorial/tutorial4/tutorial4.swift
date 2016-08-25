@@ -318,4 +318,30 @@ import Foundation
         }
         return 0
     }
+    
+    /*
+     static Uint32 sdl_refresh_timer_cb(Uint32 interval, void *opaque) {
+     SDL_Event event;
+     event.type = FF_REFRESH_EVENT;
+     event.user.data1 = opaque;
+     SDL_PushEvent(&event);
+     return 0; /* 0 means stop timer */
+     }
+     
+     /* schedule a video refresh in 'delay' ms */
+     static void schedule_refresh(VideoState *is, int delay) {
+     SDL_AddTimer(delay, sdl_refresh_timer_cb, is);
+     }
+ */
+    static var sdl_refresh_timer_cb: SDL_TimerCallback = {
+        var event = SDL_Event()
+        event.type = (SDL_USEREVENT).rawValue
+        event.user.data1 = $1
+        SDL_PushEvent(&event)
+        return 0
+    }
+    
+    static func schedule_refresh(vs: UnsafeMutablePointer<VideoState>, delay: Int32) {
+        SDL_AddTimer(Uint32(delay), tutorial4.sdl_refresh_timer_cb, vs)
+    }
 }
