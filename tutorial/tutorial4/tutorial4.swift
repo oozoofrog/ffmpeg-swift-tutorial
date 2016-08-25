@@ -400,6 +400,13 @@ import AVFoundation
             return -1
         }
         
+        vs?.pointee.pFormatCtx = pFormatCtx
+        
+        guard 0 <= avformat_find_stream_info(pFormatCtx, nil) else {
+            return -1
+        }
+        av_dump_format(pFormatCtx, 0, vs?.pointee.filename, 0)
+        // TODO: working decode_thread to swift from c
         return 0
     }
 }
