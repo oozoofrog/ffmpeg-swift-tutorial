@@ -101,9 +101,6 @@ typedef struct VideoState {
     int             quit;
 } VideoState;
 
-
-void alloc_picture(void *userdata);
-
 int decode_frame(AVCodecContext *codec, AVPacket *packet, AVFrame *frame);
 
 #endif /* main_h */

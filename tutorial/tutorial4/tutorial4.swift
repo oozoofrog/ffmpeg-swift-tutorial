@@ -10,6 +10,10 @@ import Foundation
 
 @objc public class tutorial4: NSObject {
     
+    static var window: OpaquePointer?
+    static var renderer: OpaquePointer?
+    static var screen_mutex: OpaquePointer?
+    
     static public func packet_queue_init(q: UnsafeMutablePointer<PacketQueue>) {
         memset(q, 0, MemoryLayout<PacketQueue>.stride)
         q.pointee.mutex = SDL_CreateMutex()
@@ -295,7 +299,7 @@ import Foundation
         if nil == vp.pointee.texture || vp.pointee.width != vs.pointee.video_ctx.pointee.width || vp.pointee.height != vs.pointee.video_ctx.pointee.height {
             
             vp.pointee.allocated = 0
-            alloc_picture(UnsafeMutableRawPointer(vs))
+            alloc_pict(userdata: UnsafeMutableRawPointer(vs))
             if 1 == vs.pointee.quit {
                 return -1
             }
@@ -351,12 +355,11 @@ import Foundation
     }
     
     static public func video_refresh_timer(userdata: UnsafeMutableRawPointer, mutex: OpaquePointer, window: OpaquePointer, renderer: OpaquePointer) {
-        var vs = userdata.assumingMemoryBound(to: VideoState.self)
+        let vs = userdata.assumingMemoryBound(to: VideoState.self)
         if let _ = vs.pointee.video_st {
             if 0 == vs.pointee.pictq_size {
                 schedule_refresh(vs: vs, delay: 1)
             } else {
-                var vp = vs.pointee.pictq_ptr.advanced(by: Int(vs.pointee.pictq_rindex))
                 schedule_refresh(vs: vs, delay: 40)
                 
                 video_display(vs: vs, mutex: mutex, window: window, renderer: renderer)
@@ -374,5 +377,39 @@ import Foundation
         } else {
             schedule_refresh(vs: vs, delay: 100)
         }
+    }
+    
+    static public func alloc_pict(userdata: UnsafeMutableRawPointer) {
+        let vs = userdata.assumingMemoryBound(to: VideoState.self)
+        let vp = vs.pointee.pictq_ptr.advanced(by: Int(vs.pointee.pictq_windex))
+        vp.pointee.alloc_picture(vs: vs)
+    }
+}
+
+extension VideoPicture {
+    var uvPlaneSz: Int {
+        return self.yPlaneSz / 4
+    }
+    mutating func alloc_picture(vs: UnsafeMutablePointer<VideoState>) {
+        if nil != self.texture {
+            SDL_DestroyTexture(self.texture)
+        }
+        SDL_LockMutex(tutorial4.screen_mutex)
+        let w: Int32 = vs.pointee.video_ctx.pointee.width
+        let h: Int32 = vs.pointee.video_ctx.pointee.height
+        
+        self.texture = SDL_CreateTexture(tutorial4.renderer, Uint32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), w, h)
+        self.yPlaneSz = size_t(w * h)
+        self.yPlane = SDL_malloc(yPlaneSz).assumingMemoryBound(to: UInt8.self)
+        self.uPlane = SDL_malloc(uvPlaneSz).assumingMemoryBound(to: UInt8.self)
+        self.vPlane = SDL_malloc(uvPlaneSz).assumingMemoryBound(to: UInt8.self)
+        
+        self.uvPitch = vs.pointee.video_ctx.pointee.width / 2
+        
+        SDL_UnlockMutex(tutorial4.screen_mutex)
+        
+        self.width = w
+        self.height = h
+        self.allocated = 1
     }
 }

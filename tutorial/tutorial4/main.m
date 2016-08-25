@@ -37,51 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-void alloc_picture(void *userdata) {
-    
-    VideoState *is = (VideoState *)userdata;
-    VideoPicture *vp;
-    
-    vp = &is->pictq[is->pictq_windex];
-    if(vp->texture) {
-        // we already have one make another, bigger/smaller
-        /* SDL_FreeYUVOverlay(vp->bmp); */
-        SDL_DestroyTexture(vp->texture);
-    }
-    // Allocate a place to put our YUV image on that screen
-    SDL_LockMutex(screen_mutex);
-    int w, h;
-    w = is->video_ctx->width;
-    h = is->video_ctx->height;
-    vp->texture = SDL_CreateTexture(
-                                    renderer,
-                                    SDL_PIXELFORMAT_YV12,
-                                    SDL_TEXTUREACCESS_STREAMING,
-                                    is->video_ctx->width,
-                                    is->video_ctx->height
-                                    );
-    vp->yPlaneSz = w * h;
-    /* vp->yPlaneSz = is->video_ctx->width * is->video_ctx->height; */
-    vp->uvPlaneSz = w * h / 4;
-    /* vp->uvPlaneSz = is->video_ctx->width * is->video_ctx->height / 4; */
-    vp->yPlane = (Uint8*)malloc(vp->yPlaneSz);
-    vp->uPlane = (Uint8*)malloc(vp->uvPlaneSz);
-    vp->vPlane = (Uint8*)malloc(vp->uvPlaneSz);
-    if (!vp->yPlane || !vp->uPlane || !vp->vPlane) {
-        fprintf(stderr, "Could not allocate pixel buffers - exiting\n");
-        exit(1);
-    }
-    
-    vp->uvPitch = is->video_ctx->width / 2;
-    
-    SDL_UnlockMutex(screen_mutex);
-    
-    vp->width = is->video_ctx->width;
-    vp->height = is->video_ctx->height;
-    vp->allocated = 1;
-    
-}
-
 int video_thread(void *arg) {
     return [tutorial4 video_threadWithArg:arg];
 }
@@ -347,7 +302,7 @@ int main(int argc, char *argv[]) {
                               0,
                               1280,
                               800,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_RESIZABLE
                               );
     
     
@@ -363,6 +318,10 @@ int main(int argc, char *argv[]) {
     }
     
     screen_mutex = SDL_CreateMutex();
+    
+    [tutorial4 setWindow:screen];
+    [tutorial4 setRenderer:renderer];
+    [tutorial4 setScreen_mutex:screen_mutex];
     
     av_strlcpy(is->filename, filename, sizeof(is->filename));
     printf("is->filename: %s\n", is->filename);
