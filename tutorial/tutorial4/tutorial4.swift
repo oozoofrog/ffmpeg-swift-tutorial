@@ -255,9 +255,9 @@ import Foundation
         }
     }
     
-    static public func video_thread(arg: UnsafeMutableRawPointer) -> Int32 {
+    static public var video_thread: SDL_ThreadFunction = { arg in
         
-        let vs: UnsafeMutablePointer<VideoState> = arg.assumingMemoryBound(to: VideoState.self)
+        let vs: UnsafeMutablePointer<VideoState> = arg!.assumingMemoryBound(to: VideoState.self)
         var pkt1: AVPacket = AVPacket()
         let packet: UnsafeMutablePointer<AVPacket> = withUnsafeMutablePointer(to: &pkt1){$0}
         

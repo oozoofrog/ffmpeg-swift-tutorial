@@ -37,10 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-int video_thread(void *arg) {
-    return [tutorial4 video_threadWithArg:arg];
-}
-
 int stream_component_open(VideoState *is, int stream_index) {
     
     AVFormatContext *pFormatCtx = is->pFormatCtx;
@@ -101,7 +97,7 @@ int stream_component_open(VideoState *is, int stream_index) {
             is->video_st = pFormatCtx->streams[stream_index];
             is->video_ctx = codecCtx;
             [tutorial4 packet_queue_initWithQ:&is->videoq];
-            is->video_tid = SDL_CreateThread(video_thread, "video_thread", is);
+            is->video_tid = SDL_CreateThread([tutorial4 video_thread], "video_thread", is);
             
             is->src_rect.w = codecCtx->width;
             is->src_rect.h = codecCtx->height;
