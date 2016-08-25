@@ -37,45 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-void video_refresh_timer(void *userdata) {
-    
-    VideoState *is = (VideoState *)userdata;
-    VideoPicture *vp;
-    
-    if(is->video_st) {
-        if(is->pictq_size == 0) {
-            //schedule_refresh(is, 1);
-            [tutorial4 schedule_refreshWithVs:is delay:1];
-        } else {
-            vp = &is->pictq[is->pictq_rindex];
-            /* Now, normally here goes a ton of code
-             about timing, etc. we're just going to
-             guess at a delay for now. You can
-             increase and decrease this value and hard code
-             the timing - but I don't suggest that ;)
-             We'll learn how to do it for real later.
-             */
-            //schedule_refresh(is, 40);
-            [tutorial4 schedule_refreshWithVs:is delay:40];
-            
-            /* show the picture! */
-            [tutorial4 video_displayWithVs:is mutex:screen_mutex window:screen renderer:renderer];
-            
-            /* update queue for next picture! */
-            if(++is->pictq_rindex == VIDEO_PICTURE_QUEUE_SIZE) {
-                is->pictq_rindex = 0;
-            }
-            SDL_LockMutex(is->pictq_mutex);
-            is->pictq_size--;
-            SDL_CondSignal(is->pictq_cond);
-            SDL_UnlockMutex(is->pictq_mutex);
-        }
-    } else {
-        //schedule_refresh(is, 100);
-        [tutorial4 schedule_refreshWithVs:is delay:100];
-    }
-}
-
 void alloc_picture(void *userdata) {
     
     VideoState *is = (VideoState *)userdata;
@@ -433,7 +394,8 @@ int main(int argc, char *argv[]) {
                 return 0;
                 break;
             case FF_REFRESH_EVENT:
-                video_refresh_timer(event.user.data1);
+                //video_refresh_timer(event.user.data1);
+                [tutorial4 video_refresh_timerWithUserdata:event.user.data1 mutex:screen_mutex window:screen renderer:renderer];
                 break;
             default:
                 break;

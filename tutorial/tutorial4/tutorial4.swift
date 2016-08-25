@@ -349,4 +349,30 @@ import Foundation
         
         SDL_UnlockMutex(mutex)
     }
+    
+    static public func video_refresh_timer(userdata: UnsafeMutableRawPointer, mutex: OpaquePointer, window: OpaquePointer, renderer: OpaquePointer) {
+        var vs = userdata.assumingMemoryBound(to: VideoState.self)
+        if let _ = vs.pointee.video_st {
+            if 0 == vs.pointee.pictq_size {
+                schedule_refresh(vs: vs, delay: 1)
+            } else {
+                var vp = vs.pointee.pictq_ptr.advanced(by: Int(vs.pointee.pictq_rindex))
+                schedule_refresh(vs: vs, delay: 40)
+                
+                video_display(vs: vs, mutex: mutex, window: window, renderer: renderer)
+                
+                vs.pointee.pictq_rindex += 1
+                if vs.pointee.pictq_rindex >= VIDEO_PICTURE_QUEUE_SIZE {
+                    vs.pointee.pictq_rindex = 0
+                }
+                
+                SDL_LockMutex(vs.pointee.pictq_mutex)
+                vs.pointee.pictq_size -= 1
+                SDL_CondSignal(vs.pointee.pictq_cond)
+                SDL_UnlockMutex(vs.pointee.pictq_mutex)
+            }
+        } else {
+            schedule_refresh(vs: vs, delay: 100)
+        }
+    }
 }
