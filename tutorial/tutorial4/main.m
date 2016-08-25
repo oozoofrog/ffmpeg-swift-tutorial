@@ -391,9 +391,12 @@ int main(int argc, char *argv[]) {
     is->audio_buf_ptr = is->audio_buf;
     is->audio_buf_ptr_length = sizeof(is->audio_buf);
     
+    const char *filename;
+    
     if(argc < 2) {
-        fprintf(stderr, "Usage: test <file>\n");
-        /* exit(1); */
+        filename = [[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:@"sample.mp4"] UTF8String];
+    } else {
+        filename = argv[1];
     }
     // Register all formats and codecs
     av_register_all();
@@ -426,7 +429,7 @@ int main(int argc, char *argv[]) {
     
     screen_mutex = SDL_CreateMutex();
     
-    av_strlcpy(is->filename, argv[1], sizeof(is->filename));
+    av_strlcpy(is->filename, filename, sizeof(is->filename));
     printf("is->filename: %s\n", is->filename);
     
     is->pictq_mutex = SDL_CreateMutex();

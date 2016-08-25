@@ -103,6 +103,7 @@
 		A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
 		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
+		A9759A5C1D6EB35200EE64BA /* sample.mp4 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A98B2F771D6D25CC00AD314E /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
 		A98B2F7B1D6D260E00AD314E /* FFmpeg.h in Headers */ = {isa = PBXBuildFile; fileRef = A96D17471D5875F1009F7AC2 /* FFmpeg.h */; };
 		A98B2F831D6D5A9100AD314E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A98B2F821D6D5A9100AD314E /* main.m */; };
@@ -148,16 +149,17 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A98B2F7E1D6D5A9100AD314E /* CopyFiles */ = {
+		A9759A5B1D6EB34200EE64BA /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			dstPath = "";
+			dstSubfolderSpec = 16;
 			files = (
+				A9759A5C1D6EB35200EE64BA /* sample.mp4 in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A9B7A06F1D6C39E40060ADF4 /* CopyFiles */ = {
+		A98B2F7E1D6D5A9100AD314E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -766,7 +768,7 @@
 				A98B2F7A1D6D260200AD314E /* Headers */,
 				A9B7A06D1D6C39E40060ADF4 /* Sources */,
 				A9B7A06E1D6C39E40060ADF4 /* Frameworks */,
-				A9B7A06F1D6C39E40060ADF4 /* CopyFiles */,
+				A9759A5B1D6EB34200EE64BA /* CopyFiles */,
 			);
 			buildRules = (
 			);
