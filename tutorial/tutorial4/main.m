@@ -37,89 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-int stream_component_open(VideoState *is, int stream_index) {
-    
-    AVFormatContext *pFormatCtx = is->pFormatCtx;
-    AVCodecContext *codecCtx = NULL;
-    AVCodec *codec = NULL;
-    SDL_AudioSpec wanted_spec, spec;
-    
-    if(stream_index < 0 || stream_index >= pFormatCtx->nb_streams) {
-        return -1;
-    }
-    
-    codec = avcodec_find_decoder(pFormatCtx->streams[stream_index]->codecpar->codec_id);
-    if(!codec) {
-        fprintf(stderr, "Unsupported codec!\n");
-        return -1;
-    }
-    
-    codecCtx = avcodec_alloc_context3(codec);
-    if(avcodec_parameters_to_context(codecCtx, pFormatCtx->streams[stream_index]->codecpar) != 0) {
-        fprintf(stderr, "Couldn't copy codec context");
-        return -1; // Error copying codec context
-    }
-    
-    
-    if(codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
-        // Set audio settings from codec info
-        wanted_spec.freq = codecCtx->sample_rate;
-        wanted_spec.format = AUDIO_S16SYS;
-        wanted_spec.channels = codecCtx->channels;
-        wanted_spec.silence = 0;
-        wanted_spec.samples = SDL_AUDIO_BUFFER_SIZE;
-        wanted_spec.callback = [tutorial4 audio_callback]; //audio_callback;
-        wanted_spec.userdata = is;
-        printf("audio format -> %s\n", av_get_sample_fmt_name(codecCtx->sample_fmt));
-        if(SDL_OpenAudio(&wanted_spec, &spec) < 0) {
-            fprintf(stderr, "SDL_OpenAudio: %s\n", SDL_GetError());
-            return -1;
-        }
-    }
-    if(avcodec_open2(codecCtx, codec, NULL) < 0) {
-        fprintf(stderr, "Unsupported codec!\n");
-        return -1;
-    }
-    
-    switch(codecCtx->codec_type) {
-        case AVMEDIA_TYPE_AUDIO:
-            is->audioStream = stream_index;
-            is->audio_st = pFormatCtx->streams[stream_index];
-            is->audio_ctx = codecCtx;
-            is->audio_buf_size = 0;
-            is->audio_buf_index = 0;
-            memset(&is->audio_pkt, 0, sizeof(is->audio_pkt));
-            [tutorial4 packet_queue_initWithQ:&is->audioq];
-            SDL_PauseAudio(0);
-            break;
-        case AVMEDIA_TYPE_VIDEO:
-            is->videoStream = stream_index;
-            is->video_st = pFormatCtx->streams[stream_index];
-            is->video_ctx = codecCtx;
-            [tutorial4 packet_queue_initWithQ:&is->videoq];
-            is->video_tid = SDL_CreateThread([tutorial4 video_thread], "video_thread", is);
-            
-            is->src_rect.w = codecCtx->width;
-            is->src_rect.h = codecCtx->height;
-            
-            int w, h;
-            w = h = 0;
-            SDL_GetWindowSize(screen, &w, &h);
-            
-            CGSize screenSize = CGSizeMake(is->src_rect.w, is->src_rect.h);
-            CGRect dstRect = AVMakeRectWithAspectRatioInsideRect(screenSize, CGRectMake(0, 0, w, h));
-            is->dst_rect.x = dstRect.origin.x;
-            is->dst_rect.y = dstRect.origin.y;
-            is->dst_rect.w = dstRect.size.width;
-            is->dst_rect.h = dstRect.size.height;
-            
-            break;
-        default:
-            break;
-    }
-    return 0;
-}
-
 int decode_thread(void *arg) {
     
     VideoState *is = (VideoState *)arg;
@@ -164,12 +81,8 @@ int decode_thread(void *arg) {
             audio_index=i;
         }
     }
-    if(audio_index >= 0) {
-        stream_component_open(is, audio_index);
-    }
-    if(video_index >= 0) {
-        stream_component_open(is, video_index);
-    }
+    [tutorial4 stream_openWithVs:is at:audio_index];
+    [tutorial4 stream_openWithVs:is at:video_index];
     
     if(is->videoStream < 0 || is->audioStream < 0) {
         fprintf(stderr, "%s: could not open codecs\n", is->filename);

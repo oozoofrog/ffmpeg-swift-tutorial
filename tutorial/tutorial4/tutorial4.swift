@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AVFoundation
 
 @objc public class tutorial4: NSObject {
     
@@ -383,6 +384,116 @@ import Foundation
         let vs = userdata.assumingMemoryBound(to: VideoState.self)
         let vp = vs.pointee.pictq_ptr.advanced(by: Int(vs.pointee.pictq_windex))
         vp.pointee.alloc_picture(vs: vs)
+    }
+    
+    static public func stream_open(vs: UnsafeMutablePointer<VideoState>, at: Int32) -> Int32 {
+        return vs.pointee.stream_open(at: at)
+    }
+}
+
+extension VideoState {
+    mutating func stream_open(at: Int32) -> Int32 {
+        var ret: Int32 = 0
+        if 0 > at || UInt32(at) >= pFormatCtx.pointee.nb_streams  {
+            return -1
+        }
+        
+        guard let codecpar = pFormatCtx.pointee.streams[Int(at)]?.pointee.codecpar else {
+            return -1
+        }
+        let codec_name = String(cString: avcodec_get_name(codecpar.pointee.codec_id))
+        guard let codec = avcodec_find_decoder(codecpar.pointee.codec_id) else {
+            print("Couldn't find decoder for \(codec_name)")
+            return -1
+        }
+        
+        guard let codecCtx = avcodec_alloc_context3(codec) else {
+            print("Couldn't alloc codec context for \(codec_name)")
+            return -1
+        }
+        
+        ret = avcodec_parameters_to_context(codecCtx, codecpar)
+        
+        var ctx: UnsafeMutablePointer<AVCodecContext>? = codecCtx
+        guard 0 <= ret else {
+            avcodec_free_context(&ctx)
+            print("Couldn't copy to codec context from codec parameters for \(codec_name)")
+            return -1
+        }
+        
+        var wanted_spec: SDL_AudioSpec = SDL_AudioSpec()
+        var spec: SDL_AudioSpec = SDL_AudioSpec()
+        let userdata = UnsafeMutableRawPointer(withUnsafeMutablePointer(to: &self){$0})
+        switch codecpar.pointee.codec_type {
+        case AVMEDIA_TYPE_AUDIO:
+            wanted_spec.freq = codecpar.pointee.sample_rate
+            wanted_spec.format = UInt16(AUDIO_S16SYS)
+            wanted_spec.channels = UInt8(codecpar.pointee.channels)
+            wanted_spec.silence = 0
+            wanted_spec.samples = UInt16(SDL_AUDIO_BUFFER_SIZE)
+            wanted_spec.callback = tutorial4.audio_callback
+            wanted_spec.userdata = userdata
+            guard 0 <= SDL_OpenAudio(&wanted_spec, &spec) else {
+                print("SDL_OpenAudio failed with \(String(cString: SDL_GetError()))")
+                return -1
+            }
+            
+            guard 0 <= avcodec_open2(codecCtx, codec, nil) else {
+                avcodec_free_context(&ctx)
+                print("Couldn't open \(codec_name)")
+                return -1
+            }
+            
+            self.audioStream = at
+            self.audio_ctx = codecCtx
+            self.audio_buf_size = 0
+            self.audio_buf_index = 0
+            SDL_memset(&audio_pkt, 0, MemoryLayout<AVPacket>.stride)
+            tutorial4.packet_queue_init(q: &audioq)
+            
+            SDL_PauseAudio(0)
+        case AVMEDIA_TYPE_VIDEO:
+            guard 0 <= avcodec_open2(codecCtx, codec, nil) else {
+                avcodec_free_context(&ctx)
+                print("Couldn't open \(codec_name)")
+                return -1
+            }
+            self.videoStream = at
+            self.video_ctx = codecCtx
+            tutorial4.packet_queue_init(q: &videoq)
+            self.video_tid = SDL_CreateThread(tutorial4.video_thread, "video_thread", userdata)
+            
+            let width: Int32 = codecCtx.pointee.width
+            let height: Int32 = codecCtx.pointee.height
+            
+            self.src_rect.w = width
+            self.src_rect.h = height
+            
+            var w: Int32 = 0
+            var h: Int32 = 0
+            SDL_GetWindowSize(tutorial4.window, &w, &h)
+            
+            let textureSize = CGSize(width: Int(width), height: Int(height))
+            let dstRect = AVMakeRect(aspectRatio: textureSize, insideRect: CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h)))
+            
+            dst_rect.x = Int32(ceil(dstRect.origin.x))
+            dst_rect.y = Int32(ceil(dstRect.origin.y))
+            dst_rect.w = Int32(ceil(dstRect.width))
+            dst_rect.h = Int32(ceil(dstRect.height))
+            
+        default:
+            break
+        }
+        
+        return 0
+    }
+   
+    var audio_st: UnsafeMutablePointer<AVStream>? {
+        return pFormatCtx.pointee.streams.advanced(by: Int(audioStream)).pointee
+    }
+    
+    var video_st: UnsafeMutablePointer<AVStream>? {
+        return pFormatCtx.pointee.streams.advanced(by: Int(videoStream)).pointee
     }
 }
 
