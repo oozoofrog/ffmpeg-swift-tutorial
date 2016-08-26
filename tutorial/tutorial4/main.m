@@ -37,52 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-int decode_frame(AVStream *stream, AVCodecContext *codec, AVPacket *packet, AVFrame *frame) {
-    
-    int got_picture = 1;
-    int ret = 0;
-    int length = 0;
-    while ((0 < packet->size || (nil == packet->data && got_picture)) && 0 <= ret) {
-        got_picture = 0;
-        switch (codec->codec_type) {
-            case AVMEDIA_TYPE_VIDEO:
-            case AVMEDIA_TYPE_AUDIO:
-            {
-                ret = avcodec_send_packet(codec, packet);
-                if (ret > 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-                    break;
-                }
-                if (0 <= ret) {
-                    packet->size = 0;
-                }
-                ret = avcodec_receive_frame(codec, frame);
-                got_picture = 0 <= ret ? 1 : 0;
-                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                    ret = 0;
-                }
-                length = frame->pkt_size;
-            }
-                break;
-            default:
-                break;
-        }
-        if (0 <= ret) {
-            if (got_picture) {
-                stream->nb_decoded_frames += 1;
-            }
-            ret = got_picture;
-        }
-    }
-    length = frame->pkt_size;
-    if (NULL == packet->data && got_picture) {
-        return -1;
-    }
-    if (0 <= ret && 0 > length) {
-        length = 0;
-    }
-    return length;
-}
-
 int main(int argc, char *argv[]) {
     
     SDL_Event       event;
