@@ -37,99 +37,6 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-int decode_thread(void *arg) {
-    
-    VideoState *is = (VideoState *)arg;
-    AVFormatContext *pFormatCtx = NULL;
-    AVPacket pkt1, *packet = &pkt1;
-    
-    int video_index = -1;
-    int audio_index = -1;
-    int i;
-    
-    is->videoStream=-1;
-    is->audioStream=-1;
-    
-    // Open video file
-    printf("here!!decode_thread\n");
-    printf("is->filename:  %s\n", is->filename);
-    if(avformat_open_input(&pFormatCtx, is->filename, NULL, NULL)!=0) {
-        printf("avformat_open_input Failed: %s\n", is->filename);
-        return -1; // Couldn't open file
-    }
-    
-    is->pFormatCtx = pFormatCtx;
-    
-    // Retrieve stream information
-    if(avformat_find_stream_info(pFormatCtx, NULL)<0)
-        return -1; // Couldn't find stream information
-    
-    // Dump information about file onto standard error
-    av_dump_format(pFormatCtx, 0, is->filename, 0);
-    
-    // Find the first video stream
-    
-    for(i=0; i<pFormatCtx->nb_streams; i++) {
-        if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO &&
-           video_index < 0) {
-            video_index=i;
-        }
-        if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_AUDIO &&
-           audio_index < 0) {
-            audio_index=i;
-        }
-    }
-    [tutorial4 stream_openWithVs:is at:audio_index];
-    [tutorial4 stream_openWithVs:is at:video_index];
-    
-    if(is->videoStream < 0 || is->audioStream < 0) {
-        fprintf(stderr, "%s: could not open codecs\n", is->filename);
-        goto fail;
-    }
-    
-    // main decode loop
-    
-    for(;;) {
-        if(is->quit) {
-            break;
-        }
-        // seek stuff goes here
-        if(is->audioq.size > MAX_AUDIOQ_SIZE ||
-           is->videoq.size > MAX_VIDEOQ_SIZE) {
-            SDL_Delay(10);
-            continue;
-        }
-        if(av_read_frame(is->pFormatCtx, packet) < 0) {
-            if(is->pFormatCtx->pb->error == 0) {
-                SDL_Delay(100); /* no error; wait for user input */
-                continue;
-            } else {
-                break;
-            }
-        }
-        // Is this a packet from the video stream?
-        if(packet->stream_index == is->videoStream) {
-            [tutorial4 packet_queue_putWithQ:&is->videoq pkt:packet];
-        } else if(packet->stream_index == is->audioStream) {
-            [tutorial4 packet_queue_putWithQ:&is->audioq pkt:packet];
-        } else {
-            av_packet_unref(packet);
-        }
-    }
-    /* all done - wait for it */
-    while(!is->quit) {
-        SDL_Delay(100);
-    }
-    
-fail:
-    if(1){
-        SDL_Event event;
-        event.type = FF_QUIT_EVENT;
-        event.user.data1 = is;
-        SDL_PushEvent(&event);
-    }
-    return 0;
-}
 int decode_frame(AVCodecContext *codec, AVPacket *packet, AVFrame *frame) {
     
     int got_picture = 1;
@@ -241,7 +148,7 @@ int main(int argc, char *argv[]) {
     //schedule_refresh(is, 40);
     [tutorial4 schedule_refreshWithVs:is delay:40];
     
-    is->parse_tid = SDL_CreateThread(decode_thread, "decode_thread", is);
+    is->parse_tid = SDL_CreateThread([tutorial4 decode_thread], "decode_thread", is);
     if(!is->parse_tid) {
         av_free(is);
         return -1;

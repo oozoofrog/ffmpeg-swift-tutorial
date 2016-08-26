@@ -9,6 +9,9 @@
 import Foundation
 import AVFoundation
 
+let MAX_AUDIOQ_SIZE: Int32 = (5 * 16 * 1024)
+let MAX_VIDEOQ_SIZE: Int32 = (5 * 256 * 1024)
+
 @objc public class tutorial4: NSObject {
     
     static var window: OpaquePointer?
@@ -391,22 +394,80 @@ import AVFoundation
     }
     
     static public var decode_thread: SDL_ThreadFunction = { (arg) in
-        var vs: UnsafeMutablePointer<VideoState>? = arg?.assumingMemoryBound(to: VideoState.self)
-        
-        vs?.pointee.videoStream = -1
-        vs?.pointee.audioStream = -1
-        var pFormatCtx: UnsafeMutablePointer<AVFormatContext>? = nil
-        guard 0 <= avformat_open_input(&pFormatCtx, vs?.pointee.filename, nil, nil) else {
+        guard let vs: UnsafeMutablePointer<VideoState> = arg?.assumingMemoryBound(to: VideoState.self) else {
             return -1
         }
         
-        vs?.pointee.pFormatCtx = pFormatCtx
+        var pkt: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+        
+        defer {
+            av_packet_free(&pkt)
+        }
+        
+        vs.pointee.videoStream = -1
+        vs.pointee.audioStream = -1
+        var pFormatCtx: UnsafeMutablePointer<AVFormatContext>? = nil
+        guard 0 <= avformat_open_input(&pFormatCtx, vs.pointee.filename, nil, nil) else {
+            return -1
+        }
+        
+        vs.pointee.pFormatCtx = pFormatCtx
         
         guard 0 <= avformat_find_stream_info(pFormatCtx, nil) else {
+            print("Couldn't find stream info for \(String(cString: vs.pointee.filename))")
             return -1
         }
-        av_dump_format(pFormatCtx, 0, vs?.pointee.filename, 0)
-        // TODO: working decode_thread to swift from c
+        av_dump_format(pFormatCtx, 0, vs.pointee.filename, 0)
+        
+        let video_stream_index: Int32 = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nil, 0)
+        let audio_stream_index: Int32 = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nil, 0)
+        
+        guard 0 <= tutorial4.stream_open(vs: vs, at: video_stream_index) else {
+            print("Couldn't open video stream")
+            return -1
+        }
+        
+        guard 0 <= tutorial4.stream_open(vs: vs, at: audio_stream_index) else {
+            print("Couldn't open audio stream")
+            return -1
+        }
+        
+        decode: while true {
+            if vs.pointee.quit == 1 {
+                break decode
+            }
+            
+            guard MAX_AUDIOQ_SIZE >= vs.pointee.audioq.size && MAX_VIDEOQ_SIZE >= vs.pointee.videoq.size else {
+                SDL_Delay(10)
+                continue decode
+            }
+            
+            if 0 > av_read_frame(vs.pointee.pFormatCtx, pkt) {
+                guard 0 != vs.pointee.pFormatCtx.pointee.pb.pointee.error else {
+                    break
+                }
+                SDL_Delay(100)
+                continue decode
+            }
+            
+            switch pkt?.pointee.stream_index {
+            case video_stream_index?:
+                guard 0 <= tutorial4.packet_queue_put(q:&vs.pointee.videoq, pkt: pkt!) else {
+                    break decode
+                }
+            case audio_stream_index?:
+                guard 0 <= tutorial4.packet_queue_put(q:&vs.pointee.audioq, pkt: pkt!) else {
+                    break decode
+                }
+            default:
+                av_packet_unref(pkt)
+            }
+        }
+        
+        while 0 == vs.pointee.quit {
+            SDL_Delay(100)
+        }
+        
         return 0
     }
 }
