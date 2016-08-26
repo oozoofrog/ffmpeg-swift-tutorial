@@ -197,7 +197,7 @@ let MAX_VIDEOQ_SIZE: Int32 = (5 * 256 * 1024)
         
         while true {
             while vs.pointee.audio_pkt_size > 0 {
-                len1 = decode_frame(vs.pointee.audio_ctx, pkt, &vs.pointee.audio_frame)
+                len1 = tutorial4.decode_frame(stream: vs.pointee.audio_st, codec: vs.pointee.audio_ctx, pkt: pkt, frame: &vs.pointee.audio_frame)
                 if 0 > len1 {
                     vs.pointee.audio_pkt_size = 0
                     break
@@ -271,7 +271,7 @@ let MAX_VIDEOQ_SIZE: Int32 = (5 * 256 * 1024)
             if 0 > packet_queue_get(is: vs, q: &vs.pointee.videoq, pkt: packet, block: 1) {
                 break
             }
-            guard 0 <= decode_frame(vs.pointee.video_ctx, packet, pFrame) else {
+            guard 0 <= tutorial4.decode_frame(stream: vs.pointee.video_st, codec: vs.pointee.video_ctx, pkt: packet, frame: pFrame) else {
                 break
             }
             
@@ -470,6 +470,52 @@ let MAX_VIDEOQ_SIZE: Int32 = (5 * 256 * 1024)
         
         return 0
     }
+    
+    static public func decode_frame(stream: UnsafeMutablePointer<AVStream>, codec: UnsafeMutablePointer<AVCodecContext>, pkt: UnsafeMutablePointer<AVPacket>?, frame: UnsafeMutablePointer<AVFrame>?) -> Int32 {
+        var got_picture: Bool = true
+        var ret: Int32 = 0
+        var length: Int32 = 0
+        
+        decode: while (0 < (pkt?.pointee.size ?? 0) || (nil == pkt?.pointee.data && got_picture)) && 0 <= ret {
+            got_picture = false
+            
+            switch codec.pointee.codec_type {
+            case AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO:
+                ret = avcodec_send_packet(codec, pkt)
+                if 0 > ret && false == AVFILTER_EOF(ret) {
+                    break decode
+                }
+                if 0 <= ret {
+                    pkt?.pointee.size = 0
+                }
+                ret = avcodec_receive_frame(codec, frame)
+                got_picture = 0 <= ret
+                if AVFILTER_EOF(ret) {
+                    ret = 0
+                }
+            default:
+                break
+            }
+            if 0 <= ret {
+                if got_picture {
+                    stream.pointee.nb_decoded_frames += 1
+                }
+                ret = got_picture ? 1 : 0
+            }
+        }
+        
+        length = frame?.pointee.pkt_size ?? 0
+        
+        if nil == pkt?.pointee.data && got_picture {
+            return -1
+        }
+        
+        if 0 <= ret && 0 > length {
+            length = 0
+        }
+        
+        return length
+    }
 }
 
 extension VideoState {
@@ -526,6 +572,7 @@ extension VideoState {
             }
             
             self.audioStream = at
+            self.audio_st = pFormatCtx.pointee.streams.advanced(by: Int(at)).pointee
             self.audio_ctx = codecCtx
             self.audio_buf_size = 0
             self.audio_buf_index = 0
@@ -540,6 +587,7 @@ extension VideoState {
                 return -1
             }
             self.videoStream = at
+            self.video_st = pFormatCtx.pointee.streams.advanced(by: Int(at)).pointee
             self.video_ctx = codecCtx
             tutorial4.packet_queue_init(q: &videoq)
             self.video_tid = SDL_CreateThread(tutorial4.video_thread, "video_thread", userdata)
@@ -567,14 +615,6 @@ extension VideoState {
         }
         
         return 0
-    }
-   
-    var audio_st: UnsafeMutablePointer<AVStream>? {
-        return pFormatCtx.pointee.streams.advanced(by: Int(audioStream)).pointee
-    }
-    
-    var video_st: UnsafeMutablePointer<AVStream>? {
-        return pFormatCtx.pointee.streams.advanced(by: Int(videoStream)).pointee
     }
 }
 

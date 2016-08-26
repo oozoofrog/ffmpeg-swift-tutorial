@@ -37,7 +37,7 @@ SDL_Renderer *renderer = NULL;
  can be global in case we need it. */
 VideoState *global_video_state;
 
-int decode_frame(AVCodecContext *codec, AVPacket *packet, AVFrame *frame) {
+int decode_frame(AVStream *stream, AVCodecContext *codec, AVPacket *packet, AVFrame *frame) {
     
     int got_picture = 1;
     int ret = 0;
@@ -68,7 +68,7 @@ int decode_frame(AVCodecContext *codec, AVPacket *packet, AVFrame *frame) {
         }
         if (0 <= ret) {
             if (got_picture) {
-                //stream->nb_decoded_frames += 1;
+                stream->nb_decoded_frames += 1;
             }
             ret = got_picture;
         }
