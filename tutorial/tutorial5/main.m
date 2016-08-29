@@ -1,13 +1,13 @@
 //
 //  main.m
-//  tutorial4
+//  tutorial5
 //
 //  Created by jayios on 2016. 8. 23..
 //  Copyright © 2016년 gretech. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "tutorial4-Swift.h"
+#import "tutorial5-Swift.h"
 #import <AVFoundation/AVFoundation.h>
 
 // tutorial04.c
@@ -88,9 +88,9 @@ int main(int argc, char *argv[]) {
     
     screen_mutex = SDL_CreateMutex();
     
-    [tutorial4 setWindow:screen];
-    [tutorial4 setRenderer:renderer];
-    [tutorial4 setScreen_mutex:screen_mutex];
+    [tutorial5 setWindow:screen];
+    [tutorial5 setRenderer:renderer];
+    [tutorial5 setScreen_mutex:screen_mutex];
     
     av_strlcpy(is->filename_arr, filename, sizeof(is->filename_arr));
     is->filename = is->filename_arr;
@@ -100,9 +100,9 @@ int main(int argc, char *argv[]) {
     is->pictq_cond = SDL_CreateCond();
     
     //schedule_refresh(is, 40);
-    [tutorial4 schedule_refreshWithVs:is delay:40];
+    [tutorial5 schedule_refreshWithVs:is delay:40];
     
-    is->parse_tid = SDL_CreateThread([tutorial4 decode_thread], "decode_thread", is);
+    is->parse_tid = SDL_CreateThread([tutorial5 decode_thread], "decode_thread", is);
     if(!is->parse_tid) {
         av_free(is);
         return -1;
@@ -124,8 +124,8 @@ int main(int argc, char *argv[]) {
                 break;
             case FF_REFRESH_EVENT:
                 //video_refresh_timer(event.user.data1);
-                NSLog(@"a:%f, v:%f", [tutorial4 a_pts], [tutorial4 v_pts]);
-                [tutorial4 video_refresh_timerWithUserdata:event.user.data1 mutex:screen_mutex window:screen renderer:renderer];
+                NSLog(@"a:%f, v:%f", [tutorial5 a_pts], [tutorial5 v_pts]);
+                [tutorial5 video_refresh_timerWithUserdata:event.user.data1 mutex:screen_mutex window:screen renderer:renderer];
                 break;
             default:
                 break;

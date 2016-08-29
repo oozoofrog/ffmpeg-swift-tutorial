@@ -1,5 +1,5 @@
 //
-//  tutorial4.swift
+//  tutorial5.swift
 //  tutorial
 //
 //  Created by jayios on 2016. 8. 23..
@@ -14,7 +14,7 @@ let MAX_VIDEOQ_SIZE: Int32 = (5 * 256 * 1024)
 
 let AV_NOPTS_VALUE = Int64.min
 
-@objc public class tutorial4: NSObject {
+@objc public class tutorial5: NSObject {
     
     static var a_pts = 0.0
     static var v_pts = 0.0
@@ -201,7 +201,7 @@ let AV_NOPTS_VALUE = Int64.min
         let pkt = withUnsafeMutablePointer(to: &vs.pointee.audio_pkt){$0}
         while true {
             while vs.pointee.audio_pkt_size > 0 {
-                len1 = tutorial4.decode_frame(codec: vs.pointee.audio_ctx, pkt: pkt, frame: &vs.pointee.audio_frame)
+                len1 = tutorial5.decode_frame(codec: vs.pointee.audio_ctx, pkt: pkt, frame: &vs.pointee.audio_frame)
                 if 0 > len1 {
                     vs.pointee.audio_pkt_size = 0
                     break
@@ -214,7 +214,7 @@ let AV_NOPTS_VALUE = Int64.min
                 
                 a_pts *= av_q2d(vs.pointee.audio_st.pointee.time_base)
                 
-                data_size = tutorial4.audio_resampling(ctx: vs.pointee.audio_ctx, frame: &vs.pointee.audio_frame, output_format: AV_SAMPLE_FMT_S16, out_channels: vs.pointee.audio_frame.channels, out_sample_rate: vs.pointee.audio_frame.sample_rate, out_buffer: audio_buf);
+                data_size = tutorial5.audio_resampling(ctx: vs.pointee.audio_ctx, frame: &vs.pointee.audio_frame, output_format: AV_SAMPLE_FMT_S16, out_channels: vs.pointee.audio_frame.channels, out_sample_rate: vs.pointee.audio_frame.sample_rate, out_buffer: audio_buf);
                 assert(data_size <= buf_size)
                 
                 vs.pointee.audio_pkt_data = vs.pointee.audio_pkt_data.advanced(by: Int(len1))
@@ -251,7 +251,7 @@ let AV_NOPTS_VALUE = Int64.min
         
         while 0 < len {
             if vs.pointee.audio_buf_index >= vs.pointee.audio_buf_size {
-                audio_size = tutorial4.audio_decode_frame(vs: vs, audio_buf: vs.pointee.audio_buf_ptr, buf_size: Int32(vs.pointee.audio_buf_ptr_length))
+                audio_size = tutorial5.audio_decode_frame(vs: vs, audio_buf: vs.pointee.audio_buf_ptr, buf_size: Int32(vs.pointee.audio_buf_ptr_length))
                 if 0 > audio_size {
                     vs.pointee.audio_buf_size = 1024
                     SDL_memset(vs.pointee.audio_buf_ptr, 0, Int(vs.pointee.audio_buf_size))
@@ -283,14 +283,14 @@ let AV_NOPTS_VALUE = Int64.min
             if 0 > packet_queue_get(is: vs, q: &vs.pointee.videoq, pkt: packet, block: 1) {
                 break
             }
-            guard 0 <= tutorial4.decode_frame(codec: vs.pointee.video_ctx, pkt: packet, frame: pFrame) else {
+            guard 0 <= tutorial5.decode_frame(codec: vs.pointee.video_ctx, pkt: packet, frame: pFrame) else {
                 break
             }
             
             if AV_NOPTS_VALUE != packet.pointee.dts {
-                tutorial4.v_pts = Double(av_frame_get_best_effort_timestamp(pFrame))
+                tutorial5.v_pts = Double(av_frame_get_best_effort_timestamp(pFrame))
             } else {
-                tutorial4.v_pts = 0
+                tutorial5.v_pts = 0
             }
             
             v_pts *= av_q2d(vs.pointee.video_st.pointee.time_base)
@@ -356,7 +356,7 @@ let AV_NOPTS_VALUE = Int64.min
     }
     
     static func schedule_refresh(vs: UnsafeMutablePointer<VideoState>, delay: Int32) {
-        SDL_AddTimer(Uint32(delay), tutorial4.sdl_refresh_timer_cb, vs)
+        SDL_AddTimer(Uint32(delay), tutorial5.sdl_refresh_timer_cb, vs)
     }
     
     static func video_display(vs: UnsafeMutablePointer<VideoState>,
@@ -442,12 +442,12 @@ let AV_NOPTS_VALUE = Int64.min
         let video_stream_index: Int32 = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nil, 0)
         let audio_stream_index: Int32 = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nil, 0)
         
-        guard 0 <= tutorial4.stream_open(vs: vs, at: video_stream_index) else {
+        guard 0 <= tutorial5.stream_open(vs: vs, at: video_stream_index) else {
             print("Couldn't open video stream")
             return -1
         }
         
-        guard 0 <= tutorial4.stream_open(vs: vs, at: audio_stream_index) else {
+        guard 0 <= tutorial5.stream_open(vs: vs, at: audio_stream_index) else {
             print("Couldn't open audio stream")
             return -1
         }
@@ -472,11 +472,11 @@ let AV_NOPTS_VALUE = Int64.min
             
             switch pkt?.pointee.stream_index {
             case video_stream_index?:
-                guard 0 <= tutorial4.packet_queue_put(q:&vs.pointee.videoq, pkt: pkt!) else {
+                guard 0 <= tutorial5.packet_queue_put(q:&vs.pointee.videoq, pkt: pkt!) else {
                     break decode
                 }
             case audio_stream_index?:
-                guard 0 <= tutorial4.packet_queue_put(q:&vs.pointee.audioq, pkt: pkt!) else {
+                guard 0 <= tutorial5.packet_queue_put(q:&vs.pointee.audioq, pkt: pkt!) else {
                     break decode
                 }
             default:
@@ -556,7 +556,7 @@ extension VideoState {
             wanted_spec.channels = UInt8(codecpar.pointee.channels)
             wanted_spec.silence = 0
             wanted_spec.samples = UInt16(SDL_AUDIO_BUFFER_SIZE)
-            wanted_spec.callback = tutorial4.audio_callback
+            wanted_spec.callback = tutorial5.audio_callback
             wanted_spec.userdata = userdata
             guard 0 <= SDL_OpenAudio(&wanted_spec, &spec) else {
                 print("SDL_OpenAudio failed with \(String(cString: SDL_GetError()))")
@@ -575,7 +575,7 @@ extension VideoState {
             self.audio_buf_size = 0
             self.audio_buf_index = 0
             SDL_memset(&audio_pkt, 0, MemoryLayout<AVPacket>.stride)
-            tutorial4.packet_queue_init(q: &audioq)
+            tutorial5.packet_queue_init(q: &audioq)
             
             SDL_PauseAudio(0)
         case AVMEDIA_TYPE_VIDEO:
@@ -587,8 +587,8 @@ extension VideoState {
             self.videoStream = at
             self.video_st = pFormatCtx.pointee.streams.advanced(by: Int(at)).pointee
             self.video_ctx = codecCtx
-            tutorial4.packet_queue_init(q: &videoq)
-            self.video_tid = SDL_CreateThread(tutorial4.video_thread, "video_thread", userdata)
+            tutorial5.packet_queue_init(q: &videoq)
+            self.video_tid = SDL_CreateThread(tutorial5.video_thread, "video_thread", userdata)
             
             let width: Int32 = codecCtx.pointee.width
             let height: Int32 = codecCtx.pointee.height
@@ -598,7 +598,7 @@ extension VideoState {
             
             var w: Int32 = 0
             var h: Int32 = 0
-            SDL_GetWindowSize(tutorial4.window, &w, &h)
+            SDL_GetWindowSize(tutorial5.window, &w, &h)
             
             let textureSize = CGSize(width: Int(width), height: Int(height))
             let dstRect = AVMakeRect(aspectRatio: textureSize, insideRect: CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h)))
@@ -624,11 +624,11 @@ extension VideoPicture {
         if nil != self.texture {
             SDL_DestroyTexture(self.texture)
         }
-        SDL_LockMutex(tutorial4.screen_mutex)
+        SDL_LockMutex(tutorial5.screen_mutex)
         let w: Int32 = vs.pointee.video_ctx.pointee.width
         let h: Int32 = vs.pointee.video_ctx.pointee.height
         
-        self.texture = SDL_CreateTexture(tutorial4.renderer, Uint32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), w, h)
+        self.texture = SDL_CreateTexture(tutorial5.renderer, Uint32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), w, h)
         self.yPlaneSz = size_t(w * h)
         self.yPlane = SDL_malloc(yPlaneSz).assumingMemoryBound(to: UInt8.self)
         self.uPlane = SDL_malloc(uvPlaneSz).assumingMemoryBound(to: UInt8.self)
@@ -636,7 +636,7 @@ extension VideoPicture {
         
         self.uvPitch = vs.pointee.video_ctx.pointee.width / 2
         
-        SDL_UnlockMutex(tutorial4.screen_mutex)
+        SDL_UnlockMutex(tutorial5.screen_mutex)
         
         self.width = w
         self.height = h

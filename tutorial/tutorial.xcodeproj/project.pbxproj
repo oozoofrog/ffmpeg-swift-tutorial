@@ -7,6 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A905FE1F1D740ECF001E496B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A905FE1E1D740ECF001E496B /* main.m */; };
+		A905FE271D740EF2001E496B /* tutorial5.swift in Sources */ = {isa = PBXBuildFile; fileRef = A905FE261D740EF2001E496B /* tutorial5.swift */; };
+		A905FE281D740F8C001E496B /* libavcodec.57.48.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135E1D6C1B37000A2A2E /* libavcodec.57.48.101.dylib */; };
+		A905FE291D740F8C001E496B /* libavfilter.6.47.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135F1D6C1B37000A2A2E /* libavfilter.6.47.100.dylib */; };
+		A905FE2A1D740F8C001E496B /* libavformat.57.41.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13601D6C1B37000A2A2E /* libavformat.57.41.100.dylib */; };
+		A905FE2B1D740F8C001E496B /* libavresample.3.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13611D6C1B37000A2A2E /* libavresample.3.0.0.dylib */; };
+		A905FE2C1D740F8C001E496B /* libavutil.55.28.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13621D6C1B37000A2A2E /* libavutil.55.28.100.dylib */; };
+		A905FE2D1D740F8C001E496B /* libswresample.2.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13631D6C1B37000A2A2E /* libswresample.2.1.100.dylib */; };
+		A905FE2E1D740F8C001E496B /* libswscale.4.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13641D6C1B37000A2A2E /* libswscale.4.1.100.dylib */; };
+		A905FE311D740F8C001E496B /* libavdevice.57.0.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A905FE2F1D740F8C001E496B /* libavdevice.57.0.101.dylib */; };
+		A905FE321D740F8C001E496B /* libpostproc.54.0.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A905FE301D740F8C001E496B /* libpostproc.54.0.100.dylib */; };
+		A905FE331D740FA4001E496B /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135C1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib */; };
+		A905FE361D74101B001E496B /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
 		A91089321D6C4B6000A48616 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = A91089311D6C4B6000A48616 /* README.md */; };
 		A96535A71D6AD130009FE760 /* Tutorial2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96535A61D6AD130009FE760 /* Tutorial2.swift */; };
 		A96535A91D6AF69E009FE760 /* Tutorial3.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96535A81D6AF69E009FE760 /* Tutorial3.swift */; };
@@ -106,9 +119,6 @@
 		A9759A5C1D6EB35200EE64BA /* sample.mp4 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A98B2F771D6D25CC00AD314E /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
 		A98B2F7B1D6D260E00AD314E /* FFmpeg.h in Headers */ = {isa = PBXBuildFile; fileRef = A96D17471D5875F1009F7AC2 /* FFmpeg.h */; };
-		A98B2F831D6D5A9100AD314E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A98B2F821D6D5A9100AD314E /* main.m */; };
-		A98B2F891D6D60E700AD314E /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A98B2F881D6D60E700AD314E /* AudioUnit.framework */; };
-		A98B2F8B1D6D620500AD314E /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A98B2F8A1D6D620500AD314E /* AVFoundation.framework */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
 		A9B7A0741D6C39E40060ADF4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A9B7A0731D6C39E40060ADF4 /* main.m */; };
 		A9B7A0811D6C3A080060ADF4 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A0781D6C3A080060ADF4 /* libavcodec.a */; };
@@ -139,6 +149,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		A905FE1A1D740ECF001E496B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		A96BD6AC1D5997960095C84C /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -159,15 +178,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A98B2F7E1D6D5A9100AD314E /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		A9BE13531D6C1AB8000A2A2E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -180,6 +190,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A905FE1C1D740ECF001E496B /* tutorial5 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tutorial5; sourceTree = BUILT_PRODUCTS_DIR; };
+		A905FE1E1D740ECF001E496B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		A905FE231D740EF2001E496B /* tutorial5-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tutorial5-Bridging-Header.h"; sourceTree = "<group>"; };
+		A905FE241D740EF2001E496B /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
+		A905FE261D740EF2001E496B /* tutorial5.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorial5.swift; sourceTree = "<group>"; };
+		A905FE2F1D740F8C001E496B /* libavdevice.57.0.101.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavdevice.57.0.101.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libavdevice.57.0.101.dylib; sourceTree = "<group>"; };
+		A905FE301D740F8C001E496B /* libpostproc.54.0.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpostproc.54.0.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libpostproc.54.0.100.dylib; sourceTree = "<group>"; };
+		A905FE341D740FB9001E496B /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ffmpeg; path = ../../../../../../usr/local/Cellar/ffmpeg; sourceTree = "<group>"; };
+		A905FE351D740FB9001E496B /* sdl2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = sdl2; path = ../../../../../../usr/local/Cellar/sdl2; sourceTree = "<group>"; };
 		A91089311D6C4B6000A48616 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		A94E9B841D658FB600E87579 /* ffplay.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ffplay.c; path = "../../FFmpeg-iOS-build-script/ffmpeg-3.1.1/ffplay.c"; sourceTree = "<group>"; };
 		A96535A61D6AD130009FE760 /* Tutorial2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tutorial2.swift; sourceTree = "<group>"; };
@@ -283,8 +302,6 @@
 		A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ffmpeg-tutorial"; path = "../../ffmpeg-tutorial"; sourceTree = "<group>"; };
 		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
-		A98B2F801D6D5A9100AD314E /* play_audio */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = play_audio; sourceTree = BUILT_PRODUCTS_DIR; };
-		A98B2F821D6D5A9100AD314E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A98B2F881D6D60E700AD314E /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/AudioUnit.framework; sourceTree = DEVELOPER_DIR; };
 		A98B2F8A1D6D620500AD314E /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
@@ -321,6 +338,23 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A905FE191D740ECF001E496B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A905FE331D740FA4001E496B /* libSDL2-2.0.0.dylib in Frameworks */,
+				A905FE311D740F8C001E496B /* libavdevice.57.0.101.dylib in Frameworks */,
+				A905FE321D740F8C001E496B /* libpostproc.54.0.100.dylib in Frameworks */,
+				A905FE281D740F8C001E496B /* libavcodec.57.48.101.dylib in Frameworks */,
+				A905FE291D740F8C001E496B /* libavfilter.6.47.100.dylib in Frameworks */,
+				A905FE2A1D740F8C001E496B /* libavformat.57.41.100.dylib in Frameworks */,
+				A905FE2B1D740F8C001E496B /* libavresample.3.0.0.dylib in Frameworks */,
+				A905FE2C1D740F8C001E496B /* libavutil.55.28.100.dylib in Frameworks */,
+				A905FE2D1D740F8C001E496B /* libswresample.2.1.100.dylib in Frameworks */,
+				A905FE2E1D740F8C001E496B /* libswscale.4.1.100.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A96D16ED1D5860C5009F7AC2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -345,15 +379,6 @@
 				A96D17301D587133009F7AC2 /* libavutil.a in Frameworks */,
 				A96D17311D587133009F7AC2 /* libswresample.a in Frameworks */,
 				A96D17321D587133009F7AC2 /* libswscale.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A98B2F7D1D6D5A9100AD314E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A98B2F8B1D6D620500AD314E /* AVFoundation.framework in Frameworks */,
-				A98B2F891D6D60E700AD314E /* AudioUnit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,9 +417,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A905FE1D1D740ECF001E496B /* tutorial5 */ = {
+			isa = PBXGroup;
+			children = (
+				A905FE241D740EF2001E496B /* main.h */,
+				A905FE1E1D740ECF001E496B /* main.m */,
+				A905FE261D740EF2001E496B /* tutorial5.swift */,
+				A905FE231D740EF2001E496B /* tutorial5-Bridging-Header.h */,
+			);
+			path = tutorial5;
+			sourceTree = "<group>";
+		};
 		A96D16E71D5860C5009F7AC2 = {
 			isa = PBXGroup;
 			children = (
+				A905FE341D740FB9001E496B /* ffmpeg */,
+				A905FE351D740FB9001E496B /* sdl2 */,
 				A91089311D6C4B6000A48616 /* README.md */,
 				A96BD6B21D599B450095C84C /* OpenGLES.framework */,
 				A96BD6B01D599B330095C84C /* CoreAudio.framework */,
@@ -407,7 +445,7 @@
 				A96D16F21D5860C5009F7AC2 /* tutorial */,
 				A9BE13561D6C1AB8000A2A2E /* tutorial3 */,
 				A9B7A0721D6C39E40060ADF4 /* tutorial4 */,
-				A98B2F811D6D5A9100AD314E /* play_audio */,
+				A905FE1D1D740ECF001E496B /* tutorial5 */,
 				A96D16F11D5860C5009F7AC2 /* Products */,
 				D8E9FE671D5D45B60095C53C /* Frameworks */,
 			);
@@ -419,7 +457,7 @@
 				A96D16F01D5860C5009F7AC2 /* tutorial.app */,
 				A9BE13551D6C1AB8000A2A2E /* tutorial3 */,
 				A9B7A0711D6C39E40060ADF4 /* tutorial4 */,
-				A98B2F801D6D5A9100AD314E /* play_audio */,
+				A905FE1C1D740ECF001E496B /* tutorial5 */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -535,14 +573,6 @@
 			name = includes;
 			sourceTree = "<group>";
 		};
-		A98B2F811D6D5A9100AD314E /* play_audio */ = {
-			isa = PBXGroup;
-			children = (
-				A98B2F821D6D5A9100AD314E /* main.m */,
-			);
-			path = play_audio;
-			sourceTree = "<group>";
-		};
 		A9B7A0721D6C39E40060ADF4 /* tutorial4 */ = {
 			isa = PBXGroup;
 			children = (
@@ -615,6 +645,8 @@
 		D8E9FE671D5D45B60095C53C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A905FE2F1D740F8C001E496B /* libavdevice.57.0.101.dylib */,
+				A905FE301D740F8C001E496B /* libpostproc.54.0.100.dylib */,
 				A98B2F8A1D6D620500AD314E /* AVFoundation.framework */,
 				A98B2F881D6D60E700AD314E /* AudioUnit.framework */,
 				A9B7A08A1D6C3A180060ADF4 /* libSDL2.a */,
@@ -724,6 +756,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		A905FE1B1D740ECF001E496B /* tutorial5 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A905FE201D740ECF001E496B /* Build configuration list for PBXNativeTarget "tutorial5" */;
+			buildPhases = (
+				A905FE181D740ECF001E496B /* Sources */,
+				A905FE191D740ECF001E496B /* Frameworks */,
+				A905FE1A1D740ECF001E496B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tutorial5;
+			productName = tutorial5;
+			productReference = A905FE1C1D740ECF001E496B /* tutorial5 */;
+			productType = "com.apple.product-type.tool";
+		};
 		A96D16EF1D5860C5009F7AC2 /* tutorial */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A96D17021D5860C5009F7AC2 /* Build configuration list for PBXNativeTarget "tutorial" */;
@@ -743,23 +792,6 @@
 			productName = tutorial;
 			productReference = A96D16F01D5860C5009F7AC2 /* tutorial.app */;
 			productType = "com.apple.product-type.application";
-		};
-		A98B2F7F1D6D5A9100AD314E /* play_audio */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A98B2F861D6D5A9100AD314E /* Build configuration list for PBXNativeTarget "play_audio" */;
-			buildPhases = (
-				A98B2F7C1D6D5A9100AD314E /* Sources */,
-				A98B2F7D1D6D5A9100AD314E /* Frameworks */,
-				A98B2F7E1D6D5A9100AD314E /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = play_audio;
-			productName = play_audio;
-			productReference = A98B2F801D6D5A9100AD314E /* play_audio */;
-			productType = "com.apple.product-type.tool";
 		};
 		A9B7A0701D6C39E40060ADF4 /* tutorial4 */ = {
 			isa = PBXNativeTarget;
@@ -806,14 +838,15 @@
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = gretech;
 				TargetAttributes = {
+					A905FE1B1D740ECF001E496B = {
+						CreatedOnToolsVersion = 8.0;
+						LastSwiftMigration = 0800;
+						ProvisioningStyle = Automatic;
+					};
 					A96D16EF1D5860C5009F7AC2 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = HY47J4787Q;
 						LastSwiftMigration = 0800;
-						ProvisioningStyle = Automatic;
-					};
-					A98B2F7F1D6D5A9100AD314E = {
-						CreatedOnToolsVersion = 8.0;
 						ProvisioningStyle = Automatic;
 					};
 					A9B7A0701D6C39E40060ADF4 = {
@@ -843,7 +876,7 @@
 				A96D16EF1D5860C5009F7AC2 /* tutorial */,
 				A9BE13541D6C1AB8000A2A2E /* tutorial3 */,
 				A9B7A0701D6C39E40060ADF4 /* tutorial4 */,
-				A98B2F7F1D6D5A9100AD314E /* play_audio */,
+				A905FE1B1D740ECF001E496B /* tutorial5 */,
 			);
 		};
 /* End PBXProject section */
@@ -883,6 +916,16 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A905FE181D740ECF001E496B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A905FE361D74101B001E496B /* FFmpeg.m in Sources */,
+				A905FE1F1D740ECF001E496B /* main.m in Sources */,
+				A905FE271D740EF2001E496B /* tutorial5.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A96D16EC1D5860C5009F7AC2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -900,14 +943,6 @@
 				A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */,
 				A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */,
 				A96535A91D6AF69E009FE760 /* Tutorial3.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A98B2F7C1D6D5A9100AD314E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A98B2F831D6D5A9100AD314E /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -951,6 +986,57 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		A905FE211D740ECF001E496B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/Cellar/ffmpeg/3.1.2/include,
+					/usr/local/Cellar/sdl2/2.0.4/include,
+				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/ffmpeg/3.1.2/lib,
+					/usr/local/Cellar/sdl2/2.0.4/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "tutorial5/tutorial5-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		A905FE221D740ECF001E496B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/Cellar/ffmpeg/3.1.2/include,
+					/usr/local/Cellar/sdl2/2.0.4/include,
+				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/ffmpeg/3.1.2/lib,
+					/usr/local/Cellar/sdl2/2.0.4/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "tutorial5/tutorial5-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
 		A96D17001D5860C5009F7AC2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1104,30 +1190,6 @@
 			};
 			name = Release;
 		};
-		A98B2F841D6D5A9100AD314E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		A98B2F851D6D5A9100AD314E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Release;
-		};
 		A9B7A0761D6C39E40060ADF4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1226,6 +1288,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A905FE201D740ECF001E496B /* Build configuration list for PBXNativeTarget "tutorial5" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A905FE211D740ECF001E496B /* Debug */,
+				A905FE221D740ECF001E496B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		A96D16EB1D5860C5009F7AC2 /* Build configuration list for PBXProject "tutorial" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1240,15 +1310,6 @@
 			buildConfigurations = (
 				A96D17031D5860C5009F7AC2 /* Debug */,
 				A96D17041D5860C5009F7AC2 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		A98B2F861D6D5A9100AD314E /* Build configuration list for PBXNativeTarget "play_audio" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A98B2F841D6D5A9100AD314E /* Debug */,
-				A98B2F851D6D5A9100AD314E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
