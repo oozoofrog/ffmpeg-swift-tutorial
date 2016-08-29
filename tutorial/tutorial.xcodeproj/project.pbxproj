@@ -1295,6 +1295,7 @@
 				A905FE221D740ECF001E496B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A96D16EB1D5860C5009F7AC2 /* Build configuration list for PBXProject "tutorial" */ = {
 			isa = XCConfigurationList;

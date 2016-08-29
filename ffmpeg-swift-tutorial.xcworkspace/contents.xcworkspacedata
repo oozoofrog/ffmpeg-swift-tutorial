@@ -2,6 +2,24 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:tutorial/../../../../../../usr/local/Cellar/ffmpeg">
+   </FileRef>
+   <FileRef
+      location = "group:tutorial/../../../../../../usr/local/Cellar/sdl2">
+   </FileRef>
+   <FileRef
+      location = "group:SwiftPlayer/SwiftPlayer/../../ffmpeg.map">
+   </FileRef>
+   <FileRef
+      location = "group:SwiftPlayer/SwiftPlayer/../../sdl.map">
+   </FileRef>
+   <FileRef
+      location = "group:SwiftPlayer/SwiftPlayer/../../tutorial/tutorial/sample.mp4">
+   </FileRef>
+   <FileRef
+      location = "group:SwiftPlayer/SwiftPlayer.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:tutorial/tutorial.xcodeproj">
    </FileRef>
 </Workspace>

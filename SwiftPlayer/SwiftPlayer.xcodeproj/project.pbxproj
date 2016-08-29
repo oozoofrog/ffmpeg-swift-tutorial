@@ -1,0 +1,480 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A90310A91D752AA600B4FEF1 /* ffmpeg.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90310A81D752AA600B4FEF1 /* ffmpeg.swift */; };
+		A9314A711D750CF300EC253A /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A9314A701D750CF300EC253A /* sample.mp4 */; };
+		A9314A731D75121300EC253A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A721D75121300EC253A /* AVFoundation.framework */; };
+		A9314A751D75121900EC253A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A741D75121900EC253A /* UIKit.framework */; };
+		A9314A781D75121F00EC253A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A761D75121F00EC253A /* CoreFoundation.framework */; };
+		A9314A791D75121F00EC253A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A771D75121F00EC253A /* Foundation.framework */; };
+		D805EF331D747187004BE9B3 /* ffmpeg.c in Sources */ = {isa = PBXBuildFile; fileRef = D805EF311D747187004BE9B3 /* ffmpeg.c */; };
+		D81915281D746C0100D919E9 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D81915271D746C0100D919E9 /* CoreMedia.framework */; };
+		D832355F1D7465E5008689D5 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D832355E1D7465E5008689D5 /* libz.tbd */; };
+		D83235611D7465EC008689D5 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D83235601D7465EC008689D5 /* libbz2.tbd */; };
+		D83235631D7465F3008689D5 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D83235621D7465F3008689D5 /* libiconv.tbd */; };
+		D848FE771D745F4D0058E322 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D848FE761D745F4D0058E322 /* AppDelegate.swift */; };
+		D848FE791D745F4D0058E322 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D848FE781D745F4D0058E322 /* ViewController.swift */; };
+		D848FE7C1D745F4D0058E322 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D848FE7A1D745F4D0058E322 /* Main.storyboard */; };
+		D848FE7E1D745F4D0058E322 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D848FE7D1D745F4D0058E322 /* Assets.xcassets */; };
+		D848FE811D745F4D0058E322 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D848FE7F1D745F4D0058E322 /* LaunchScreen.storyboard */; };
+		D848FE961D745F980058E322 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE8F1D745F980058E322 /* libavcodec.a */; };
+		D848FE971D745F980058E322 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE901D745F980058E322 /* libavdevice.a */; };
+		D848FE981D745F980058E322 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE911D745F980058E322 /* libavfilter.a */; };
+		D848FE991D745F980058E322 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE921D745F980058E322 /* libavformat.a */; };
+		D848FE9A1D745F980058E322 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE931D745F980058E322 /* libavutil.a */; };
+		D848FE9B1D745F980058E322 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE941D745F980058E322 /* libswresample.a */; };
+		D848FE9C1D745F980058E322 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE951D745F980058E322 /* libswscale.a */; };
+		D848FE9E1D745FA90058E322 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE9D1D745FA90058E322 /* libSDL2.a */; };
+		D848FEA91D7461720058E322 /* SDL.m in Sources */ = {isa = PBXBuildFile; fileRef = D848FEA81D7461720058E322 /* SDL.m */; };
+		D848FEAB1D7462F50058E322 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = D848FEAA1D7462F50058E322 /* Player.swift */; };
+		D848FEAE1D7463950058E322 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEAC1D7463950058E322 /* CoreAudio.framework */; };
+		D848FEAF1D7463950058E322 /* CoreAudioKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEAD1D7463950058E322 /* CoreAudioKit.framework */; };
+		D848FEB31D74639E0058E322 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB01D74639E0058E322 /* AudioToolbox.framework */; };
+		D848FEB41D74639E0058E322 /* MediaToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB11D74639E0058E322 /* MediaToolbox.framework */; };
+		D848FEB51D74639E0058E322 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB21D74639E0058E322 /* VideoToolbox.framework */; };
+		D85ABD111D7463DF00B8954C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD101D7463DF00B8954C /* CoreMotion.framework */; };
+		D85ABD131D74640600B8954C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD121D74640600B8954C /* GameController.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A90310A81D752AA600B4FEF1 /* ffmpeg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ffmpeg.swift; sourceTree = "<group>"; };
+		A9314A701D750CF300EC253A /* sample.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = sample.mp4; path = ../../tutorial/tutorial/sample.mp4; sourceTree = "<group>"; };
+		A9314A721D75121300EC253A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		A9314A741D75121900EC253A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		A9314A761D75121F00EC253A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		A9314A771D75121F00EC253A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		D805EF311D747187004BE9B3 /* ffmpeg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffmpeg.c; sourceTree = "<group>"; };
+		D805EF321D747187004BE9B3 /* ffmpeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffmpeg.h; sourceTree = "<group>"; };
+		D81915271D746C0100D919E9 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		D832355E1D7465E5008689D5 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		D83235601D7465EC008689D5 /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
+		D83235621D7465F3008689D5 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
+		D848FE731D745F4D0058E322 /* SwiftPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D848FE761D745F4D0058E322 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D848FE781D745F4D0058E322 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		D848FE7B1D745F4D0058E322 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		D848FE7D1D745F4D0058E322 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D848FE801D745F4D0058E322 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		D848FE821D745F4D0058E322 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D848FE8F1D745F980058E322 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libavcodec.a"; sourceTree = "<group>"; };
+		D848FE901D745F980058E322 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libavdevice.a"; sourceTree = "<group>"; };
+		D848FE911D745F980058E322 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libavfilter.a"; sourceTree = "<group>"; };
+		D848FE921D745F980058E322 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libavformat.a"; sourceTree = "<group>"; };
+		D848FE931D745F980058E322 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libavutil.a"; sourceTree = "<group>"; };
+		D848FE941D745F980058E322 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libswresample.a"; sourceTree = "<group>"; };
+		D848FE951D745F980058E322 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libswscale.a"; sourceTree = "<group>"; };
+		D848FE9D1D745FA90058E322 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../SDL-iOS/lib/libSDL2.a"; sourceTree = "<group>"; };
+		D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "FFmpeg-iOS-build-script"; path = "../FFmpeg-iOS-build-script"; sourceTree = "<group>"; };
+		D848FEA01D745FBE0058E322 /* SDL-iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SDL-iOS"; path = "../SDL-iOS"; sourceTree = "<group>"; };
+		D848FEA61D7461710058E322 /* SwiftPlayer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftPlayer-Bridging-Header.h"; sourceTree = "<group>"; };
+		D848FEA71D7461720058E322 /* SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL.h; sourceTree = "<group>"; };
+		D848FEA81D7461720058E322 /* SDL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDL.m; sourceTree = "<group>"; };
+		D848FEAA1D7462F50058E322 /* Player.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		D848FEAC1D7463950058E322 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		D848FEAD1D7463950058E322 /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
+		D848FEB01D74639E0058E322 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		D848FEB11D74639E0058E322 /* MediaToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaToolbox.framework; path = System/Library/Frameworks/MediaToolbox.framework; sourceTree = SDKROOT; };
+		D848FEB21D74639E0058E322 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
+		D85ABD101D7463DF00B8954C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
+		D85ABD121D74640600B8954C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D848FE701D745F4D0058E322 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9314A781D75121F00EC253A /* CoreFoundation.framework in Frameworks */,
+				A9314A791D75121F00EC253A /* Foundation.framework in Frameworks */,
+				A9314A751D75121900EC253A /* UIKit.framework in Frameworks */,
+				A9314A731D75121300EC253A /* AVFoundation.framework in Frameworks */,
+				D81915281D746C0100D919E9 /* CoreMedia.framework in Frameworks */,
+				D83235631D7465F3008689D5 /* libiconv.tbd in Frameworks */,
+				D83235611D7465EC008689D5 /* libbz2.tbd in Frameworks */,
+				D832355F1D7465E5008689D5 /* libz.tbd in Frameworks */,
+				D85ABD131D74640600B8954C /* GameController.framework in Frameworks */,
+				D85ABD111D7463DF00B8954C /* CoreMotion.framework in Frameworks */,
+				D848FEB31D74639E0058E322 /* AudioToolbox.framework in Frameworks */,
+				D848FEB41D74639E0058E322 /* MediaToolbox.framework in Frameworks */,
+				D848FEB51D74639E0058E322 /* VideoToolbox.framework in Frameworks */,
+				D848FEAE1D7463950058E322 /* CoreAudio.framework in Frameworks */,
+				D848FEAF1D7463950058E322 /* CoreAudioKit.framework in Frameworks */,
+				D848FE9E1D745FA90058E322 /* libSDL2.a in Frameworks */,
+				D848FE961D745F980058E322 /* libavcodec.a in Frameworks */,
+				D848FE971D745F980058E322 /* libavdevice.a in Frameworks */,
+				D848FE981D745F980058E322 /* libavfilter.a in Frameworks */,
+				D848FE991D745F980058E322 /* libavformat.a in Frameworks */,
+				D848FE9A1D745F980058E322 /* libavutil.a in Frameworks */,
+				D848FE9B1D745F980058E322 /* libswresample.a in Frameworks */,
+				D848FE9C1D745F980058E322 /* libswscale.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D848FE6A1D745F4D0058E322 = {
+			isa = PBXGroup;
+			children = (
+				D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */,
+				D848FEA01D745FBE0058E322 /* SDL-iOS */,
+				D848FE751D745F4D0058E322 /* SwiftPlayer */,
+				D848FE741D745F4D0058E322 /* Products */,
+				D848FE8E1D745F980058E322 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		D848FE741D745F4D0058E322 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D848FE731D745F4D0058E322 /* SwiftPlayer.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D848FE751D745F4D0058E322 /* SwiftPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				A9314A701D750CF300EC253A /* sample.mp4 */,
+				D848FEA71D7461720058E322 /* SDL.h */,
+				D848FEA81D7461720058E322 /* SDL.m */,
+				D805EF311D747187004BE9B3 /* ffmpeg.c */,
+				D805EF321D747187004BE9B3 /* ffmpeg.h */,
+				A90310A81D752AA600B4FEF1 /* ffmpeg.swift */,
+				D848FE761D745F4D0058E322 /* AppDelegate.swift */,
+				D848FE781D745F4D0058E322 /* ViewController.swift */,
+				D848FEAA1D7462F50058E322 /* Player.swift */,
+				D848FE7A1D745F4D0058E322 /* Main.storyboard */,
+				D848FE7D1D745F4D0058E322 /* Assets.xcassets */,
+				D848FE7F1D745F4D0058E322 /* LaunchScreen.storyboard */,
+				D848FE821D745F4D0058E322 /* Info.plist */,
+				D848FEA61D7461710058E322 /* SwiftPlayer-Bridging-Header.h */,
+			);
+			path = SwiftPlayer;
+			sourceTree = "<group>";
+		};
+		D848FE8E1D745F980058E322 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A9314A761D75121F00EC253A /* CoreFoundation.framework */,
+				A9314A771D75121F00EC253A /* Foundation.framework */,
+				A9314A741D75121900EC253A /* UIKit.framework */,
+				A9314A721D75121300EC253A /* AVFoundation.framework */,
+				D81915271D746C0100D919E9 /* CoreMedia.framework */,
+				D83235621D7465F3008689D5 /* libiconv.tbd */,
+				D83235601D7465EC008689D5 /* libbz2.tbd */,
+				D832355E1D7465E5008689D5 /* libz.tbd */,
+				D85ABD121D74640600B8954C /* GameController.framework */,
+				D85ABD101D7463DF00B8954C /* CoreMotion.framework */,
+				D848FEB01D74639E0058E322 /* AudioToolbox.framework */,
+				D848FEB11D74639E0058E322 /* MediaToolbox.framework */,
+				D848FEB21D74639E0058E322 /* VideoToolbox.framework */,
+				D848FEAC1D7463950058E322 /* CoreAudio.framework */,
+				D848FEAD1D7463950058E322 /* CoreAudioKit.framework */,
+				D848FE9D1D745FA90058E322 /* libSDL2.a */,
+				D848FE8F1D745F980058E322 /* libavcodec.a */,
+				D848FE901D745F980058E322 /* libavdevice.a */,
+				D848FE911D745F980058E322 /* libavfilter.a */,
+				D848FE921D745F980058E322 /* libavformat.a */,
+				D848FE931D745F980058E322 /* libavutil.a */,
+				D848FE941D745F980058E322 /* libswresample.a */,
+				D848FE951D745F980058E322 /* libswscale.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D848FE721D745F4D0058E322 /* SwiftPlayer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D848FE851D745F4D0058E322 /* Build configuration list for PBXNativeTarget "SwiftPlayer" */;
+			buildPhases = (
+				D848FEA31D7460A70058E322 /* Copy Module Maps */,
+				D848FE6F1D745F4D0058E322 /* Sources */,
+				D848FE701D745F4D0058E322 /* Frameworks */,
+				D848FE711D745F4D0058E322 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SwiftPlayer;
+			productName = SwiftPlayer;
+			productReference = D848FE731D745F4D0058E322 /* SwiftPlayer.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D848FE6B1D745F4D0058E322 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0800;
+				LastUpgradeCheck = 0800;
+				ORGANIZATIONNAME = "Kwanghoon Choi";
+				TargetAttributes = {
+					D848FE721D745F4D0058E322 = {
+						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = HY47J4787Q;
+						LastSwiftMigration = 0800;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D848FE6E1D745F4D0058E322 /* Build configuration list for PBXProject "SwiftPlayer" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D848FE6A1D745F4D0058E322;
+			productRefGroup = D848FE741D745F4D0058E322 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D848FE721D745F4D0058E322 /* SwiftPlayer */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D848FE711D745F4D0058E322 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D848FE811D745F4D0058E322 /* LaunchScreen.storyboard in Resources */,
+				D848FE7E1D745F4D0058E322 /* Assets.xcassets in Resources */,
+				D848FE7C1D745F4D0058E322 /* Main.storyboard in Resources */,
+				A9314A711D750CF300EC253A /* sample.mp4 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D848FEA31D7460A70058E322 /* Copy Module Maps */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Module Maps";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp $SRCROOT/../ffmpeg.map $SRCROOT/../FFmpeg-iOS-build-script/FFmpeg-iOS/include/module.map\ncp $SRCROOT/../sdl.map $SRCROOT/../SDL-iOS/include/module.map";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D848FE6F1D745F4D0058E322 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A90310A91D752AA600B4FEF1 /* ffmpeg.swift in Sources */,
+				D805EF331D747187004BE9B3 /* ffmpeg.c in Sources */,
+				D848FEAB1D7462F50058E322 /* Player.swift in Sources */,
+				D848FEA91D7461720058E322 /* SDL.m in Sources */,
+				D848FE791D745F4D0058E322 /* ViewController.swift in Sources */,
+				D848FE771D745F4D0058E322 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		D848FE7A1D745F4D0058E322 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D848FE7B1D745F4D0058E322 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		D848FE7F1D745F4D0058E322 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D848FE801D745F4D0058E322 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		D848FE831D745F4D0058E322 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D848FE841D745F4D0058E322 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D848FE861D745F4D0058E322 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = HY47J4787Q;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include\"",
+					"\"$(SRCROOT)/../SDL-iOS/include\"",
+				);
+				INFOPLIST_FILE = SwiftPlayer/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/lib\"",
+					"\"$(SRCROOT)/../SDL-iOS/lib\"",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ngenii.SwiftPlayer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "SwiftPlayer/SwiftPlayer-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		D848FE871D745F4D0058E322 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = HY47J4787Q;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include\"",
+					"\"$(SRCROOT)/../SDL-iOS/include\"",
+				);
+				INFOPLIST_FILE = SwiftPlayer/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/lib\"",
+					"\"$(SRCROOT)/../SDL-iOS/lib\"",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ngenii.SwiftPlayer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "SwiftPlayer/SwiftPlayer-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D848FE6E1D745F4D0058E322 /* Build configuration list for PBXProject "SwiftPlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D848FE831D745F4D0058E322 /* Debug */,
+				D848FE841D745F4D0058E322 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D848FE851D745F4D0058E322 /* Build configuration list for PBXNativeTarget "SwiftPlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D848FE861D745F4D0058E322 /* Debug */,
+				D848FE871D745F4D0058E322 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D848FE6B1D745F4D0058E322 /* Project object */;
+}
