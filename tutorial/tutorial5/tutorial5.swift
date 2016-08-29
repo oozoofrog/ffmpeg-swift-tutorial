@@ -13,11 +13,10 @@ let MAX_AUDIOQ_SIZE: Int32 = (5 * 16 * 1024)
 let MAX_VIDEOQ_SIZE: Int32 = (5 * 256 * 1024)
 
 let AV_NOPTS_VALUE = Int64.min
+let AV_SYNC_THRESHOLD = 0.01
+let AV_NOSYNC_THRESHOLD = 10.0
 
 @objc public class tutorial5: NSObject {
-    
-    static var a_pts = 0.0
-    static var v_pts = 0.0
     
     static var window: OpaquePointer?
     static var renderer: OpaquePointer?
@@ -199,6 +198,8 @@ let AV_NOPTS_VALUE = Int64.min
         var len1: Int32 = 0
         var data_size: Int32 = 0
         let pkt = withUnsafeMutablePointer(to: &vs.pointee.audio_pkt){$0}
+        var pts: Double = 0
+        var n: Double = 0
         while true {
             while vs.pointee.audio_pkt_size > 0 {
                 len1 = tutorial5.decode_frame(codec: vs.pointee.audio_ctx, pkt: pkt, frame: &vs.pointee.audio_frame)
@@ -206,13 +207,6 @@ let AV_NOPTS_VALUE = Int64.min
                     vs.pointee.audio_pkt_size = 0
                     break
                 }
-                if AV_NOPTS_VALUE != pkt.pointee.dts {
-                    a_pts = Double(av_frame_get_best_effort_timestamp(&vs.pointee.audio_frame))
-                } else {
-                    a_pts = 0
-                }
-                
-                a_pts *= av_q2d(vs.pointee.audio_st.pointee.time_base)
                 
                 data_size = tutorial5.audio_resampling(ctx: vs.pointee.audio_ctx, frame: &vs.pointee.audio_frame, output_format: AV_SAMPLE_FMT_S16, out_channels: vs.pointee.audio_frame.channels, out_sample_rate: vs.pointee.audio_frame.sample_rate, out_buffer: audio_buf);
                 assert(data_size <= buf_size)
@@ -222,6 +216,14 @@ let AV_NOPTS_VALUE = Int64.min
                 if 0 >= data_size {
                     continue
                 }
+                
+                pts = vs.pointee.audio_clock;
+                //*pts_ptr = pts;
+                n = 2 * Double(vs.pointee.audio_st.pointee.codecpar.pointee.channels);
+                vs.pointee.audio_clock += Double(data_size) /
+                (n * Double(vs.pointee.audio_st.pointee.codecpar.pointee.sample_rate));
+                
+                
                 return data_size
             }
             if nil != pkt.pointee.data {
@@ -279,6 +281,7 @@ let AV_NOPTS_VALUE = Int64.min
         
         var pFrame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
         
+        var pts: Double = 0
         while true {
             if 0 > packet_queue_get(is: vs, q: &vs.pointee.videoq, pkt: packet, block: 1) {
                 break
@@ -287,15 +290,19 @@ let AV_NOPTS_VALUE = Int64.min
                 break
             }
             
-            if AV_NOPTS_VALUE != packet.pointee.dts {
-                tutorial5.v_pts = Double(av_frame_get_best_effort_timestamp(pFrame))
+            var opaque = nil != pFrame?.pointee.opaque ? pFrame!.pointee.opaque.assumingMemoryBound(to: UInt64.self).pointee : 0
+            if AV_NOPTS_VALUE == packet.pointee.dts && UInt64(AV_NOPTS_VALUE) != opaque {
+                pts = Double(opaque)
+            } else if packet.pointee.dts != AV_NOPTS_VALUE {
+                pts = Double(packet.pointee.dts)
             } else {
-                tutorial5.v_pts = 0
+                pts = 0
             }
+            pts *= av_q2d(vs.pointee.video_st.pointee.time_base)
             
-            v_pts *= av_q2d(vs.pointee.video_st.pointee.time_base)
+            pts = tutorial5.synchronize_video(vs: vs, src_frame: pFrame!, pts: pts)
             
-            if 0 > queue_picture(vs:vs, pFrame: pFrame!) {
+            if 0 > queue_picture(vs:vs, pFrame: pFrame!, pts: pts) {
                 break
             }
             av_packet_unref(packet)
@@ -306,7 +313,7 @@ let AV_NOPTS_VALUE = Int64.min
         return 0
     }
     
-    static public func queue_picture(vs: UnsafeMutablePointer<VideoState>, pFrame: UnsafeMutablePointer<AVFrame>) -> Int32 {
+    static public func queue_picture(vs: UnsafeMutablePointer<VideoState>, pFrame: UnsafeMutablePointer<AVFrame>, pts: Double) -> Int32 {
         SDL_LockMutex(vs.pointee.pictq_mutex)
         while vs.pointee.pictq_size >= VIDEO_PICTURE_QUEUE_SIZE && 0 == vs.pointee.quit {
             SDL_CondWait(vs.pointee.pictq_cond, vs.pointee.pictq_mutex)
@@ -330,12 +337,14 @@ let AV_NOPTS_VALUE = Int64.min
         }
         
         if let _ = vp.pointee.texture {
+            
             vp.pointee.yPlane = pFrame.pointee.data.0
             vp.pointee.uPlane = pFrame.pointee.data.1
             vp.pointee.vPlane = pFrame.pointee.data.2
             vp.pointee.width = pFrame.pointee.linesize.0
             vp.pointee.uvPitch = pFrame.pointee.linesize.1
             
+            vp.pointee.pts = pts
             vs.pointee.pictq_windex += 1
             if vs.pointee.pictq_windex >= VIDEO_PICTURE_QUEUE_SIZE {
                 vs.pointee.pictq_windex = 0
@@ -367,7 +376,6 @@ let AV_NOPTS_VALUE = Int64.min
         guard let texture = vp.pointee.texture else {
             return
         }
-        
         SDL_LockMutex(mutex)
         
         SDL_UpdateYUVTexture(texture, nil, vp.pointee.yPlane, vs.pointee.video_ctx.pointee.width, vp.pointee.uPlane, vp.pointee.uvPitch, vp.pointee.vPlane, vp.pointee.uvPitch)
@@ -378,13 +386,71 @@ let AV_NOPTS_VALUE = Int64.min
         SDL_UnlockMutex(mutex)
     }
     
+    static public func get_audio_clock(vs: UnsafeMutablePointer<VideoState>) -> Double {
+        var pts: Double = 0
+        var hw_buf_size: Int32 = 0
+        var bytes_per_sec: Int32 = 0
+        var n: Int32 = 0
+        
+        pts = vs.pointee.audio_clock
+        
+        hw_buf_size = Int32(vs.pointee.audio_buf_size - vs.pointee.audio_buf_index)
+        bytes_per_sec = 0
+        n = vs.pointee.audio_st.pointee.codecpar.pointee.channels * 2
+        if vs.pointee.audio_st != nil {
+            bytes_per_sec = vs.pointee.audio_st.pointee.codecpar.pointee.sample_rate * n
+        }
+        
+        if 0 < bytes_per_sec {
+            pts -= Double(hw_buf_size) / Double(bytes_per_sec)
+        }
+        
+        return pts
+    }
+    
     static public func video_refresh_timer(userdata: UnsafeMutableRawPointer, mutex: OpaquePointer, window: OpaquePointer, renderer: OpaquePointer) {
         let vs = userdata.assumingMemoryBound(to: VideoState.self)
+        var vp: UnsafeMutablePointer<VideoPicture>?
+        var actual_delay: Double = 0
+        var delay: Double = 0
+        var sync_threshold: Double = 0
+        var ref_clock: Double = 0
+        var diff: Double = 0
+        
         if let _ = vs.pointee.video_st {
             if 0 == vs.pointee.pictq_size {
                 schedule_refresh(vs: vs, delay: 1)
             } else {
-                schedule_refresh(vs: vs, delay: 40)
+                vp = vs.pointee.pictq_ptr.advanced(by: Int(vs.pointee.pictq_rindex))
+                
+                delay = vp!.pointee.pts - vs.pointee.last_frame_pts
+                if 0 <= delay || 1.0 >= delay {
+                    // 딜레이가 어긋나있다면 이전의 pts를 그대로 사용한다
+                    delay = vs.pointee.last_frame_delay
+                }
+                // 다음을 위해 저장
+                vs.pointee.last_frame_delay = delay
+                vs.pointee.last_frame_pts = vp!.pointee.pts
+                
+                // 동기화를 위해 audio에 delay를 갱신
+                ref_clock = get_audio_clock(vs: vs)
+                diff = vp!.pointee.pts - ref_clock
+                
+                sync_threshold = (delay > AV_SYNC_THRESHOLD) ? delay : AV_SYNC_THRESHOLD
+                if fabs(diff) < AV_NOSYNC_THRESHOLD {
+                    if diff <= -sync_threshold {
+                        delay = 2 * delay
+                    }
+                }
+                
+                vs.pointee.frame_timer += delay
+                // 실제 딜레이 계산
+                actual_delay = vs.pointee.frame_timer - (Double(av_gettime()) / 1000000.0)
+                if AV_SYNC_THRESHOLD > actual_delay {
+                    actual_delay = AV_SYNC_THRESHOLD
+                }
+                
+                schedule_refresh(vs: vs, delay: Int32(actual_delay * 1000.0 + 0.5))
                 
                 video_display(vs: vs, mutex: mutex, window: window, renderer: renderer)
                 
@@ -506,13 +572,31 @@ let AV_NOPTS_VALUE = Int64.min
         if 0 > ret && false == AVFILTER_EOF(ret) {
             return ret
         }
-        if 0 <= ret {
-            length = frame?.pointee.pkt_size ?? 0
-        } else {
-            length = ret
-        }
+        ret = 0;
+        length = max(ret, frame?.pointee.pkt_size ?? 0)
         
         return length
+    }
+    
+    static public func synchronize_video(vs: UnsafeMutablePointer<VideoState>, src_frame: UnsafeMutablePointer<AVFrame>, pts: Double) -> Double {
+        
+        var frame_delay: Double = 0
+        var pts: Double = pts
+        if 0 != pts {
+            // pts가 있다면, video_clock을 pts로 변경
+            vs.pointee.video_clock = pts
+        } else {
+            // pts가 없다면, pts를 video_clock으로 변경
+            pts = vs.pointee.video_clock
+        }
+        // video clock을 업데이트
+        frame_delay = av_q2d(vs.pointee.video_st.pointee.time_base)
+        // 한 프레임을 재사용(p, b, i frame 확인) 중이라면, 적절하게 클럭을 변경한다
+        frame_delay += Double(src_frame.pointee.repeat_pict) * (frame_delay * 0.5)
+        vs.pointee.video_clock += frame_delay
+        
+        return pts
+        
     }
 }
 
@@ -585,6 +669,8 @@ extension VideoState {
                 return -1
             }
             self.videoStream = at
+            self.frame_timer = Double(av_gettime()) / 1000000.0
+            self.last_frame_delay = 40e-3
             self.video_st = pFormatCtx.pointee.streams.advanced(by: Int(at)).pointee
             self.video_ctx = codecCtx
             tutorial5.packet_queue_init(q: &videoq)

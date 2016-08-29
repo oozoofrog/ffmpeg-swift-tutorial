@@ -124,7 +124,6 @@ int main(int argc, char *argv[]) {
                 break;
             case FF_REFRESH_EVENT:
                 //video_refresh_timer(event.user.data1);
-                NSLog(@"a:%f, v:%f", [tutorial5 a_pts], [tutorial5 v_pts]);
                 [tutorial5 video_refresh_timerWithUserdata:event.user.data1 mutex:screen_mutex window:screen renderer:renderer];
                 break;
             default:

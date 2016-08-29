@@ -18,6 +18,7 @@
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
+#include <libavutil/time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
@@ -63,9 +64,18 @@ typedef struct VideoPicture {
     int uvPitch;
     int width, height; /* source height & width */
     int allocated;
+    
+    double pts;
 } VideoPicture;
 
 typedef struct VideoState {
+    
+    double          video_clock; // (pts of last decoded frame / predicted pts of next decoded frame)
+    double          last_frame_pts;
+    double          last_frame_delay;
+    double          frame_timer;
+    
+    double          audio_clock;
     
     AVFormatContext *pFormatCtx;
     int             videoStream, audioStream;
