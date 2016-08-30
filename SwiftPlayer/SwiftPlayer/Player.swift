@@ -45,7 +45,7 @@ public class Player: Operation {
         
         self.dst_rect = SDL_Rect(x: Int32(dstRect.origin.x), y: Int32(dstRect.origin.y), w: Int32(dstRect.width), h: Int32(dstRect.height))
         
-        self.captureEvent()
+        self.startEventPulling()
         self.decodeFrames()
         
         self.startDisplayLink()
@@ -62,7 +62,7 @@ public class Player: Operation {
     }
     
     var event = SDL_Event()
-    func captureEvent() {
+    func startEventPulling() {
         capture_queue.async {
             event_loop: while true {
                 SDL_PollEvent(&self.event)
@@ -102,7 +102,7 @@ public class Player: Operation {
         }
     }
     
-    var frameQueue: AVFrameQueue!
+    var frameQueue: AVQueue<AVFrame>!
     
     let pkt = av_packet_alloc()
     let frame = av_frame_alloc()
@@ -129,7 +129,8 @@ public class Player: Operation {
                         print_err(ret)
                         continue
                     }
-                    self.frameQueue.write(frame: frame){
+                    
+                    self.frameQueue.write(container: frame){
                         av_frame_unref(frame)
                     }
                 }
@@ -230,7 +231,7 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(videoContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
-        self.frameQueue = AVFrameQueue(time_base: videoStream?.pointee.time_base ?? AVRational())
+        self.frameQueue = AVQueue<AVFrame>(time_base: videoStream?.pointee.time_base ?? AVRational())
         
         audio_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0)
         audioStream = formatContext?.pointee.streams.advanced(by: Int(audio_index)).pointee
@@ -276,6 +277,13 @@ public class Player: Operation {
         }
         
         texture = t
+        
+        var wanted = SDL_AudioSpec()
+        var obtained = SDL_AudioSpec()
+        
+        if let audio = self.audioContext {
+            
+        }
         
         return true
     }
