@@ -12,6 +12,17 @@ import SDL
 import AVFoundation
 import UIKit
 
+struct AudioState {
+    var audioContex: UnsafeMutablePointer<AVCodecContext>?
+    
+    var abuffer_ctx: UnsafeMutablePointer<AVFilterContext>?
+    var abuffer_sink_ctx: UnsafeMutablePointer<AVFilterContext>?
+    
+    var audio_queue: UnsafeMutablePointer<AVQueue<AVFrame>>?
+    
+    var audio_filtered_frame: UnsafeMutablePointer<AVFrame>?
+}
+
 public class Player: Operation {
     
     public let capture_queue = DispatchQueue(label: "capture", qos: DispatchQoS.userInteractive, attributes: DispatchQueue.Attributes.concurrent, autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit)
@@ -61,6 +72,8 @@ public class Player: Operation {
         self.decodeFrames()
         
         self.startDisplayLink()
+        
+        SDL_PauseAudio(0)
     }
     
     func startDisplayLink() {
@@ -105,7 +118,7 @@ public class Player: Operation {
             first = link.timestamp
         }
         
-        frameQueue.read(time: link.timestamp - first) { (frame) in
+        Player.videoQueue.read(time: link.timestamp - first) { (frame) in
             SDL_UpdateYUVTexture(texture, &video_rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
             SDL_RenderClear(renderer)
             var dst = dst_rect!
@@ -114,10 +127,50 @@ public class Player: Operation {
         }
     }
     
-    var frameQueue: AVQueue<AVFrame>!
+    var audio_callback: SDL_AudioCallback = {(userdata, stream, length) in
+        guard let state = userdata?.assumingMemoryBound(to: AudioState.self) else {
+            return
+        }
+        SDL_memset(stream, 0, Int(length))
+        state.pointee.audio_queue?.pointee.read() { (frame) in
+            var err = av_buffersrc_write_frame(state.pointee.abuffer_ctx, frame)
+            guard 0 <= err else {
+                print_averr(err: err)
+                return
+            }
+            
+            var length = length
+            var stream = stream
+            while true {
+                err = av_buffersink_get_frame(state.pointee.abuffer_sink_ctx, state.pointee.audio_filtered_frame)
+                guard 0 == is_eof(err) && err != err2averr(EAGAIN) else {
+                    break
+                }
+                guard 0 <= err else {
+                    print_averr(err: err)
+                    return
+                }
+                guard let audio_frame = state.pointee.audio_filtered_frame else {
+                    return
+                }
+                SDL_memcpy(stream, audio_frame.pointee.data.0, Int(audio_frame.pointee.linesize.0))
+                stream = stream?.advanced(by: Int(audio_frame.pointee.linesize.0))
+                length -= audio_frame.pointee.linesize.0
+                if 0 >= length {
+                    break
+                }
+            }
+            
+        }
+        
+    }
+    
+    static var videoQueue: AVQueue<AVFrame>!
+    var audioQueue: AVQueue<AVFrame>!
     
     let pkt = av_packet_alloc()
     let frame = av_frame_alloc()
+    let audio_filtered_frame = av_frame_alloc()!
     
     var got_frame: Int32 = 0
     var length: Int32 = 0
@@ -128,22 +181,34 @@ public class Player: Operation {
                 print("👏🏽 decode finished")
             }
             decode: while true {
-                if self.frameQueue.fulled {
+                if Player.videoQueue.fulled || self.audioQueue.fulled {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
                     break decode
                 }
                 
-                if let pkt = self.pkt, pkt.pointee.stream_index == self.video_index, let videoContext = self.videoContext, let frame = self.frame {
-                    let ret = self.decode(ctx: videoContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
-                    guard 0 <= ret else {
-                        print_err(ret)
-                        continue
-                    }
-                    
-                    self.frameQueue.write(container: frame){
-                        av_frame_unref(frame)
+                if let pkt = self.pkt, let frame = self.frame {
+                    if pkt.pointee.stream_index == self.video_index, let videoContext = self.videoContext {
+                        let ret = self.decode(ctx: videoContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
+                        guard 0 <= ret else {
+                            print_err(ret)
+                            continue
+                        }
+                        
+                        Player.videoQueue.write(container: frame){
+                            av_frame_unref(frame)
+                        }
+                    } else if pkt.pointee.stream_index == self.audio_index, let audioContext = self.audioContext {
+                        let ret = self.decode(ctx: audioContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
+                        guard 0 <= ret else {
+                            print_err(ret)
+                            continue
+                        }
+                        
+                        self.audioQueue.write(container: frame){
+                            av_frame_unref(frame)
+                        }
                     }
                 }
             }
@@ -208,6 +273,8 @@ public class Player: Operation {
     var aformat_ctx: UnsafeMutablePointer<AVFilterContext>?
     var abuffer_sink_ctx: UnsafeMutablePointer<AVFilterContext>?
     
+    var audioState: AudioState?
+    
     //MARK: - setupFFmpeg
     private func setupFFmpeg() -> Bool {
         
@@ -238,7 +305,7 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(videoContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
-        self.frameQueue = AVQueue<AVFrame>(time_base: videoStream?.pointee.time_base ?? AVRational())
+        Player.videoQueue = AVQueue<AVFrame>(time_base: videoStream?.pointee.time_base ?? AVRational())
         
         audio_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0)
         audioStream = formatContext?.pointee.streams.advanced(by: Int(audio_index)).pointee
@@ -249,6 +316,8 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(audioContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
+        
+        self.audioQueue = AVQueue<AVFrame>(time_base: audioStream!.pointee.time_base)
         
         guard let audio_filter_graph = avfilter_graph_alloc() else {
             print("Couldn't create audio filter")
@@ -269,7 +338,7 @@ public class Player: Operation {
             print("Couldn't get audio format")
             return false
         }
-
+        
         self.audio_filter_graph = audio_filter_graph
         self.abuffer = audio_buffer
         self.abuffer_sink = audio_buffer_sink
@@ -318,8 +387,16 @@ public class Player: Operation {
             return false
         }
         
+        let ptr = withUnsafeMutablePointer(to: &self.audioQueue) { (ptr) -> UnsafeMutablePointer<AVQueue<AVFrame>> in
+            return ptr.withMemoryRebound(to: AVQueue<AVFrame>.self, capacity: MemoryLayout<AVQueue<AVFrame>>.stride){$0}
+        }
+        
+        self.audioState = AudioState(audioContex: audioContext, abuffer_ctx: abuffer_ctx, abuffer_sink_ctx: abuffer_sink_ctx, audio_queue: ptr, audio_filtered_frame: av_frame_alloc())
+        
         return true
     }
+    
+    
     
     //MARK: - setupSDL
     var window: OpaquePointer!
@@ -360,9 +437,17 @@ public class Player: Operation {
         
         var wanted = SDL_AudioSpec()
         var obtained = SDL_AudioSpec()
+        wanted.channels = 2
+        wanted.format = SDL_AudioFormat(AUDIO_S16SYS)
+        wanted.freq = 44100
+        wanted.silence = 0
+        wanted.size = 1024
+        wanted.callback = audio_callback
+        wanted.userdata = UnsafeMutableRawPointer(&audioState)
         
-        if let audio = self.audioContext {
-            
+        guard 0 <= SDL_OpenAudio(&wanted, &obtained) else {
+            print("SDL_OpenAudio failed : \(String(cString: SDL_GetError()))")
+            return false
         }
         
         return true

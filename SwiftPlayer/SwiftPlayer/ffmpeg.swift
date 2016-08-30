@@ -103,7 +103,7 @@ extension AVQueue where Type: AVFrameQueueContainer {
                 return
             }
             handle(frame.withMemoryRebound(to: Type.self, capacity: MemoryLayout<Type>.stride){$0})
-            if time > frame.pointee.time(time_base: time_base) {
+            if -1 == time || time > frame.pointee.time(time_base: time_base) {
                 av_frame_free(&containerQueue[rindex])
                 self.rindex += 1
                 if rindex >= containerQueueCount {
