@@ -1,6 +1,7 @@
 module ffmpeg[extern_c] {
     
     header "libavformat/avformat.h"
+    header "libavfilter/avfilter.h"
     
     export *
 }

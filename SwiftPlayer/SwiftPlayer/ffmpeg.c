@@ -24,3 +24,10 @@ int is_eof(int ret) {
 int err2averr(int ret) {
     return AVERROR(ret);
 }
+
+void test(AVCodecContext *avctx, AVRational time_base) {
+    printf("time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%"PRIx64,
+           time_base.num, time_base.den, avctx->sample_rate,
+           av_get_sample_fmt_name(avctx->sample_fmt),
+           avctx->channel_layout);
+}

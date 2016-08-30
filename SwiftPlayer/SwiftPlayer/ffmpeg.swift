@@ -11,10 +11,8 @@ import ffmpeg
 
 let AV_NOPTS_VALUE = Int64.min
 
-func print_averr(desc: String? = nil, err: Int32) {
-    if let desc = desc {
-        print("<\(desc)>")
-    }
+func print_averr(function: String = #function, line: Int = #line, desc: String = "", err: Int32) {
+    print("<\(function):\(line):\(desc)>")
     print_err(err)
 }
 
