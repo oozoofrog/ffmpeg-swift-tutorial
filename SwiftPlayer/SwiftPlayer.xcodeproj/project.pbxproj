@@ -40,6 +40,7 @@
 		D848FEB51D74639E0058E322 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB21D74639E0058E322 /* VideoToolbox.framework */; };
 		D85ABD111D7463DF00B8954C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD101D7463DF00B8954C /* CoreMotion.framework */; };
 		D85ABD131D74640600B8954C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD121D74640600B8954C /* GameController.framework */; };
+		D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +84,8 @@
 		D848FEB21D74639E0058E322 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		D85ABD101D7463DF00B8954C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		D85ABD121D74640600B8954C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		D8B3BF241D75B2B00009B509 /* AVFilterHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AVFilterHelper.h; sourceTree = "<group>"; };
+		D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AVFilterHelper.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +149,8 @@
 				D848FEA81D7461720058E322 /* SDL.m */,
 				D805EF311D747187004BE9B3 /* ffmpeg.c */,
 				D805EF321D747187004BE9B3 /* ffmpeg.h */,
+				D8B3BF241D75B2B00009B509 /* AVFilterHelper.h */,
+				D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */,
 				A90310A81D752AA600B4FEF1 /* ffmpeg.swift */,
 				D848FE761D745F4D0058E322 /* AppDelegate.swift */,
 				D848FE781D745F4D0058E322 /* ViewController.swift */,
@@ -286,6 +291,7 @@
 				D805EF331D747187004BE9B3 /* ffmpeg.c in Sources */,
 				D848FEAB1D7462F50058E322 /* Player.swift in Sources */,
 				D848FEA91D7461720058E322 /* SDL.m in Sources */,
+				D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */,
 				D848FE791D745F4D0058E322 /* ViewController.swift in Sources */,
 				D848FE771D745F4D0058E322 /* AppDelegate.swift in Sources */,
 			);

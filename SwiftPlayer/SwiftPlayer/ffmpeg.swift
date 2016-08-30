@@ -48,13 +48,15 @@ struct AVQueue<Type> where Type: AVQueueableContainer {
     let containerQueueCount: Int = 100
     var containerQueueCacheCountThreshold: Int { return max(1, self.containerQueueCount / 5) }
 
-    var queue = DispatchQueue(label: "frame_queue")
-    var queue_lock: DispatchSemaphore = DispatchSemaphore(value: 0)
+    var queue: DispatchQueue
+    var queue_lock: DispatchSemaphore
     var windex = 0
     var rindex = 0
     
     
     init(time_base: AVRational) {
+        self.queue = DispatchQueue(label: "queue", qos: .utility)
+        self.queue_lock = DispatchSemaphore(value: 0)
         self.time_base = time_base
         self.containerQueue = av_mallocz(MemoryLayout<UnsafeMutablePointer<Type>>.stride * containerQueueCount).assumingMemoryBound(to: Optional<UnsafeMutablePointer<Type>>.self)
     }

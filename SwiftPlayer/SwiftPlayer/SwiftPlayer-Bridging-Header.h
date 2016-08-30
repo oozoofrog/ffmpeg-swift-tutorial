@@ -4,3 +4,4 @@
 
 #import "SDL.h"
 #import "ffmpeg.h"
+#import "AVFilterHelper.h"

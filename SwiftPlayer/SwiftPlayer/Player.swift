@@ -15,8 +15,7 @@ import UIKit
 struct AudioState {
     var audioContex: UnsafeMutablePointer<AVCodecContext>?
     
-    var abuffer_ctx: UnsafeMutablePointer<AVFilterContext>?
-    var abuffer_sink_ctx: UnsafeMutablePointer<AVFilterContext>?
+    var filter_helper: AVFilterHelper?
     
     var audio_queue: UnsafeMutablePointer<AVQueue<AVFrame>>?
     
@@ -28,10 +27,13 @@ public class Player: Operation {
     public let capture_queue = DispatchQueue(label: "capture", qos: DispatchQoS.userInteractive, attributes: DispatchQueue.Attributes.concurrent, autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit)
     public let decode_queue = DispatchQueue(label: "decode", qos: .background, attributes: .concurrent, autoreleaseFrequency: .inherit)
     
+    
+    public var path: String
+    
     public init(path: String) {
-        super.init()
         
         self.path = path
+        super.init()
         
         displayLink = CADisplayLink(target: self, selector: #selector(update(link:)))
         displayLink?.isPaused = true
@@ -133,22 +135,15 @@ public class Player: Operation {
         }
         SDL_memset(stream, 0, Int(length))
         state.pointee.audio_queue?.pointee.read() { (frame) in
-            var err = av_buffersrc_write_frame(state.pointee.abuffer_ctx, frame)
-            guard 0 <= err else {
-                print_averr(err: err)
+            guard state.pointee.filter_helper?.input(frame) ?? false else {
                 return
             }
-            
+
             var length = length
             var stream = stream
             while true {
-                err = av_buffersink_get_frame(state.pointee.abuffer_sink_ctx, state.pointee.audio_filtered_frame)
-                guard 0 == is_eof(err) && err != err2averr(EAGAIN) else {
+                guard false == state.pointee.filter_helper?.output(state.pointee.audio_filtered_frame!) else {
                     break
-                }
-                guard 0 <= err else {
-                    print_averr(err: err)
-                    return
                 }
                 guard let audio_frame = state.pointee.audio_filtered_frame else {
                     return
@@ -181,7 +176,7 @@ public class Player: Operation {
                 print("👏🏽 decode finished")
             }
             decode: while true {
-                if Player.videoQueue.fulled || self.audioQueue.fulled {
+                if Player.videoQueue.fulled || self.audioQueue.fulled{
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -248,8 +243,6 @@ public class Player: Operation {
     //MARK: - FFmpeg, SDL
     public let screenSize: CGSize = UIScreen.main.bounds.size
     
-    public var path: String!
-    
     public var formatContext: UnsafeMutablePointer<AVFormatContext>?
     
     public var video_index: Int32 = -1
@@ -265,13 +258,7 @@ public class Player: Operation {
     public var audioCodec: UnsafeMutablePointer<AVCodec>?
     public var audioContext: UnsafeMutablePointer<AVCodecContext>?
     
-    var audio_filter_graph: UnsafeMutablePointer<AVFilterGraph>!
-    var abuffer: UnsafeMutablePointer<AVFilter>!
-    var abuffer_sink: UnsafeMutablePointer<AVFilter>!
-    var aformat: UnsafeMutablePointer<AVFilter>!
-    var abuffer_ctx: UnsafeMutablePointer<AVFilterContext>?
-    var aformat_ctx: UnsafeMutablePointer<AVFilterContext>?
-    var abuffer_sink_ctx: UnsafeMutablePointer<AVFilterContext>?
+    public var audioFilterHelper: AVFilterHelper?
     
     var audioState: AudioState?
     
@@ -281,12 +268,12 @@ public class Player: Operation {
         av_register_all()
         avfilter_register_all()
         avformat_network_init()
+        formatContext = avformat_alloc_context()
         
-        let c_path = path.cString(using: .utf8)!.withUnsafeBufferPointer(){$0}.baseAddress!
-        var ret = avformat_open_input(&formatContext, c_path, nil, nil)
+        var ret = avformat_open_input(&formatContext, path, nil, nil)
         
         if 0 > ret {
-            print("Couldn't create format for \(String(cString: c_path))")
+            print("Couldn't create format for \(path)")
             return false
         }
         
@@ -319,79 +306,13 @@ public class Player: Operation {
         
         self.audioQueue = AVQueue<AVFrame>(time_base: audioStream!.pointee.time_base)
         
-        guard let audio_filter_graph = avfilter_graph_alloc() else {
-            print("Couldn't create audio filter")
-            return false
-        }
-        
-        guard let audio_buffer = avfilter_get_by_name("abuffer") else {
-            print("Couldn't get audio buffer")
-            return false
-        }
-        
-        guard let audio_buffer_sink = avfilter_get_by_name("abuffersink") else {
-            print("Couldn't get audio buffer sink")
-            return false
-        }
-        
-        guard let audio_format = avfilter_get_by_name("aformat") else {
-            print("Couldn't get audio format")
-            return false
-        }
-        
-        self.audio_filter_graph = audio_filter_graph
-        self.abuffer = audio_buffer
-        self.abuffer_sink = audio_buffer_sink
-        self.aformat = audio_format
-        
-        let audio_time_base = audioStream!.pointee.time_base
-        let layout_s = String.init(audioContext!.pointee.channel_layout, radix: 16, uppercase: false)
-        let abuffer_str: String = "time_base=\(audio_time_base.num)/\(audio_time_base.den):sample_rate=\(audioContext!.pointee.sample_rate):sample_fmt=\(String(cString: av_get_sample_fmt_name(audioContext!.pointee.sample_fmt))):channel_layout=0x\(layout_s)"
-        var err = avfilter_graph_create_filter(&abuffer_ctx, abuffer, "audio_input", abuffer_str, nil, audio_filter_graph)
-        guard 0 <= err else {
-            print_averr(desc: "avfilter_graph_create_filter for audio input with \(abuffer_str)", err: err)
-            return false
-        }
-        
-        // output filter
-        
-        let output_ch_layout: String = String((AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT), radix: 16, uppercase: false)
-        let aformat_str = "sample_fmts=\(String(cString: av_get_sample_fmt_name(AV_SAMPLE_FMT_S16))):sample_rates=44100:channel_layouts=\(output_ch_layout)"
-        err = avfilter_graph_create_filter(&aformat_ctx, aformat, "format_converter", aformat_str, nil, audio_filter_graph)
-        guard 0 <= err else {
-            print_averr(desc: "avfilter_graph_create_filter for format convert \(aformat_str)", err: err)
-            return false
-        }
-        
-        err = avfilter_graph_create_filter(&abuffer_sink_ctx, abuffer_sink, "buffer_sink", nil, nil, audio_filter_graph)
-        guard 0 <= err else {
-            print_averr(desc: "avfilter graph create filter for buffer sink", err: err)
-            return false
-        }
-        
-        err = avfilter_link(abuffer_ctx, 0, aformat_ctx, 0)
-        guard 0 <= err else {
-            print_averr(err: err)
-            return false
-        }
-        
-        err = avfilter_link(aformat_ctx, 0, abuffer_sink_ctx, 0)
-        guard 0 <= err else {
-            print_averr(err: err)
-            return false
-        }
-        
-        err = avfilter_graph_config(audio_filter_graph, nil)
-        guard 0 <= err else {
-            print_averr(err: err)
-            return false
-        }
-        
         let ptr = withUnsafeMutablePointer(to: &self.audioQueue) { (ptr) -> UnsafeMutablePointer<AVQueue<AVFrame>> in
             return ptr.withMemoryRebound(to: AVQueue<AVFrame>.self, capacity: MemoryLayout<AVQueue<AVFrame>>.stride){$0}
         }
         
-        self.audioState = AudioState(audioContex: audioContext, abuffer_ctx: abuffer_ctx, abuffer_sink_ctx: abuffer_sink_ctx, audio_queue: ptr, audio_filtered_frame: av_frame_alloc())
+        let helper = AVFilterHelper.audioHelper(withSampleRate: audioContext!.pointee.sample_rate, in: audioContext!.pointee.sample_fmt, inChannelLayout: Int32(audioContext!.pointee.channel_layout), inChannels: audioContext!.pointee.channels, outSampleFormats: AV_SAMPLE_FMT_S16, outSampleRates: 44100, outChannelLayouts: (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT), timeBase: audioStream!.pointee.time_base, context: audioContext!)
+        self.audioFilterHelper = helper
+        self.audioState = AudioState(audioContex: audioContext, filter_helper: helper, audio_queue: ptr, audio_filtered_frame: av_frame_alloc())
         
         return true
     }
