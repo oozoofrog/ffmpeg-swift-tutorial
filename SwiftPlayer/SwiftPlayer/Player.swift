@@ -45,12 +45,20 @@ public class Player: Operation {
         
         self.dst_rect = SDL_Rect(x: Int32(dstRect.origin.x), y: Int32(dstRect.origin.y), w: Int32(dstRect.width), h: Int32(dstRect.height))
         
-        
-        displayLink?.isPaused = false
-        displayLink?.add(to: RunLoop.current, forMode: .commonModes)
-        
         self.captureEvent()
         self.decodeFrames()
+        
+        self.startDisplayLink()
+    }
+    
+    func startDisplayLink() {
+        displayLink?.isPaused = false
+        displayLink?.add(to: RunLoop.current, forMode: .commonModes)
+    }
+    
+    func stopDisplayLink() {
+        displayLink?.isPaused = true
+        displayLink?.invalidate()
     }
     
     var event = SDL_Event()
@@ -85,7 +93,7 @@ public class Player: Operation {
             first = link.timestamp
         }
         
-        frameQueue.read { (frame) in
+        frameQueue.read(time: link.timestamp - first) { (frame) in
             SDL_UpdateYUVTexture(texture, &video_rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
             SDL_RenderClear(renderer)
             var dst = dst_rect!
@@ -94,55 +102,7 @@ public class Player: Operation {
         }
     }
     
-    struct AVFrameQueue {
-        var frameQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?>!
-        let frameQueueCount = 2
-        var queue = DispatchQueue(label: "frame_queue")
-        var queue_lock: DispatchSemaphore = DispatchSemaphore(value: 0)
-        private var index = 0
-        
-        init() {
-            frameQueue = av_mallocz(MemoryLayout<UnsafeMutablePointer<AVFrame>>.stride * frameQueueCount).assumingMemoryBound(to: Optional<UnsafeMutablePointer<AVFrame>>.self)
-        }
-        
-        func lock() {
-            queue_lock.wait()
-        }
-        
-        func ingore() -> Bool {
-            return queue_lock.wait(timeout: .now()) == .timedOut
-        }
-        
-        func unlock() {
-            queue_lock.signal()
-        }
-        
-        mutating func write(frame: UnsafeMutablePointer<AVFrame>, ctx: UnsafeMutablePointer<AVCodecContext>) {
-            queue.sync {
-                if nil != self.frameQueue[index] {
-                    av_frame_free(&self.frameQueue[index])
-                }
-                let cloned = av_frame_clone(frame)
-                self.frameQueue[index] = cloned
-                self.index += 1
-                if index >= frameQueueCount {
-                    self.index = 0
-                }
-            }
-        }
-        
-        func read( handle: (_ frame: UnsafeMutablePointer<AVFrame>) -> Void) {
-            queue.sync(flags: .barrier) { () -> Void in
-                guard let frame = self.frameQueue[index] else {
-                    return
-                }
-                handle(frame)
-                av_frame_free(&self.frameQueue[index])
-            }
-        }
-    }
-    
-    var frameQueue = AVFrameQueue()
+    var frameQueue: AVFrameQueue!
     
     let pkt = av_packet_alloc()
     let frame = av_frame_alloc()
@@ -152,26 +112,28 @@ public class Player: Operation {
     
     func decodeFrames() {
         decode_queue.async {
+            defer {
+                print("👏🏽 decode finished")
+            }
             decode: while true {
+                if self.frameQueue.fulled {
+                    continue
+                }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
-                    var event = SDL_Event(type: SDL_QUIT.rawValue)
-                    SDL_PushEvent(&event)
                     break decode
                 }
                 
                 if let pkt = self.pkt, pkt.pointee.stream_index == self.video_index, let videoContext = self.videoContext, let frame = self.frame {
                     let ret = self.decode(ctx: videoContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
-                    if 0 > ret {
+                    guard 0 <= ret else {
                         print_err(ret)
-                        var event = SDL_Event(type: SDL_QUIT.rawValue)
-                        SDL_PushEvent(&event)
-                        break decode
+                        continue
                     }
-                    self.frameQueue.write(frame: frame, ctx: videoContext)
+                    self.frameQueue.write(frame: frame){
+                        av_frame_unref(frame)
+                    }
                 }
             }
-            var event = SDL_Event(type: SDL_QUIT.rawValue)
-            SDL_PushEvent(&event)
         }
     }
     
@@ -268,6 +230,7 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(videoContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
+        self.frameQueue = AVFrameQueue(time_base: videoStream?.pointee.time_base ?? AVRational())
         
         audio_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0)
         audioStream = formatContext?.pointee.streams.advanced(by: Int(audio_index)).pointee
