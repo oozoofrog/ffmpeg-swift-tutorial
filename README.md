@@ -3,6 +3,17 @@
 >$ git submodule init<br/>
 >$ ./FFmpeg-iOS-build-script/build-ffmpeg.sh
 
+###add SwiftPlayer project
+- Using AVAudioEngine, and exclude SDL audio
+- syncing with CADisplayLink, DispatchQueue, DispatchSemaphore
+- No more referencing ffmpeg tutorials. It is too old, and never working well.
+
+###TODO
+- perfectly playing audio to normal
+- update to FFmpeg 3.1.3
+- add seeking functions
+
+###olds
 - tutorial1
 - export from video to image files
 - tutorial2

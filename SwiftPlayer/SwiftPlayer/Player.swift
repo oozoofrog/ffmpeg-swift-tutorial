@@ -210,7 +210,7 @@ public class Player: Operation {
                             av_frame_unref(frame)
                         }
                     }
-                    else if pkt.pointee.stream_index == self.audio_index, let audioContext = self.audioContext, let st = self.audioStream {
+                    else if pkt.pointee.stream_index == self.audio_index, let audioContext = self.audioContext {
                         let ret = self.decode(ctx: audioContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
                         guard 0 <= ret else {
                             print_err(ret)
@@ -218,20 +218,26 @@ public class Player: Operation {
                         }
                         
                         self.audioState?.filter_helper?.input(frame)
-                        
+                        let audioBuffer = NSMutableData()
                         while true {
                             if self.audioState?.filter_helper?.output(self.audioState?.audio_filtered_frame) ?? true {
                                 break
                             }
-                            guard let filtered = self.audioState?.audio_filtered_frame, 0 < filtered.pointee.linesize.0 else {
+                            guard let data = self.audioState?.audio_filtered_frame?.pointee.data.0, let len = self.audioState?.audio_filtered_frame?.pointee.linesize.0 else {
                                 break
                             }
-                            //let frametime = filtered.pointee.time(time_base: st.pointee.time_base)
-                            let buffer = AVAudioPCMBuffer(pcmFormat: AVAudioFormat.init(commonFormat: .pcmFormatInt16, sampleRate: Double(filtered.pointee.sample_rate), channels: AVAudioChannelCount(filtered.pointee.channels), interleaved: false), frameCapacity: AVAudioFrameCount(filtered.pointee.linesize.0))
-                            let dst = buffer.int16ChannelData?[0]
-                            memcpy(dst, filtered.pointee.data.0, Int(filtered.pointee.linesize.0))
-                            self.audioPlayer?.scheduleBuffer(buffer, completionHandler: nil)
+                            audioBuffer.append(data, length: Int(len))
                         }
+                        
+                        let pcm_buf = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: AVAudioFrameCount(audioBuffer.length) / self.audioFormat!.streamDescription.pointee.mBytesPerFrame)
+                       
+                        pcm_buf.frameLength = pcm_buf.frameCapacity
+                        let channels = UnsafeBufferPointer.init(start: pcm_buf.floatChannelData, count: Int(pcm_buf.format.channelCount))
+                        audioBuffer.getBytes(channels[0], length: audioBuffer.length)
+                        
+                        self.audioPlayer?.scheduleBuffer(pcm_buf, completionHandler: {
+                            print("finished")
+                        })
                     }
                 }
             }
@@ -338,7 +344,7 @@ public class Player: Operation {
             in: audioContext!.pointee.sample_fmt,
             inChannelLayout: Int32(audioContext!.pointee.channel_layout),
             inChannels: audioContext!.pointee.channels,
-            outSampleFormats: AV_SAMPLE_FMT_S16,
+            outSampleFormats: AV_SAMPLE_FMT_FLT,
             outSampleRates: 44100,
             outChannelLayouts: (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT),
             timeBase: audioStream!.pointee.time_base, context: audioContext!)
@@ -365,6 +371,7 @@ public class Player: Operation {
     
     var audioEngine: AVAudioEngine?
     var audioPlayer: AVAudioPlayerNode?
+    var audioFormat: AVAudioFormat?
     
     func setupAudio() -> Bool {
         let audioSession = AVAudioSession.sharedInstance()
@@ -386,8 +393,9 @@ public class Player: Operation {
         
         let mixer = audioEngine?.mainMixerNode
         mixer!.outputVolume = 1.0
-        let stereoFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Double(AUDIO_OUTPUT_SAMPLE_RATE), channels: 2, interleaved: false)
-        audioEngine!.connect(audioPlayer!, to: mixer!, format: stereoFormat)
+        
+        audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(AUDIO_OUTPUT_SAMPLE_RATE), channels: 2)
+        audioEngine!.connect(audioPlayer!, to: mixer!, format: audioFormat)
         
         if audioEngine!.isRunning {
             return true

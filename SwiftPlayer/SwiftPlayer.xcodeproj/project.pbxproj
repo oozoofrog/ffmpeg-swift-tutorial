@@ -40,6 +40,7 @@
 		D848FEB51D74639E0058E322 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB21D74639E0058E322 /* VideoToolbox.framework */; };
 		D85ABD111D7463DF00B8954C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD101D7463DF00B8954C /* CoreMotion.framework */; };
 		D85ABD131D74640600B8954C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD121D74640600B8954C /* GameController.framework */; };
+		D88DC6C31D7722CE005862E4 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = D88DC6C21D7722CD005862E4 /* README.md */; };
 		D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */; };
 /* End PBXBuildFile section */
 
@@ -71,8 +72,8 @@
 		D848FE941D745F980058E322 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libswresample.a"; sourceTree = "<group>"; };
 		D848FE951D745F980058E322 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libswscale.a"; sourceTree = "<group>"; };
 		D848FE9D1D745FA90058E322 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../SDL-iOS/lib/libSDL2.a"; sourceTree = "<group>"; };
-		D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "FFmpeg-iOS-build-script"; path = "../FFmpeg-iOS-build-script"; sourceTree = "<group>"; };
-		D848FEA01D745FBE0058E322 /* SDL-iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SDL-iOS"; path = "../SDL-iOS"; sourceTree = "<group>"; };
+		D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "FFmpeg-iOS-build-script"; path = "../../FFmpeg-iOS-build-script"; sourceTree = "<group>"; };
+		D848FEA01D745FBE0058E322 /* SDL-iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SDL-iOS"; path = "../../SDL-iOS"; sourceTree = "<group>"; };
 		D848FEA61D7461710058E322 /* SwiftPlayer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftPlayer-Bridging-Header.h"; sourceTree = "<group>"; };
 		D848FEA71D7461720058E322 /* SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL.h; sourceTree = "<group>"; };
 		D848FEA81D7461720058E322 /* SDL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDL.m; sourceTree = "<group>"; };
@@ -84,6 +85,9 @@
 		D848FEB21D74639E0058E322 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		D85ABD101D7463DF00B8954C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		D85ABD121D74640600B8954C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		D88DC6BF1D772264005862E4 /* ffmpeg.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = ffmpeg.map; path = ../../ffmpeg.map; sourceTree = "<group>"; };
+		D88DC6C01D772264005862E4 /* sdl.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = sdl.map; path = ../../sdl.map; sourceTree = "<group>"; };
+		D88DC6C21D7722CD005862E4 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = "/Users/mayjay/development/playing/ffmpeg-swift-tutorial/tutorial/../README.md"; sourceTree = "<absolute>"; };
 		D8B3BF241D75B2B00009B509 /* AVFilterHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AVFilterHelper.h; sourceTree = "<group>"; };
 		D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AVFilterHelper.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -125,8 +129,6 @@
 		D848FE6A1D745F4D0058E322 = {
 			isa = PBXGroup;
 			children = (
-				D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */,
-				D848FEA01D745FBE0058E322 /* SDL-iOS */,
 				D848FE751D745F4D0058E322 /* SwiftPlayer */,
 				D848FE741D745F4D0058E322 /* Products */,
 				D848FE8E1D745F980058E322 /* Frameworks */,
@@ -144,6 +146,11 @@
 		D848FE751D745F4D0058E322 /* SwiftPlayer */ = {
 			isa = PBXGroup;
 			children = (
+				D88DC6C21D7722CD005862E4 /* README.md */,
+				D88DC6BF1D772264005862E4 /* ffmpeg.map */,
+				D88DC6C01D772264005862E4 /* sdl.map */,
+				D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */,
+				D848FEA01D745FBE0058E322 /* SDL-iOS */,
 				A9314A701D750CF300EC253A /* sample.mp4 */,
 				D848FEA71D7461720058E322 /* SDL.h */,
 				D848FEA81D7461720058E322 /* SDL.m */,
@@ -298,6 +305,7 @@
 				D848FEA91D7461720058E322 /* SDL.m in Sources */,
 				D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */,
 				D848FE791D745F4D0058E322 /* ViewController.swift in Sources */,
+				D88DC6C31D7722CE005862E4 /* README.md in Sources */,
 				D848FE771D745F4D0058E322 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
