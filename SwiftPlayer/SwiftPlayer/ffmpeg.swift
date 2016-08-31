@@ -33,18 +33,11 @@ extension AVFrame {
     }
 }
 
-public protocol AVQueueableContainer {}
-public protocol AVFrameQueueContainer: AVQueueableContainer {}
-public protocol AVPacketQueueContainer: AVQueueableContainer {}
-
-extension AVFrame : AVFrameQueueContainer {}
-extension AVPacket : AVPacketQueueContainer {}
-
-struct AVQueue<Type> where Type: AVQueueableContainer {
+struct AVFrameQueue {
     
     var time_base: AVRational
     
-    var containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<Type>?>
+    var containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?>
     let containerQueueCount: Int = 100
     var containerQueueCacheCountThreshold: Int { return max(1, self.containerQueueCount / 5) }
 
@@ -58,7 +51,7 @@ struct AVQueue<Type> where Type: AVQueueableContainer {
         self.queue = DispatchQueue(label: "queue", qos: .utility)
         self.queue_lock = DispatchSemaphore(value: 0)
         self.time_base = time_base
-        self.containerQueue = av_mallocz(MemoryLayout<UnsafeMutablePointer<Type>>.stride * containerQueueCount).assumingMemoryBound(to: Optional<UnsafeMutablePointer<Type>>.self)
+        self.containerQueue = av_mallocz(MemoryLayout<UnsafeMutablePointer<AVFrame>>.stride * containerQueueCount).assumingMemoryBound(to: Optional<UnsafeMutablePointer<AVFrame>>.self)
     }
     
     func lock() {
@@ -77,14 +70,10 @@ struct AVQueue<Type> where Type: AVQueueableContainer {
         let threshold = self.containerQueueCacheCountThreshold
         return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)
     }
-}
-
-extension AVQueue where Type: AVFrameQueueContainer {
-    mutating func write(container: UnsafeMutablePointer<Type>, completion: () -> Void) {
-        let frame = container.withMemoryRebound(to: AVFrame.self, capacity: MemoryLayout<AVFrame>.stride){$0}
-        let containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?> = self.containerQueue.withMemoryRebound(to: Optional<UnsafeMutablePointer<AVFrame>>.self, capacity: MemoryLayout<Optional<UnsafeMutablePointer<AVFrame>>>.size){$0}
+    
+    mutating func write(frame: UnsafeMutablePointer<AVFrame>, completion: () -> Void) {
         queue.sync {
-            if nil != containerQueue[windex] {
+            if nil != self.containerQueue[windex] {
                 av_frame_free(&containerQueue[windex])
             }
             let cloned = av_frame_clone(frame)
@@ -97,14 +86,12 @@ extension AVQueue where Type: AVFrameQueueContainer {
         }
     }
     
-    mutating func read(time: Double = -1, handle: (_ container: UnsafeMutablePointer<Type>) -> Void) {
+    mutating func read(time: Double = -1, handle: (_ container: UnsafeMutablePointer<AVFrame>) -> Void) {
         queue.sync(flags: .barrier) { () -> Void in
-            let containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?> = self.containerQueue.withMemoryRebound(to: Optional<UnsafeMutablePointer<AVFrame>>.self, capacity: MemoryLayout<Optional<UnsafeMutablePointer<AVFrame>>>.size){$0}
-            
             guard let frame = containerQueue[rindex] else {
                 return
             }
-            handle(frame.withMemoryRebound(to: Type.self, capacity: MemoryLayout<Type>.stride){$0})
+            handle(frame)
             if -1 == time || time > frame.pointee.time(time_base: time_base) {
                 av_frame_free(&containerQueue[rindex])
                 self.rindex += 1

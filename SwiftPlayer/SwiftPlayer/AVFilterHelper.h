@@ -35,9 +35,9 @@ typedef NS_ENUM(NSUInteger, AVFilterHelperType) {
 
 + (nullable instancetype)videoHelper:(nonnull NSString *)format;
 
-- (BOOL)input:(nonnull AVFrame *)frame;
+- (BOOL)input:(nullable AVFrame *)frame;
 
 /// return YES - finished, NO - not finished or has error
-- (BOOL)output:(nonnull AVFrame *)frame;
+- (BOOL)output:(nullable AVFrame *)frame;
 
 @end

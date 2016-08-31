@@ -135,7 +135,7 @@
     int ret = av_buffersink_get_frame(abuffersink_ctx, frame);
     
     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-        return NO;
+        return YES;
     }
     if ( 0 > ret) {
         printf("%s:%d - %s", __PRETTY_FUNCTION__, __LINE__, av_err2str(ret));
