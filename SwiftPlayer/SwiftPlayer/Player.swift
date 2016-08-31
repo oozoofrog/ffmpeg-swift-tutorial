@@ -16,7 +16,7 @@ struct AudioState {
     var audioContex: UnsafeMutablePointer<AVCodecContext>?
     var audio_filtered_frame: UnsafeMutablePointer<AVFrame>?
     var filter_helper: AVFilterHelper?
-    var audio_buffer: AudioQueue = AudioQueue()
+    let audioQueue: AudioQueue = AudioQueue()
 }
 
 let AUDIO_OUTPUT_SAMPLE_RATE    = 44100
@@ -25,51 +25,35 @@ let AUDIO_OUTPUT_BITS           = 16
 
 let AUDIO_OUTPUT_BUFFER_LENGTH  = AUDIO_OUTPUT_SAMPLE_RATE * AUDIO_OUTPUT_CHANNELS * (AUDIO_OUTPUT_BITS / 8) * 1024
 
-struct AudioQueue {
-    var buffer = av_mallocz(AUDIO_OUTPUT_BUFFER_LENGTH * 3).assumingMemoryBound(to: UInt8.self)
-    var wbuf: UnsafeMutablePointer<UInt8>? = nil
-    var rbuf: UnsafeMutablePointer<UInt8>? = nil
-    var wpos = 0
+class AudioQueue {
+    let buffer = NSMutableData()
     var rpos = 0
     
     var lock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
-    mutating func write(write_buffer: UnsafeMutablePointer<UInt8>?, length: Int) {
+    func write(write_buffer: UnsafeMutablePointer<UInt8>?, length: Int) {
         self.wait()
-        if wpos + length >= AUDIO_OUTPUT_BUFFER_LENGTH {
-            wpos = 0
-            wbuf = nil
+
+        if let buf = write_buffer {
+            buffer.append(buf, length: length)
         }
-        if nil == wbuf {
-            wbuf = self.buffer
-        }
-        memcpy(wbuf, write_buffer, length)
-        wbuf = wbuf?.advanced(by: length)
-        wpos += length
+        
         self.signal()
     }
     
-    mutating func read(read_buffer: UnsafeMutablePointer<UInt8>?, length: Int, reads: inout Int) {
+    func read(read_buffer: UnsafeMutablePointer<UInt8>?, length: Int, reads: inout Int) {
         self.wait()
         
-        let readLength = (wpos > rpos) ? min(length, wpos - rpos) : 0
-        
-        if rpos + readLength >= AUDIO_OUTPUT_BUFFER_LENGTH {
-            rpos = 0
-            rbuf = nil
-        }
-        
-        if nil == rbuf {
-            rbuf = self.buffer
-        }
-        
-        if 0 < readLength {
-            memcpy(read_buffer, rbuf, readLength)
+        if let buf = read_buffer {
+            let readLength = buffer.length > rpos ? min(buffer.length - rpos, length) : 0
             
-            rbuf = rbuf?.advanced(by: readLength)
+            buffer.getBytes(buf, range: NSRange(location: rpos, length: readLength))
+                
+            reads = readLength
+            rpos += readLength
+        } else {
+            reads = 0
         }
-        
-        reads = readLength
         
         self.signal()
     }
@@ -127,6 +111,11 @@ public class Player: Operation {
             return
         }
         
+        guard setupAudio() else {
+            print("Audio Engine setup failed")
+            return
+        }
+        
         let dstRect = AVMakeRect(aspectRatio: CGSize(width: Int(video_rect.w), height: Int(video_rect.h)), insideRect: CGRect(origin: CGPoint(), size: self.screenSize))
         
         self.dst_rect = SDL_Rect(x: Int32(dstRect.origin.x), y: Int32(dstRect.origin.y), w: Int32(dstRect.width), h: Int32(dstRect.height))
@@ -135,8 +124,6 @@ public class Player: Operation {
         self.decodeFrames()
         
         self.startDisplayLink()
-        
-        SDL_PauseAudio(0)
     }
     
     func startDisplayLink() {
@@ -190,30 +177,6 @@ public class Player: Operation {
         }
     }
     
-    var audio_callback: SDL_AudioCallback = {(userdata, stream, length) in
-        guard let state = userdata?.assumingMemoryBound(to: AudioState.self) else {
-            return
-        }
-        
-        var length = Int(length)
-        var reads: Int = 0
-        var buffer = stream
-        var pos: Int = 0
-        while true {
-            state.pointee.audio_buffer.read(read_buffer: buffer, length: Int(length), reads: &reads)
-            if 0 >= reads {
-                continue
-            }
-            if 0 >= length - reads {
-                break
-            }
-            buffer = buffer?.advanced(by: reads)
-            length -= reads
-            pos += reads
-        }
-        
-    }
-    
     let pkt = av_packet_alloc()
     let frame = av_frame_alloc()
     let audio_filtered_frame = av_frame_alloc()!
@@ -226,6 +189,7 @@ public class Player: Operation {
             defer {
                 print("👏🏽 decode finished")
             }
+            
             decode: while true {
                 if self.videoQueue?.fulled ?? true {
                     continue
@@ -246,7 +210,7 @@ public class Player: Operation {
                             av_frame_unref(frame)
                         }
                     }
-                    else if pkt.pointee.stream_index == self.audio_index, let audioContext = self.audioContext {
+                    else if pkt.pointee.stream_index == self.audio_index, let audioContext = self.audioContext, let st = self.audioStream {
                         let ret = self.decode(ctx: audioContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
                         guard 0 <= ret else {
                             print_err(ret)
@@ -259,10 +223,14 @@ public class Player: Operation {
                             if self.audioState?.filter_helper?.output(self.audioState?.audio_filtered_frame) ?? true {
                                 break
                             }
-                            guard let length = self.audioState?.audio_filtered_frame?.pointee.linesize.0, 0 < length else {
+                            guard let filtered = self.audioState?.audio_filtered_frame, 0 < filtered.pointee.linesize.0 else {
                                 break
                             }
-                            self.audioState?.audio_buffer.write(write_buffer: self.audioState?.audio_filtered_frame?.pointee.data.0, length: Int(length))
+                            //let frametime = filtered.pointee.time(time_base: st.pointee.time_base)
+                            let buffer = AVAudioPCMBuffer(pcmFormat: AVAudioFormat.init(commonFormat: .pcmFormatInt16, sampleRate: Double(filtered.pointee.sample_rate), channels: AVAudioChannelCount(filtered.pointee.channels), interleaved: false), frameCapacity: AVAudioFrameCount(filtered.pointee.linesize.0))
+                            let dst = buffer.int16ChannelData?[0]
+                            memcpy(dst, filtered.pointee.data.0, Int(filtered.pointee.linesize.0))
+                            self.audioPlayer?.scheduleBuffer(buffer, completionHandler: nil)
                         }
                     }
                 }
@@ -365,7 +333,15 @@ public class Player: Operation {
             return false
         }
         
-        let helper = AVFilterHelper.audioHelper(withSampleRate: audioContext!.pointee.sample_rate, in: audioContext!.pointee.sample_fmt, inChannelLayout: Int32(audioContext!.pointee.channel_layout), inChannels: audioContext!.pointee.channels, outSampleFormats: AV_SAMPLE_FMT_S16, outSampleRates: 44100, outChannelLayouts: (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT), timeBase: audioStream!.pointee.time_base, context: audioContext!)
+        let helper = AVFilterHelper.audioHelper(
+            withSampleRate: audioContext!.pointee.sample_rate,
+            in: audioContext!.pointee.sample_fmt,
+            inChannelLayout: Int32(audioContext!.pointee.channel_layout),
+            inChannels: audioContext!.pointee.channels,
+            outSampleFormats: AV_SAMPLE_FMT_S16,
+            outSampleRates: 44100,
+            outChannelLayouts: (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT),
+            timeBase: audioStream!.pointee.time_base, context: audioContext!)
         self.audioFilterHelper = helper
         self.audioState = AudioState()
         self.audioState?.audioContex = audioContext
@@ -375,7 +351,60 @@ public class Player: Operation {
         return true
     }
     
+    var interruptionNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVAudioSessionInterruption, object: nil, queue: .main) { (noti) in
+        print("🤔 audio interruption -> " + noti.description)
+    }
     
+    var routeNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVAudioSessionRouteChange, object: nil, queue: .main) { (noti) in
+        print("🤔 audio route change -> " + noti.description)
+    }
+    
+    var mediaResetNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVAudioSessionMediaServicesWereReset, object: nil, queue: .main) { (noti) in
+        print("🤔 audio media reset -> " + noti.description)
+    }
+    
+    var audioEngine: AVAudioEngine?
+    var audioPlayer: AVAudioPlayerNode?
+    
+    func setupAudio() -> Bool {
+        let audioSession = AVAudioSession.sharedInstance()
+        
+        let ioBufferDuration = 128 * AUDIO_OUTPUT_SAMPLE_RATE
+        do {
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setPreferredIOBufferDuration(TimeInterval(ioBufferDuration))
+            try audioSession.setActive(true)
+        } catch let err as NSError {
+            assertionFailure(err.localizedDescription)
+            return false
+        }
+        
+        audioEngine = AVAudioEngine()
+        audioPlayer = AVAudioPlayerNode()
+        
+        audioEngine?.attach(audioPlayer!)
+        
+        let mixer = audioEngine?.mainMixerNode
+        mixer!.outputVolume = 1.0
+        let stereoFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: Double(AUDIO_OUTPUT_SAMPLE_RATE), channels: 2, interleaved: false)
+        audioEngine!.connect(audioPlayer!, to: mixer!, format: stereoFormat)
+        
+        if audioEngine!.isRunning {
+            return true
+        }
+        
+        audioEngine!.prepare()
+        
+        do {
+            try audioEngine!.start()
+        } catch let err as NSError {
+            assertionFailure(err.localizedDescription)
+            return false
+        }
+        
+        audioPlayer!.play()
+        return true
+    }
     
     //MARK: - setupSDL
     var window: OpaquePointer!
@@ -413,21 +442,6 @@ public class Player: Operation {
         }
         
         texture = t
-        
-        var wanted = SDL_AudioSpec()
-        var obtained = SDL_AudioSpec()
-        wanted.channels = 2
-        wanted.format = SDL_AudioFormat(AUDIO_S16SYS)
-        wanted.freq = 44100
-        wanted.silence = 0
-        wanted.size = 1024
-        wanted.callback = audio_callback
-        wanted.userdata = UnsafeMutableRawPointer(&audioState)
-        
-        guard 0 <= SDL_OpenAudio(&wanted, &obtained) else {
-            print("SDL_OpenAudio failed : \(String(cString: SDL_GetError()))")
-            return false
-        }
         
         return true
     }
