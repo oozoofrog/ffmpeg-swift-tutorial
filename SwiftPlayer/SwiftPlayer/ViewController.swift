@@ -16,7 +16,14 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
+        let prevIO = UIApplication.shared.statusBarOrientation
+        if UIInterfaceOrientationIsPortrait(prevIO) {
+            UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
+        }
+    }
+    
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return .landscape
     }
     
     override func viewDidAppear(_ animated: Bool) {
