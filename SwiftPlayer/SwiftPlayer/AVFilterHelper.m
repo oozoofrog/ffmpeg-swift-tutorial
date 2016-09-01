@@ -14,6 +14,7 @@
     AVFilterContext *abuffer_ctx;
     AVFilterContext *abuffersink_ctx;
     AVFilterContext *aformat_ctx;
+    AVFilterContext *aeval_ctx;
 }
 
 @property (nonatomic, strong) NSString *audioInputArgs;
@@ -31,6 +32,7 @@
                          outSampleFormats:(enum AVSampleFormat)outSampleFmt
                            outSampleRates:(int)outSampleRates
                         outChannelLayouts:(int)outChannelLayouts
+                              outChannels:(int)outChannels
                                  timeBase:(AVRational)time_base
                                   context:(AVCodecContext *)context{
     AVFilterHelper *helper = [[AVFilterHelper alloc] initWithType:AVFilterHelperTypeAudio];
@@ -41,6 +43,7 @@
                         outSampleFormats:outSampleFmt
                           outSampleRates:outSampleRates
                        outChannelLayouts:outChannelLayouts
+                             outChannels:outChannels
                                 timeBase:time_base
                                  context:context]) {
         return helper;
@@ -67,6 +70,7 @@
                 outSampleFormats:(enum AVSampleFormat)outSampleFmt
                   outSampleRates:(int)outSampleRates
                outChannelLayouts:(int)outChannelLayouts
+                     outChannels:(int)outChannels
                         timeBase:(AVRational)time_base
                          context:(AVCodecContext *)context {
     
@@ -78,6 +82,7 @@
     
     AVFilter *abuffer = avfilter_get_by_name("abuffer");
     AVFilter *aformat = avfilter_get_by_name("aformat");
+    //AVFilter *aeval   = avfilter_get_by_name("aeval");
     AVFilter *abuffer_sink = avfilter_get_by_name("abuffersink");
     
     NSString *buffer_arg = [[NSString alloc] initWithFormat:@"sample_rate=%d:sample_fmt=%s:channels=%d:time_base=%d/%d:channel_layout=0x%x", inSampleRate, av_get_sample_fmt_name(inSampleFmt), channels, time_base.num, time_base.den, inChannelLayout];
@@ -86,6 +91,13 @@
         printf("%s:%d - %s", __PRETTY_FUNCTION__, __LINE__, av_err2str(ret));
         return NO;
     }
+    
+    //NSString *aeval_arg = [[NSString alloc] initWithFormat:@"nb_in_channels=%d:nb_out_channels=%d:sample_rate=%d", channels, outChannels, inSampleRate];
+    //ret = avfilter_graph_create_filter(&aeval_ctx, aeval, "aeval_ctx", aeval_arg.UTF8String, NULL, audio_graph);
+    //if (0 > ret) {
+    //    printf("%s:%d - %s", __PRETTY_FUNCTION__, __LINE__, av_err2str(ret));
+    //    return NO;
+    //}
     
     NSString *format_arg = [[NSString alloc] initWithFormat:@"sample_rates=%d:sample_fmts=%s:channel_layouts=%x", outSampleRates, av_get_sample_fmt_name(outSampleFmt), outChannelLayouts];
     ret = avfilter_graph_create_filter(&aformat_ctx, aformat, "aformat_context", format_arg.UTF8String, nil, audio_graph);
@@ -101,10 +113,16 @@
     }
     
     ret = avfilter_link(abuffer_ctx, 0, aformat_ctx, 0);
+    //ret = avfilter_link(abuffer_ctx, 0, aeval_ctx, 0);
     if (0 > ret) {
         printf("%s:%d - %s", __PRETTY_FUNCTION__, __LINE__, av_err2str(ret));
         return NO;
     }
+    //ret = avfilter_link(aeval_ctx, 0, aformat_ctx, 0);
+    //if (0 > ret) {
+    //    printf("%s:%d - %s", __PRETTY_FUNCTION__, __LINE__, av_err2str(ret));
+    //    return NO;
+    //}
     ret = avfilter_link(aformat_ctx, 0, abuffersink_ctx, 0);
     if (0 > ret) {
         printf("%s:%d - %s", __PRETTY_FUNCTION__, __LINE__, av_err2str(ret));

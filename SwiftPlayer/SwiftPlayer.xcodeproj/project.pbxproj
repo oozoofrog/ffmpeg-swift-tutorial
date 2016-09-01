@@ -13,6 +13,9 @@
 		A9314A751D75121900EC253A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A741D75121900EC253A /* UIKit.framework */; };
 		A9314A781D75121F00EC253A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A761D75121F00EC253A /* CoreFoundation.framework */; };
 		A9314A791D75121F00EC253A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9314A771D75121F00EC253A /* Foundation.framework */; };
+		A947D64D1D77BF0C00ED6338 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A947D64C1D77BF0B00ED6338 /* TableViewController.swift */; };
+		A9534E991D77AF6C00411FC9 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9534E981D77AF6C00411FC9 /* Accelerate.framework */; };
+		A9534E9B1D77BC2400411FC9 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = A9534E9A1D77BC2400411FC9 /* README.md */; };
 		D805EF331D747187004BE9B3 /* ffmpeg.c in Sources */ = {isa = PBXBuildFile; fileRef = D805EF311D747187004BE9B3 /* ffmpeg.c */; };
 		D81915281D746C0100D919E9 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D81915271D746C0100D919E9 /* CoreMedia.framework */; };
 		D832355F1D7465E5008689D5 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D832355E1D7465E5008689D5 /* libz.tbd */; };
@@ -40,7 +43,6 @@
 		D848FEB51D74639E0058E322 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB21D74639E0058E322 /* VideoToolbox.framework */; };
 		D85ABD111D7463DF00B8954C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD101D7463DF00B8954C /* CoreMotion.framework */; };
 		D85ABD131D74640600B8954C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD121D74640600B8954C /* GameController.framework */; };
-		D88DC6C31D7722CE005862E4 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = D88DC6C21D7722CD005862E4 /* README.md */; };
 		D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +53,9 @@
 		A9314A741D75121900EC253A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		A9314A761D75121F00EC253A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		A9314A771D75121F00EC253A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		A947D64C1D77BF0B00ED6338 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
+		A9534E981D77AF6C00411FC9 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		A9534E9A1D77BC2400411FC9 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../../README.md; sourceTree = "<group>"; };
 		D805EF311D747187004BE9B3 /* ffmpeg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffmpeg.c; sourceTree = "<group>"; };
 		D805EF321D747187004BE9B3 /* ffmpeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffmpeg.h; sourceTree = "<group>"; };
 		D81915271D746C0100D919E9 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -87,7 +92,6 @@
 		D85ABD121D74640600B8954C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		D88DC6BF1D772264005862E4 /* ffmpeg.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = ffmpeg.map; path = ../../ffmpeg.map; sourceTree = "<group>"; };
 		D88DC6C01D772264005862E4 /* sdl.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = sdl.map; path = ../../sdl.map; sourceTree = "<group>"; };
-		D88DC6C21D7722CD005862E4 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = "/Users/mayjay/development/playing/ffmpeg-swift-tutorial/tutorial/../README.md"; sourceTree = "<absolute>"; };
 		D8B3BF241D75B2B00009B509 /* AVFilterHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AVFilterHelper.h; sourceTree = "<group>"; };
 		D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AVFilterHelper.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -97,6 +101,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9534E991D77AF6C00411FC9 /* Accelerate.framework in Frameworks */,
 				A9314A781D75121F00EC253A /* CoreFoundation.framework in Frameworks */,
 				A9314A791D75121F00EC253A /* Foundation.framework in Frameworks */,
 				A9314A751D75121900EC253A /* UIKit.framework in Frameworks */,
@@ -146,7 +151,7 @@
 		D848FE751D745F4D0058E322 /* SwiftPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				D88DC6C21D7722CD005862E4 /* README.md */,
+				A9534E9A1D77BC2400411FC9 /* README.md */,
 				D88DC6BF1D772264005862E4 /* ffmpeg.map */,
 				D88DC6C01D772264005862E4 /* sdl.map */,
 				D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */,
@@ -160,6 +165,7 @@
 				D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */,
 				A90310A81D752AA600B4FEF1 /* ffmpeg.swift */,
 				D848FE761D745F4D0058E322 /* AppDelegate.swift */,
+				A947D64C1D77BF0B00ED6338 /* TableViewController.swift */,
 				D848FE781D745F4D0058E322 /* ViewController.swift */,
 				D848FEAA1D7462F50058E322 /* Player.swift */,
 				D848FE7A1D745F4D0058E322 /* Main.storyboard */,
@@ -174,6 +180,7 @@
 		D848FE8E1D745F980058E322 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A9534E981D77AF6C00411FC9 /* Accelerate.framework */,
 				A9314A761D75121F00EC253A /* CoreFoundation.framework */,
 				A9314A771D75121F00EC253A /* Foundation.framework */,
 				A9314A741D75121900EC253A /* UIKit.framework */,
@@ -305,7 +312,8 @@
 				D848FEA91D7461720058E322 /* SDL.m in Sources */,
 				D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */,
 				D848FE791D745F4D0058E322 /* ViewController.swift in Sources */,
-				D88DC6C31D7722CE005862E4 /* README.md in Sources */,
+				A9534E9B1D77BC2400411FC9 /* README.md in Sources */,
+				A947D64D1D77BF0C00ED6338 /* TableViewController.swift in Sources */,
 				D848FE771D745F4D0058E322 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

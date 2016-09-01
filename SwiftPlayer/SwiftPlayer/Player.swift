@@ -11,6 +11,7 @@ import ffmpeg
 import SDL
 import AVFoundation
 import UIKit
+import Accelerate
 
 struct AudioState {
     var audioContex: UnsafeMutablePointer<AVCodecContext>?
@@ -229,15 +230,16 @@ public class Player: Operation {
                             audioBuffer.append(data, length: Int(len))
                         }
                         
-                        let pcm_buf = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: AVAudioFrameCount(audioBuffer.length) / self.audioFormat!.streamDescription.pointee.mBytesPerFrame)
+                        let pcm_buf = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: (AVAudioFrameCount(audioBuffer.length) / self.audioFormat!.streamDescription.pointee.mBytesPerFrame))
                        
-                        pcm_buf.frameLength = pcm_buf.frameCapacity
+                        pcm_buf.frameLength = pcm_buf.frameCapacity / 2
                         let channels = UnsafeBufferPointer.init(start: pcm_buf.floatChannelData, count: Int(pcm_buf.format.channelCount))
-                        audioBuffer.getBytes(channels[0], length: audioBuffer.length)
+                        vDSP_vclr(channels[0], 1, vDSP_Length(pcm_buf.frameLength))
+                        vDSP_vclr(channels[1], 1, vDSP_Length(pcm_buf.frameLength))
+                        vDSP_vadd(channels[0], 1, audioBuffer.bytes.assumingMemoryBound(to: Float.self), 2, channels[0], 1, vDSP_Length(pcm_buf.frameLength))
+                        vDSP_vadd(channels[1], 1, audioBuffer.bytes.assumingMemoryBound(to: Float.self).advanced(by: 1), 2, channels[1], 1, vDSP_Length(pcm_buf.frameLength))
                         
-                        self.audioPlayer?.scheduleBuffer(pcm_buf, completionHandler: {
-                            print("finished")
-                        })
+                        self.audioPlayer?.scheduleBuffer(pcm_buf, completionHandler:nil)
                     }
                 }
             }
@@ -347,6 +349,7 @@ public class Player: Operation {
             outSampleFormats: AV_SAMPLE_FMT_FLT,
             outSampleRates: 44100,
             outChannelLayouts: (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT),
+            outChannels:2,
             timeBase: audioStream!.pointee.time_base, context: audioContext!)
         self.audioFilterHelper = helper
         self.audioState = AudioState()
@@ -394,7 +397,7 @@ public class Player: Operation {
         let mixer = audioEngine?.mainMixerNode
         mixer!.outputVolume = 1.0
         
-        audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(AUDIO_OUTPUT_SAMPLE_RATE), channels: 2)
+        audioFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(AUDIO_OUTPUT_SAMPLE_RATE), channels: 2, interleaved: false)
         audioEngine!.connect(audioPlayer!, to: mixer!, format: audioFormat)
         
         if audioEngine!.isRunning {

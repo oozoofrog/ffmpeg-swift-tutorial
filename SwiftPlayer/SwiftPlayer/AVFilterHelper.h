@@ -30,6 +30,7 @@ typedef NS_ENUM(NSUInteger, AVFilterHelperType) {
                                   outSampleFormats:(enum AVSampleFormat)outSampleFmt
                                     outSampleRates:(int)outSampleRates
                                  outChannelLayouts:(int)outChannelLayouts
+                                       outChannels:(int)outChannels
                                           timeBase:(AVRational)time_base
                              context:(nonnull AVCodecContext *)context;
 

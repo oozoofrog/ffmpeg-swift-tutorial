@@ -16,6 +16,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        
+        let documentPath: String = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let documentSamplePath: String = "\(documentPath)/sample.mp4"
+        if false == FileManager.default.fileExists(atPath: documentSamplePath) {
+            guard let samplePath: String = Bundle.main.path(forResource: "sample", ofType: "mp4") else {
+                return true
+            }
+            do {
+                try FileManager.default.copyItem(atPath: samplePath, toPath: documentSamplePath)
+            } catch let err as NSError {
+                assertionFailure(err.localizedDescription)
+            }
+        }
+        
+        #if arch(i386) || arch(x86_64)
+            self.createSymbolickLinkForDocuments()
+        #endif
+        
         return true
     }
 
@@ -41,6 +60,54 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
-
+    
+    var docPath: NSString {
+        return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
+    }
+    var docPaths: [String] {
+        return docPath.components(separatedBy: "/")
+    }
+    var user: String {
+        return docPaths[2]
+    }
+    var documentPathForUser: String {
+        return docPaths[0...2].joined(separator: "/") + "/Documents"
+    }
+    
+    var documentPathForUserWithAppName: String {
+        return documentPathForUser + "/ffmpeg_tutorial"
+    }
+    
+    var linkOfDocumentPathForUserWithAppName: String {
+        return (try? FileManager.default.destinationOfSymbolicLink(atPath: documentPathForUserWithAppName)) ?? ""
+    }
+    
+    func createSymbolickLinkForDocuments() {
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName), let type: FileAttributeType = attributes[.type] as? FileAttributeType {
+            if type == .typeSymbolicLink && (self.docPath as String) == self.linkOfDocumentPathForUserWithAppName {
+                return
+            }
+        }
+        do {
+            let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName)
+            if let attributes = attributes {
+                
+                let type: FileAttributeType = attributes[.type] as! FileAttributeType
+                if type == .typeSymbolicLink {
+                    try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
+                    try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+                }
+                else {
+                    try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
+                    try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+                }
+            } else {
+                try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+            }
+            
+        } catch let err as NSError {
+            assertionFailure(err.localizedDescription)
+        }
+    }
 }
 
