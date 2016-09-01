@@ -67,7 +67,7 @@ struct AVFrameQueue {
     }
     
     var fulled: Bool {
-        let threshold = 10//self.containerQueueCacheCountThreshold
+        let threshold = self.containerQueueCacheCountThreshold
         return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)
     }
     
