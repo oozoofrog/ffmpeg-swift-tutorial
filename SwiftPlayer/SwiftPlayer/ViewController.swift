@@ -19,8 +19,8 @@ class ViewController: UIViewController {
         
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         if let path = self.path, 0 < path.lengthOfBytes(using: .utf8) {
             self.player = Player(path: path)

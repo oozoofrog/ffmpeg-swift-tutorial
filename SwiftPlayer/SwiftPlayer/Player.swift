@@ -150,7 +150,6 @@ public class Player: Operation {
                             self.displayLink?.isPaused = true
                             self.displayLink?.invalidate()
                             SDL_Quit()
-                            exit(1)
                         })
                     })
                     break event_loop
@@ -219,7 +218,7 @@ public class Player: Operation {
                         }
                         
                         self.audioState?.filter_helper?.input(frame)
-                        let audioBuffer = NSMutableData()
+                        //let audioBuffer = NSMutableData()
                         while true {
                             if self.audioState?.filter_helper?.output(self.audioState?.audio_filtered_frame) ?? true {
                                 break
@@ -227,19 +226,21 @@ public class Player: Operation {
                             guard let data = self.audioState?.audio_filtered_frame?.pointee.data.0, let len = self.audioState?.audio_filtered_frame?.pointee.linesize.0 else {
                                 break
                             }
-                            audioBuffer.append(data, length: Int(len))
+                            //audioBuffer.append(data, length: Int(len))
+                            
+                            
+                            let pcm_buf = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: (AVAudioFrameCount(len) / self.audioFormat!.streamDescription.pointee.mBytesPerFrame))
+                            
+                            pcm_buf.frameLength = pcm_buf.frameCapacity / 2
+                            let channels = UnsafeBufferPointer.init(start: pcm_buf.floatChannelData, count: Int(pcm_buf.format.channelCount))
+                            vDSP_vclr(channels[0], 1, vDSP_Length(pcm_buf.frameLength))
+                            vDSP_vclr(channels[1], 1, vDSP_Length(pcm_buf.frameLength))
+                            let f_buf = data.withMemoryRebound(to: Float.self, capacity: Int(pcm_buf.frameCapacity)){$0}
+                            vDSP_vadd(channels[0], 1, f_buf, 2, channels[0], 1, vDSP_Length(pcm_buf.frameLength))
+                            vDSP_vadd(channels[1], 1, f_buf.advanced(by: 1), 2, channels[1], 1, vDSP_Length(pcm_buf.frameLength))
+                            
+                            self.audioPlayer?.scheduleBuffer(pcm_buf, completionHandler:nil)
                         }
-                        
-                        let pcm_buf = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: (AVAudioFrameCount(audioBuffer.length) / self.audioFormat!.streamDescription.pointee.mBytesPerFrame))
-                       
-                        pcm_buf.frameLength = pcm_buf.frameCapacity / 2
-                        let channels = UnsafeBufferPointer.init(start: pcm_buf.floatChannelData, count: Int(pcm_buf.format.channelCount))
-                        vDSP_vclr(channels[0], 1, vDSP_Length(pcm_buf.frameLength))
-                        vDSP_vclr(channels[1], 1, vDSP_Length(pcm_buf.frameLength))
-                        vDSP_vadd(channels[0], 1, audioBuffer.bytes.assumingMemoryBound(to: Float.self), 2, channels[0], 1, vDSP_Length(pcm_buf.frameLength))
-                        vDSP_vadd(channels[1], 1, audioBuffer.bytes.assumingMemoryBound(to: Float.self).advanced(by: 1), 2, channels[1], 1, vDSP_Length(pcm_buf.frameLength))
-                        
-                        self.audioPlayer?.scheduleBuffer(pcm_buf, completionHandler:nil)
                     }
                 }
             }

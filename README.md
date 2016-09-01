@@ -3,6 +3,9 @@
 >$ git submodule init<br/>
 >$ ./FFmpeg-iOS-build-script/build-ffmpeg.sh
 
+###2016.09.01
+- use Accelerate for copy audio stream
+
 ###add SwiftPlayer project
 - Using AVAudioEngine, and exclude SDL audio
 - syncing with CADisplayLink, DispatchQueue, DispatchSemaphore
