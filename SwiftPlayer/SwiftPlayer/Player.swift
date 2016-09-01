@@ -123,8 +123,6 @@ public class Player: Operation {
         
         self.startEventPulling()
         self.decodeFrames()
-        
-        self.startDisplayLink()
     }
     
     func startDisplayLink() {
@@ -183,7 +181,7 @@ public class Player: Operation {
     
     var got_frame: Int32 = 0
     var length: Int32 = 0
-    
+    var audioStarted: Bool = false
     func decodeFrames() {
         decode_queue.async {
             defer {
@@ -191,7 +189,7 @@ public class Player: Operation {
             }
             
             decode: while true {
-                if self.videoQueue?.fulled ?? true {
+                if self.videoQueue?.fulled ?? true && self.audioStarted {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -218,7 +216,6 @@ public class Player: Operation {
                         }
                         
                         self.audioState?.filter_helper?.input(frame)
-                        //let audioBuffer = NSMutableData()
                         while true {
                             if self.audioState?.filter_helper?.output(self.audioState?.audio_filtered_frame) ?? true {
                                 break
@@ -226,8 +223,6 @@ public class Player: Operation {
                             guard let data = self.audioState?.audio_filtered_frame?.pointee.data.0, let len = self.audioState?.audio_filtered_frame?.pointee.linesize.0 else {
                                 break
                             }
-                            //audioBuffer.append(data, length: Int(len))
-                            
                             
                             let pcm_buf = AVAudioPCMBuffer(pcmFormat: self.audioFormat!, frameCapacity: (AVAudioFrameCount(len) / self.audioFormat!.streamDescription.pointee.mBytesPerFrame))
                             
@@ -239,7 +234,14 @@ public class Player: Operation {
                             vDSP_vadd(channels[0], 1, f_buf, 2, channels[0], 1, vDSP_Length(pcm_buf.frameLength))
                             vDSP_vadd(channels[1], 1, f_buf.advanced(by: 1), 2, channels[1], 1, vDSP_Length(pcm_buf.frameLength))
                             
-                            self.audioPlayer?.scheduleBuffer(pcm_buf, completionHandler:nil)
+                            self.audioPlayer.scheduleBuffer(pcm_buf, completionHandler: {
+                                if false == self.audioStarted {
+                                    DispatchQueue.main.async {
+                                        self.startDisplayLink()
+                                        self.audioStarted = true
+                                    }
+                                }
+                            })
                         }
                     }
                 }
@@ -373,48 +375,45 @@ public class Player: Operation {
         print("🤔 audio media reset -> " + noti.description)
     }
     
-    var audioEngine: AVAudioEngine?
-    var audioPlayer: AVAudioPlayerNode?
-    var audioFormat: AVAudioFormat?
+    let audioEngine: AVAudioEngine = AVAudioEngine()
+    let audioPlayer: AVAudioPlayerNode = AVAudioPlayerNode()
+    var audioFormat: AVAudioFormat!
     
     func setupAudio() -> Bool {
         let audioSession = AVAudioSession.sharedInstance()
         
-        let ioBufferDuration = 128 * AUDIO_OUTPUT_SAMPLE_RATE
         do {
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-            try audioSession.setPreferredIOBufferDuration(TimeInterval(ioBufferDuration))
             try audioSession.setActive(true)
         } catch let err as NSError {
             assertionFailure(err.localizedDescription)
             return false
         }
         
-        audioEngine = AVAudioEngine()
-        audioPlayer = AVAudioPlayerNode()
+        audioEngine.attach(audioPlayer)
         
-        audioEngine?.attach(audioPlayer!)
+        let timePitch = AVAudioUnitTimePitch()
+        timePitch.rate = 2
         
-        let mixer = audioEngine?.mainMixerNode
-        mixer!.outputVolume = 1.0
+        audioEngine.attach(timePitch)
+        
+        let mixer = audioEngine.mainMixerNode
+        mixer.outputVolume = 1.0
         
         audioFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(AUDIO_OUTPUT_SAMPLE_RATE), channels: 2, interleaved: false)
-        audioEngine!.connect(audioPlayer!, to: mixer!, format: audioFormat)
+        audioEngine.connect(audioPlayer, to: mixer, format: audioFormat)
+        //audioEngine.connect(timePitch, to: mixer, format: audioFormat)
         
-        if audioEngine!.isRunning {
-            return true
-        }
-        
-        audioEngine!.prepare()
+        audioEngine.prepare()
         
         do {
-            try audioEngine!.start()
+            try audioEngine.start()
         } catch let err as NSError {
             assertionFailure(err.localizedDescription)
             return false
         }
         
-        audioPlayer!.play()
+        audioPlayer.play()
         return true
     }
     

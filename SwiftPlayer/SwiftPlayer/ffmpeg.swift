@@ -38,7 +38,7 @@ struct AVFrameQueue {
     var time_base: AVRational
     
     var containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?>
-    let containerQueueCount: Int = 100
+    let containerQueueCount: Int = 1024
     var containerQueueCacheCountThreshold: Int { return max(1, self.containerQueueCount / 5) }
 
     var queue: DispatchQueue
@@ -67,7 +67,7 @@ struct AVFrameQueue {
     }
     
     var fulled: Bool {
-        let threshold = self.containerQueueCacheCountThreshold
+        let threshold = 10//self.containerQueueCacheCountThreshold
         return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)
     }
     
