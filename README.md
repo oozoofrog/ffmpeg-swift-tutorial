@@ -5,6 +5,8 @@
 
 ###2016.09.01
 - use Accelerate for copy audio stream
+- stop using AVFilter
+- AVAudioEngine playing with Float Planar audio format
 
 ###add SwiftPlayer project
 - Using AVAudioEngine, and exclude SDL audio
