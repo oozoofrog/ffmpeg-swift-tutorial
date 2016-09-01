@@ -14,7 +14,7 @@ import UIKit
 import Accelerate
 
 extension AVAudioPlayerNode {
-    func schedule(format: AVAudioFormat, left: UnsafePointer<UInt8>, right: UnsafePointer<UInt8>, bufferLength: Int) {
+    func schedule(format: AVAudioFormat, left: UnsafePointer<UInt8>, right: UnsafePointer<UInt8>, bufferLength: Int, completion: AVAudioNodeCompletionHandler? ) {
         let lbuf = left.withMemoryRebound(to: Float.self, capacity: bufferLength / MemoryLayout<Float>.size){$0}
         let rbuf = right.withMemoryRebound(to: Float.self, capacity: bufferLength / MemoryLayout<Float>.size){$0}
         let pcm_buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(bufferLength / MemoryLayout<Float>.size))
@@ -26,7 +26,7 @@ extension AVAudioPlayerNode {
         vDSP_vclr(channels[1], 1, vDSP_Length(pcm_buf.frameLength))
         vDSP_vadd(channels[0], 1, lbuf, 1, channels[0], 1, vDSP_Length(pcm_buf.frameLength))
         vDSP_vadd(channels[1], 1, rbuf, 1, channels[1], 1, vDSP_Length(pcm_buf.frameLength))
-        self.scheduleBuffer(pcm_buf, completionHandler:nil)
+        self.scheduleBuffer(pcm_buf, completionHandler:completion)
     }
 }
 
@@ -86,7 +86,6 @@ public class Player: Operation {
         self.startEventPulling()
         self.decodeFrames()
         
-        self.startDisplayLink()
     }
     
     func startDisplayLink() {
@@ -149,15 +148,14 @@ public class Player: Operation {
     
     var got_frame: Int32 = 0
     var length: Int32 = 0
-    
+ 
     func decodeFrames() {
         decode_queue.async {
             defer {
                 print("👏🏽 decode finished")
             }
-            
             decode: while true {
-                if self.videoQueue?.fulled ?? true {
+                if false == self.displayLink?.isPaused && self.videoQueue?.fulled ?? true {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -189,16 +187,24 @@ public class Player: Operation {
                         let len = Int(aframe.pointee.linesize.0)
                         
                         if let lbuf = aframe.pointee.data.0, let rbuf = aframe.pointee.data.1, 0 < self.audioPlayers.count {
-                            self.audioPlayers[0].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len)
+                            self.audioPlayers[0].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
                         }
                         if let lbuf = aframe.pointee.data.2, let rbuf = aframe.pointee.data.3, 1 < self.audioPlayers.count {
-                            self.audioPlayers[1].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len)
+                            self.audioPlayers[1].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
                         }
                         if let lbuf = aframe.pointee.data.4, let rbuf = aframe.pointee.data.5, 2 < self.audioPlayers.count {
-                            self.audioPlayers[2].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len)
+                            self.audioPlayers[2].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
                         }
                         if let lbuf = aframe.pointee.data.6, let rbuf = aframe.pointee.data.7, 3 < self.audioPlayers.count {
-                            self.audioPlayers[3].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len)
+                            self.audioPlayers[3].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
+                        }
+                        
+                        if self.displayLink?.isPaused ?? true {
+                            DispatchQueue.main.async {
+                                if self.displayLink?.isPaused ?? true {
+                                    self.startDisplayLink()
+                                }
+                            }
                         }
                     }
                 }
@@ -324,6 +330,7 @@ public class Player: Operation {
     
     let audioEngine: AVAudioEngine = AVAudioEngine()
     var audioFormat: AVAudioFormat?
+    
     var audioPlayers: [AVAudioPlayerNode] = []
     
     func setupAudio() -> Bool {
@@ -341,12 +348,15 @@ public class Player: Operation {
         
         let mixer = audioEngine.mainMixerNode
         mixer.outputVolume = 1.0
-        
+//        let effect = AVAudioUnitTimePitch()
+//        effect.pitch = 1000
+//        audioEngine.attach(effect)
         for i in 0..<Int(self.audioContext!.pointee.channels / 2) {
             self.audioPlayers.append(AVAudioPlayerNode())
             audioEngine.attach(self.audioPlayers[i])
             audioEngine.connect(self.audioPlayers[i], to: mixer, format: audioFormat)
         }
+//        audioEngine.connect(effect, to: mixer, format: audioFormat)
         
         audioEngine.prepare()
         
