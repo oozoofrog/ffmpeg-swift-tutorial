@@ -26,13 +26,6 @@
 		D848FE7C1D745F4D0058E322 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D848FE7A1D745F4D0058E322 /* Main.storyboard */; };
 		D848FE7E1D745F4D0058E322 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D848FE7D1D745F4D0058E322 /* Assets.xcassets */; };
 		D848FE811D745F4D0058E322 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D848FE7F1D745F4D0058E322 /* LaunchScreen.storyboard */; };
-		D848FE961D745F980058E322 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE8F1D745F980058E322 /* libavcodec.a */; };
-		D848FE971D745F980058E322 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE901D745F980058E322 /* libavdevice.a */; };
-		D848FE981D745F980058E322 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE911D745F980058E322 /* libavfilter.a */; };
-		D848FE991D745F980058E322 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE921D745F980058E322 /* libavformat.a */; };
-		D848FE9A1D745F980058E322 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE931D745F980058E322 /* libavutil.a */; };
-		D848FE9B1D745F980058E322 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE941D745F980058E322 /* libswresample.a */; };
-		D848FE9C1D745F980058E322 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE951D745F980058E322 /* libswscale.a */; };
 		D848FE9E1D745FA90058E322 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FE9D1D745FA90058E322 /* libSDL2.a */; };
 		D848FEA91D7461720058E322 /* SDL.m in Sources */ = {isa = PBXBuildFile; fileRef = D848FEA81D7461720058E322 /* SDL.m */; };
 		D848FEAB1D7462F50058E322 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = D848FEAA1D7462F50058E322 /* Player.swift */; };
@@ -41,6 +34,13 @@
 		D848FEB31D74639E0058E322 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB01D74639E0058E322 /* AudioToolbox.framework */; };
 		D848FEB41D74639E0058E322 /* MediaToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB11D74639E0058E322 /* MediaToolbox.framework */; };
 		D848FEB51D74639E0058E322 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D848FEB21D74639E0058E322 /* VideoToolbox.framework */; };
+		D84F81891D7868D5008C1804 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81821D7868D5008C1804 /* libavcodec.a */; };
+		D84F818A1D7868D5008C1804 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81831D7868D5008C1804 /* libavdevice.a */; };
+		D84F818B1D7868D5008C1804 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81841D7868D5008C1804 /* libavfilter.a */; };
+		D84F818C1D7868D5008C1804 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81851D7868D5008C1804 /* libavformat.a */; };
+		D84F818D1D7868D5008C1804 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81861D7868D5008C1804 /* libavutil.a */; };
+		D84F818E1D7868D5008C1804 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81871D7868D5008C1804 /* libswresample.a */; };
+		D84F818F1D7868D5008C1804 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84F81881D7868D5008C1804 /* libswscale.a */; };
 		D85ABD111D7463DF00B8954C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD101D7463DF00B8954C /* CoreMotion.framework */; };
 		D85ABD131D74640600B8954C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D85ABD121D74640600B8954C /* GameController.framework */; };
 		D8B3BF261D75B2B00009B509 /* AVFilterHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B3BF251D75B2B00009B509 /* AVFilterHelper.m */; };
@@ -77,7 +77,6 @@
 		D848FE941D745F980058E322 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libswresample.a"; sourceTree = "<group>"; };
 		D848FE951D745F980058E322 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = "../FFmpeg-iOS-build-script/FFmpeg-iOS/lib/libswscale.a"; sourceTree = "<group>"; };
 		D848FE9D1D745FA90058E322 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../SDL-iOS/lib/libSDL2.a"; sourceTree = "<group>"; };
-		D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "FFmpeg-iOS-build-script"; path = "../../FFmpeg-iOS-build-script"; sourceTree = "<group>"; };
 		D848FEA01D745FBE0058E322 /* SDL-iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SDL-iOS"; path = "../../SDL-iOS"; sourceTree = "<group>"; };
 		D848FEA61D7461710058E322 /* SwiftPlayer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftPlayer-Bridging-Header.h"; sourceTree = "<group>"; };
 		D848FEA71D7461720058E322 /* SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL.h; sourceTree = "<group>"; };
@@ -88,6 +87,13 @@
 		D848FEB01D74639E0058E322 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		D848FEB11D74639E0058E322 /* MediaToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaToolbox.framework; path = System/Library/Frameworks/MediaToolbox.framework; sourceTree = SDKROOT; };
 		D848FEB21D74639E0058E322 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
+		D84F81821D7868D5008C1804 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../ffmpeg/lib/libavcodec.a; sourceTree = "<group>"; };
+		D84F81831D7868D5008C1804 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = ../ffmpeg/lib/libavdevice.a; sourceTree = "<group>"; };
+		D84F81841D7868D5008C1804 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = ../ffmpeg/lib/libavfilter.a; sourceTree = "<group>"; };
+		D84F81851D7868D5008C1804 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ../ffmpeg/lib/libavformat.a; sourceTree = "<group>"; };
+		D84F81861D7868D5008C1804 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = ../ffmpeg/lib/libavutil.a; sourceTree = "<group>"; };
+		D84F81871D7868D5008C1804 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = ../ffmpeg/lib/libswresample.a; sourceTree = "<group>"; };
+		D84F81881D7868D5008C1804 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = ../ffmpeg/lib/libswscale.a; sourceTree = "<group>"; };
 		D85ABD101D7463DF00B8954C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		D85ABD121D74640600B8954C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		D88DC6BF1D772264005862E4 /* ffmpeg.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = ffmpeg.map; path = ../../ffmpeg.map; sourceTree = "<group>"; };
@@ -101,6 +107,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D84F81891D7868D5008C1804 /* libavcodec.a in Frameworks */,
+				D84F818A1D7868D5008C1804 /* libavdevice.a in Frameworks */,
+				D84F818B1D7868D5008C1804 /* libavfilter.a in Frameworks */,
+				D84F818C1D7868D5008C1804 /* libavformat.a in Frameworks */,
+				D84F818D1D7868D5008C1804 /* libavutil.a in Frameworks */,
+				D84F818E1D7868D5008C1804 /* libswresample.a in Frameworks */,
+				D84F818F1D7868D5008C1804 /* libswscale.a in Frameworks */,
 				A9534E991D77AF6C00411FC9 /* Accelerate.framework in Frameworks */,
 				A9314A781D75121F00EC253A /* CoreFoundation.framework in Frameworks */,
 				A9314A791D75121F00EC253A /* Foundation.framework in Frameworks */,
@@ -118,13 +131,6 @@
 				D848FEAE1D7463950058E322 /* CoreAudio.framework in Frameworks */,
 				D848FEAF1D7463950058E322 /* CoreAudioKit.framework in Frameworks */,
 				D848FE9E1D745FA90058E322 /* libSDL2.a in Frameworks */,
-				D848FE961D745F980058E322 /* libavcodec.a in Frameworks */,
-				D848FE971D745F980058E322 /* libavdevice.a in Frameworks */,
-				D848FE981D745F980058E322 /* libavfilter.a in Frameworks */,
-				D848FE991D745F980058E322 /* libavformat.a in Frameworks */,
-				D848FE9A1D745F980058E322 /* libavutil.a in Frameworks */,
-				D848FE9B1D745F980058E322 /* libswresample.a in Frameworks */,
-				D848FE9C1D745F980058E322 /* libswscale.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -154,7 +160,6 @@
 				A9534E9A1D77BC2400411FC9 /* README.md */,
 				D88DC6BF1D772264005862E4 /* ffmpeg.map */,
 				D88DC6C01D772264005862E4 /* sdl.map */,
-				D848FE9F1D745FBE0058E322 /* FFmpeg-iOS-build-script */,
 				D848FEA01D745FBE0058E322 /* SDL-iOS */,
 				A9314A701D750CF300EC253A /* sample.mp4 */,
 				D848FEA71D7461720058E322 /* SDL.h */,
@@ -180,6 +185,13 @@
 		D848FE8E1D745F980058E322 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D84F81821D7868D5008C1804 /* libavcodec.a */,
+				D84F81831D7868D5008C1804 /* libavdevice.a */,
+				D84F81841D7868D5008C1804 /* libavfilter.a */,
+				D84F81851D7868D5008C1804 /* libavformat.a */,
+				D84F81861D7868D5008C1804 /* libavutil.a */,
+				D84F81871D7868D5008C1804 /* libswresample.a */,
+				D84F81881D7868D5008C1804 /* libswscale.a */,
 				A9534E981D77AF6C00411FC9 /* Accelerate.framework */,
 				A9314A761D75121F00EC253A /* CoreFoundation.framework */,
 				A9314A771D75121F00EC253A /* Foundation.framework */,
@@ -297,7 +309,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp $SRCROOT/../ffmpeg.map $SRCROOT/../FFmpeg-iOS-build-script/FFmpeg-iOS/include/module.map\ncp $SRCROOT/../sdl.map $SRCROOT/../SDL-iOS/include/module.map";
+			shellScript = "cp $SRCROOT/../ffmpeg.map $SRCROOT/../ffmpeg/include/module.map\ncp $SRCROOT/../sdl.map $SRCROOT/../SDL-iOS/include/module.map";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -440,14 +452,14 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = HY47J4787Q;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include\"",
+					"\"$(SRCROOT)/../ffmpeg/include\"",
 					"\"$(SRCROOT)/../SDL-iOS/include\"",
 				);
 				INFOPLIST_FILE = SwiftPlayer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/lib\"",
+					"\"$(SRCROOT)/../ffmpeg/lib\"",
 					"\"$(SRCROOT)/../SDL-iOS/lib\"",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ngenii.SwiftPlayer;
@@ -465,14 +477,14 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = HY47J4787Q;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/include\"",
+					"\"$(SRCROOT)/../ffmpeg/include\"",
 					"\"$(SRCROOT)/../SDL-iOS/include\"",
 				);
 				INFOPLIST_FILE = SwiftPlayer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../FFmpeg-iOS-build-script/FFmpeg-iOS/lib\"",
+					"\"$(SRCROOT)/../ffmpeg/lib\"",
 					"\"$(SRCROOT)/../SDL-iOS/lib\"",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ngenii.SwiftPlayer;

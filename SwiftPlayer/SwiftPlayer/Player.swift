@@ -30,55 +30,6 @@ extension AVAudioPlayerNode {
     }
 }
 
-struct AudioState {
-    var audioContex: UnsafeMutablePointer<AVCodecContext>?
-    var audio_filtered_frame: UnsafeMutablePointer<AVFrame>?
-    var filter_helper: AVFilterHelper?
-    let audioQueue: AudioQueue = AudioQueue()
-}
-
-class AudioQueue {
-    let buffer = NSMutableData()
-    var rpos = 0
-    
-    var lock: DispatchSemaphore = DispatchSemaphore(value: 1)
-    
-    func write(write_buffer: UnsafeMutablePointer<UInt8>?, length: Int) {
-        self.wait()
-
-        if let buf = write_buffer {
-            buffer.append(buf, length: length)
-        }
-        
-        self.signal()
-    }
-    
-    func read(read_buffer: UnsafeMutablePointer<UInt8>?, length: Int, reads: inout Int) {
-        self.wait()
-        
-        if let buf = read_buffer {
-            let readLength = buffer.length > rpos ? min(buffer.length - rpos, length) : 0
-            
-            buffer.getBytes(buf, range: NSRange(location: rpos, length: readLength))
-                
-            reads = readLength
-            rpos += readLength
-        } else {
-            reads = 0
-        }
-        
-        self.signal()
-    }
-    
-    func wait() {
-        lock.wait()
-    }
-    
-    func signal() {
-        lock.signal()
-    }
-}
-
 public class Player: Operation {
     
     public let capture_queue = DispatchQueue(label: "capture", qos: DispatchQoS.userInteractive, attributes: DispatchQueue.Attributes.concurrent, autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit)
@@ -303,10 +254,7 @@ public class Player: Operation {
     public var audioCodec: UnsafeMutablePointer<AVCodec>?
     public var audioContext: UnsafeMutablePointer<AVCodecContext>?
     
-    public var audioFilterHelper: AVFilterHelper?
-    
     var videoQueue: AVFrameQueue?
-    var audioState: AudioState?
     
     //MARK: - setupFFmpeg
     private func setupFFmpeg() -> Bool {
@@ -359,22 +307,6 @@ public class Player: Operation {
             return false
         }
         
-        let helper = AVFilterHelper.audioHelper(
-            withSampleRate: audioContext!.pointee.sample_rate,
-            in: audioContext!.pointee.sample_fmt,
-            inChannelLayout: Int32(audioContext!.pointee.channel_layout),
-            inChannels: audioContext!.pointee.channels,
-            outSampleFormats: AV_SAMPLE_FMT_FLT,
-            outSampleRates: 44100,
-            outChannelLayouts: (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT),
-            outChannels:2,
-            timeBase: audioStream!.pointee.time_base, context: audioContext!)
-        self.audioFilterHelper = helper
-        self.audioState = AudioState()
-        self.audioState?.audioContex = audioContext
-        self.audioState?.filter_helper = helper
-        self.audioState?.audio_filtered_frame = av_frame_alloc()
-        
         return true
     }
     
@@ -410,7 +342,7 @@ public class Player: Operation {
         let mixer = audioEngine.mainMixerNode
         mixer.outputVolume = 1.0
         
-        for i in 0..<Int(self.audioContext!.pointee.channels/2) {
+        for i in 0..<Int(self.audioContext!.pointee.channels / 2) {
             self.audioPlayers.append(AVAudioPlayerNode())
             audioEngine.attach(self.audioPlayers[i])
             audioEngine.connect(self.audioPlayers[i], to: mixer, format: audioFormat)
