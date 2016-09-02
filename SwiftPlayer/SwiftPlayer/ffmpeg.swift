@@ -46,7 +46,7 @@ struct AVFrameQueue {
     var time_base: AVRational
     
     var containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?>
-    let containerQueueCount: Int = 1024
+    let containerQueueCount: Int
     var containerQueueCacheCountThreshold: Int { return max(1, self.containerQueueCount / 5) }
 
     var queue: DispatchQueue
@@ -55,7 +55,8 @@ struct AVFrameQueue {
     var rindex = 0
     
     
-    init(time_base: AVRational) {
+    init(queueCount: Int = 1024, time_base: AVRational) {
+        self.containerQueueCount = queueCount
         self.queue = DispatchQueue(label: "queue", qos: .utility)
         self.queue_lock = DispatchSemaphore(value: 0)
         self.time_base = time_base
@@ -77,6 +78,14 @@ struct AVFrameQueue {
     var fulled: Bool {
         let threshold = self.containerQueueCacheCountThreshold
         return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)
+    }
+    
+    var readTimeStamp: Double {
+        var timestamp: Double = 0
+        queue.sync {
+            timestamp = self.containerQueue[rindex]?.pointee.time(time_base: self.time_base) ?? 0
+        }
+        return timestamp
     }
     
     mutating func write(frame: UnsafeMutablePointer<AVFrame>, completion: () -> Void) {

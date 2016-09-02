@@ -86,6 +86,8 @@ public class Player: Operation {
         self.decodeFrames()
         
         self.completion?()
+        
+        self.startAudioPlay()
     }
     
     
@@ -95,6 +97,31 @@ public class Player: Operation {
         self.videoQueue?.read(time: time, handle: { (frame) in
             decodeCompletion(frame.pointee.data.0!, frame.pointee.data.1!, frame.pointee.data.2!, Int(frame.pointee.linesize.0))
         })
+    }
+    
+    lazy var audioPlayQueue: DispatchQueue? = DispatchQueue(label: "audio.queue", qos: .background)
+    private func startAudioPlay() {
+        audioPlayQueue?.async {
+            while true {
+                self.audioQueue?.read(handle: { (aframe) in
+                    let len = Int(aframe.pointee.linesize.0)
+                    let datas = aframe.pointee.datas
+                    let dataCount = datas.reduce(0, { (result, ptr) -> Int in
+                        return nil != ptr ? result + 1 : result
+                    })
+                    for playerIndex in 0..<(dataCount / 2) {
+                        self.audioPlayers[playerIndex].schedule(format: self.audioFormat!, left: datas[playerIndex * 2]!, right: datas[playerIndex * 2 + 1]!, bufferLength: len, completion: nil)
+                    }
+                    if 1 == dataCount % 2 {
+                        let player = dataCount / 2 + 1
+                        let l = player * 2
+                        let r = l
+                        self.audioPlayers[player].schedule(format: self.audioFormat!, left: datas[l]!, right: datas[r]!, bufferLength: len, completion: nil)
+                    }
+                })
+            }
+        }
+   
     }
     
     let pkt = av_packet_alloc()
@@ -114,7 +141,7 @@ public class Player: Operation {
                 if self.isCancelled {
                     break
                 }
-                if self.videoQueue?.fulled ?? true {
+                if self.videoQueue!.fulled || self.audioQueue!.fulled {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -139,24 +166,9 @@ public class Player: Operation {
                             print_err(ret)
                             continue
                         }
-                        guard let aframe = self.aframe else {
-                            break decode
-                        }
-                        
-                        let len = Int(aframe.pointee.linesize.0)
-                        let datas = aframe.pointee.datas
-                        let dataCount = datas.reduce(0, { (result, ptr) -> Int in
-                            return nil != ptr ? result + 1 : result
+                        self.audioQueue?.write(frame: self.aframe!, completion: {
+                            av_frame_unref(self.aframe)
                         })
-                        for playerIndex in 0..<(dataCount / 2) {
-                            self.audioPlayers[playerIndex].schedule(format: self.audioFormat!, left: datas[playerIndex * 2]!, right: datas[playerIndex * 2 + 1]!, bufferLength: len, completion: nil)
-                        }
-                        if 1 == dataCount % 2 {
-                            let player = dataCount / 2 + 1
-                            let l = player * 2
-                            let r = l
-                            self.audioPlayers[player].schedule(format: self.audioFormat!, left: datas[l]!, right: datas[r]!, bufferLength: len, completion: nil)
-                        }
                     }
                 }
             }
@@ -210,6 +222,7 @@ public class Player: Operation {
     public var audioContext: UnsafeMutablePointer<AVCodecContext>?
     
     var videoQueue: AVFrameQueue?
+    var audioQueue: AVFrameQueue?
     
     //MARK: - setupFFmpeg
     private func setupFFmpeg() -> Bool {
@@ -255,7 +268,7 @@ public class Player: Operation {
         audioContext?.pointee.coded_width = audioStream?.pointee.codec.pointee.coded_width ?? 0
         audioContext?.pointee.coded_height = audioStream?.pointee.codec.pointee.coded_height ?? 0
         audioContext?.pointee.time_base = audioStream?.pointee.time_base ?? AVRational()
-        
+        audioQueue = AVFrameQueue(queueCount: 1024 * 1024, time_base: audioStream!.pointee.time_base)
         
         guard 0 <= avcodec_open2(audioContext, audioCodec, nil) else {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(audioContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
