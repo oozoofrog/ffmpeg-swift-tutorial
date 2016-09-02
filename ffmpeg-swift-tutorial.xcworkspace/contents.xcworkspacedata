@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:tutorial/tutorial.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:SwiftPlayer/SwiftPlayer.xcodeproj">
    </FileRef>
 </Workspace>
