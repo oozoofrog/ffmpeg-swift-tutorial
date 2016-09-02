@@ -4,7 +4,10 @@
 >$ ./FFmpeg-iOS-build-script/build-ffmpeg.sh
 
 ###2016.09.02
-- pull out SDL from Player.swift and doing update video on ViewController.swift 
+- pull out SDL from Player.swift and doing update video on ViewController.swift
+- resolve thread dead races
+- resolve memory leaks
+- reduce memory usage
 
 ###2016.09.01
 - use Accelerate for copy audio stream

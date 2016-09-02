@@ -119,6 +119,7 @@ public class Player: Operation {
                     let dataCount = datas.reduce(0, { (result, ptr) -> Int in
                         return nil != ptr ? result + 1 : result
                     })
+                    
                     for playerIndex in 0..<(dataCount / 2) {
                         self.audioPlayers[playerIndex].schedule(format: self.audioFormat!, left: datas[playerIndex * 2]!, right: datas[playerIndex * 2 + 1]!, bufferLength: len, completion: nil)
                     }
@@ -151,7 +152,7 @@ public class Player: Operation {
                 if self.audioQueue?.stopped() ?? true || self.videoQueue?.stopped() ?? true {
                     break decode
                 }
-                if self.videoQueue!.fulled && self.audioQueue!.fulled {
+                if self.videoQueue!.fulled || self.audioQueue!.fulled {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -266,7 +267,7 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(videoContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
-        videoQueue = AVFrameQueue(time_base: videoStream?.pointee.time_base ?? AVRational())
+        videoQueue = AVFrameQueue(type: AVMEDIA_TYPE_VIDEO, time_base: videoStream?.pointee.time_base ?? AVRational())
         
         audio_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0)
         audioStream = formatContext?.pointee.streams.advanced(by: Int(audio_index)).pointee
@@ -278,7 +279,7 @@ public class Player: Operation {
         audioContext?.pointee.coded_width = audioStream?.pointee.codec.pointee.coded_width ?? 0
         audioContext?.pointee.coded_height = audioStream?.pointee.codec.pointee.coded_height ?? 0
         audioContext?.pointee.time_base = audioStream?.pointee.time_base ?? AVRational()
-        audioQueue = AVFrameQueue(queueCount: 1024, time_base: audioContext!.pointee.time_base)
+        audioQueue = AVFrameQueue(type: AVMEDIA_TYPE_AUDIO, queueCount: 1024, time_base: audioContext!.pointee.time_base)
         
         guard 0 <= avcodec_open2(audioContext, audioCodec, nil) else {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(audioContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
