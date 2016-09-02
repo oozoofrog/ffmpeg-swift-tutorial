@@ -41,26 +41,50 @@ extension AVFrame {
     }
 }
 
-struct AVFrameQueue {
+class AVFrameQueue {
+    
+    private var quit: Bool = false
     
     var time_base: AVRational
     
-    var containerQueue: UnsafeMutablePointer<UnsafeMutablePointer<AVFrame>?>
-    let containerQueueCount: Int
-    var containerQueueCacheCountThreshold: Int { return max(1, self.containerQueueCount / 5) }
+    var containerQueue: [UnsafeMutablePointer<AVFrame>?] = []
+    var containerQueueCount: Int {
+        return containerQueue.count
+    }
+    var containerQueueCacheCountThreshold: Int { return max(1, self.containerQueue.count / 5) }
 
-    var queue: DispatchQueue
-    var queue_lock: DispatchSemaphore
+    let queue: DispatchQueue = DispatchQueue(label: "queue", qos: .utility)
+    let queue_lock: DispatchSemaphore = DispatchSemaphore(value: 1)
     var windex = 0
     var rindex = 0
     
     
     init(queueCount: Int = 1024, time_base: AVRational) {
-        self.containerQueueCount = queueCount
-        self.queue = DispatchQueue(label: "queue", qos: .utility)
-        self.queue_lock = DispatchSemaphore(value: 0)
         self.time_base = time_base
-        self.containerQueue = av_mallocz(MemoryLayout<UnsafeMutablePointer<AVFrame>>.stride * containerQueueCount).assumingMemoryBound(to: Optional<UnsafeMutablePointer<AVFrame>>.self)
+        self.containerQueue = [UnsafeMutablePointer<AVFrame>?](repeating: nil, count: queueCount)
+    }
+    
+    func stop() {
+        lock()
+        defer {
+            unlock()
+        }
+        queue.suspend()
+        self.containerQueue.filter { (ptr) -> Bool in
+            return nil != ptr
+            }.forEach { (ptr) in
+                var ptr = ptr
+                av_frame_free(&ptr)
+        }
+        quit = true
+    }
+    
+    func stopped() -> Bool {
+        lock()
+        defer {
+            unlock()
+        }
+        return quit
     }
     
     func lock() {
@@ -75,51 +99,54 @@ struct AVFrameQueue {
         queue_lock.signal()
     }
     
-    func suspend() {
-        queue_lock.suspend()
-    }
-    
     var fulled: Bool {
+        lock()
+        defer {
+            unlock()
+        }
         let threshold = self.containerQueueCacheCountThreshold
         return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)
     }
     
-    var readTimeStamp: Double {
-        var timestamp: Double = 0
-        queue.sync {
-            timestamp = self.containerQueue[rindex]?.pointee.time(time_base: self.time_base) ?? 0
-        }
-        return timestamp
-    }
+    var readTimeStamp: Double = 0
     
-    mutating func write(frame: UnsafeMutablePointer<AVFrame>, completion: () -> Void) {
-        queue.sync {
-            if nil != self.containerQueue[windex] {
-                av_frame_free(&containerQueue[windex])
+    func write(frame: UnsafeMutablePointer<AVFrame>, completion: @escaping () -> Void) {
+        lock()
+//        queue?.sync {
+            defer {
+                unlock()
             }
-            let cloned = av_frame_clone(frame)
-            containerQueue[windex] = cloned
+            if let writeFrame = self.containerQueue[windex] {
+                av_frame_copy(writeFrame, frame)
+            } else {
+                containerQueue[windex] = av_frame_clone(frame)
+            }
             self.windex += 1
             if windex >= containerQueueCount {
                 self.windex = 0
             }
             completion()
-        }
+//        }
     }
     
-    mutating func read(time: Double = -1, handle: (_ container: UnsafeMutablePointer<AVFrame>) -> Void) {
-        queue.sync(flags: .barrier) { () -> Void in
+    func read(time: Double = -1, handle: @escaping (_ container: UnsafeMutablePointer<AVFrame>) -> Void) {
+        lock()
+//        queue?.sync(flags: .barrier) { () -> Void in
+            defer {
+                unlock()
+            }
             guard let frame = containerQueue[rindex] else {
                 return
             }
+            readTimeStamp = frame.pointee.time(time_base: self.time_base)
             handle(frame)
             if -1 == time || time > frame.pointee.time(time_base: time_base) {
-                av_frame_free(&containerQueue[rindex])
+                av_frame_unref(frame)
                 self.rindex += 1
                 if rindex >= containerQueueCount {
                     self.rindex = 0
                 }
             }
-        }
+//        }
     }
 }

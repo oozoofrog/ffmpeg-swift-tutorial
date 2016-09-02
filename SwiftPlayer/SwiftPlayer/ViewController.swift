@@ -85,7 +85,7 @@ class ViewController: UIViewController {
         
         let screenSize = UIScreen.main.bounds.size
         
-        guard 0 <= SDL_Init(UInt32(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO)) else {
+        guard 0 <= SDL_Init(UInt32(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) else {
             print("SDL_Init: " + String(cString: SDL_GetError()))
             return false
         }

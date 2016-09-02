@@ -37,8 +37,7 @@ public class Player: Operation {
         return CGSize(width: Int(ctx.pointee.width), height: Int(ctx.pointee.height))
     }
     
-    public let capture_queue = DispatchQueue(label: "capture", qos: DispatchQoS.userInteractive, attributes: DispatchQueue.Attributes.concurrent, autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit)
-    public let decode_queue = DispatchQueue(label: "decode", qos: .background, attributes: .concurrent, autoreleaseFrequency: .inherit)
+    lazy var decode_queue: DispatchQueue? = DispatchQueue(label: "decode", qos: .background, attributes: .concurrent, autoreleaseFrequency: .inherit)
     
     
     public var path: String
@@ -65,10 +64,11 @@ public class Player: Operation {
     }
     
     public override func cancel() {
-        self.audioQueue?.suspend()
-        self.videoQueue?.suspend()
+        self.audioQueue?.stop()
+        self.videoQueue?.stop()
         self.audioPlayQueue?.suspend()
-        self.decode_queue.suspend()
+        self.decode_queue?.suspend()
+        self.audioPlayers.forEach(){$0.stop()}
         super.cancel()
     }
     
@@ -108,8 +108,11 @@ public class Player: Operation {
     
     lazy var audioPlayQueue: DispatchQueue? = DispatchQueue(label: "audio.queue", qos: .background)
     private func startAudioPlay() {
-        audioPlayQueue?.async {
+        audioPlayQueue?.async(execute: {
             while false == self.isCancelled {
+                if self.audioQueue?.stopped() ?? true {
+                    break
+                }
                 self.audioQueue?.read(handle: { (aframe) in
                     let len = Int(aframe.pointee.linesize.0)
                     let datas = aframe.pointee.datas
@@ -127,7 +130,7 @@ public class Player: Operation {
                     }
                 })
             }
-        }
+        })
    
     }
     
@@ -140,12 +143,15 @@ public class Player: Operation {
     var length: Int32 = 0
  
     func decodeFrames() {
-        decode_queue.async {
+        decode_queue?.async {
             defer {
                 print("👏🏽 decode finished")
             }
             decode: while false == self.isCancelled {
-                if self.videoQueue!.fulled || self.audioQueue!.fulled {
+                if self.audioQueue?.stopped() ?? true || self.videoQueue?.stopped() ?? true {
+                    break decode
+                }
+                if self.videoQueue!.fulled && self.audioQueue!.fulled {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -272,7 +278,7 @@ public class Player: Operation {
         audioContext?.pointee.coded_width = audioStream?.pointee.codec.pointee.coded_width ?? 0
         audioContext?.pointee.coded_height = audioStream?.pointee.codec.pointee.coded_height ?? 0
         audioContext?.pointee.time_base = audioStream?.pointee.time_base ?? AVRational()
-        audioQueue = AVFrameQueue(queueCount: 1024 * 1024, time_base: audioStream!.pointee.time_base)
+        audioQueue = AVFrameQueue(queueCount: 1024, time_base: audioContext!.pointee.time_base)
         
         guard 0 <= avcodec_open2(audioContext, audioCodec, nil) else {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(audioContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
