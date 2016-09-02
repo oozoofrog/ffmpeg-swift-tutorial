@@ -185,18 +185,18 @@ public class Player: Operation {
                         }
                         
                         let len = Int(aframe.pointee.linesize.0)
-                        
-                        if let lbuf = aframe.pointee.data.0, let rbuf = aframe.pointee.data.1, 0 < self.audioPlayers.count {
-                            self.audioPlayers[0].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
+                        let datas = aframe.pointee.datas
+                        let dataCount = datas.reduce(0, { (result, ptr) -> Int in
+                            return nil != ptr ? result + 1 : result
+                        })
+                        for playerIndex in 0..<(dataCount / 2) {
+                            self.audioPlayers[playerIndex].schedule(format: self.audioFormat!, left: datas[playerIndex * 2]!, right: datas[playerIndex * 2 + 1]!, bufferLength: len, completion: nil)
                         }
-                        if let lbuf = aframe.pointee.data.2, let rbuf = aframe.pointee.data.3, 1 < self.audioPlayers.count {
-                            self.audioPlayers[1].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
-                        }
-                        if let lbuf = aframe.pointee.data.4, let rbuf = aframe.pointee.data.5, 2 < self.audioPlayers.count {
-                            self.audioPlayers[2].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
-                        }
-                        if let lbuf = aframe.pointee.data.6, let rbuf = aframe.pointee.data.7, 3 < self.audioPlayers.count {
-                            self.audioPlayers[3].schedule(format: self.audioFormat!, left: lbuf, right: rbuf, bufferLength: len, completion: nil)
+                        if 1 == dataCount % 2 {
+                            let player = dataCount / 2 + 1
+                            let l = player * 2
+                            let r = l
+                            self.audioPlayers[player].schedule(format: self.audioFormat!, left: datas[l]!, right: datas[r]!, bufferLength: len, completion: nil)
                         }
                         
                         if self.displayLink?.isPaused ?? true {
@@ -348,16 +348,11 @@ public class Player: Operation {
         
         let mixer = audioEngine.mainMixerNode
         mixer.outputVolume = 1.0
-//        let effect = AVAudioUnitTimePitch()
-//        effect.pitch = 1000
-//        audioEngine.attach(effect)
-        for i in 0..<Int(self.audioContext!.pointee.channels / 2) {
+        for i in 0..<Int(self.audioContext!.pointee.channels / 2 + self.audioContext!.pointee.channels % 2) {
             self.audioPlayers.append(AVAudioPlayerNode())
             audioEngine.attach(self.audioPlayers[i])
             audioEngine.connect(self.audioPlayers[i], to: mixer, format: audioFormat)
         }
-//        audioEngine.connect(effect, to: mixer, format: audioFormat)
-        
         audioEngine.prepare()
         
         do {
