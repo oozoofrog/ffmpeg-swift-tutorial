@@ -75,6 +75,10 @@ struct AVFrameQueue {
         queue_lock.signal()
     }
     
+    func suspend() {
+        queue_lock.suspend()
+    }
+    
     var fulled: Bool {
         let threshold = self.containerQueueCacheCountThreshold
         return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)

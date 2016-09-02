@@ -77,6 +77,7 @@ class ViewController: UIViewController {
     
     var videoRect: SDL_Rect = SDL_Rect()
     var dst: SDL_Rect = SDL_Rect()
+    lazy var eventQueue: DispatchQueue? = DispatchQueue(label: "sdl.event.queue")
     
     private func setupSDL(player: Player) -> Bool {
         
@@ -118,6 +119,28 @@ class ViewController: UIViewController {
         }
         
         texture = t
+        
+        eventQueue?.async {
+            var event: SDL_Event = SDL_Event()
+            event_loop: while true {
+                SDL_PollEvent(&event)
+                
+                switch event.type {
+                case SDL_FINGERDOWN.rawValue, SDL_QUIT.rawValue:
+                    DispatchQueue.main.async(execute: {
+                        
+                        self.player?.cancel()
+                        
+                        self.displayLink?.isPaused = true
+                        self.displayLink?.invalidate()
+                        SDL_Quit()
+                    })
+                    break event_loop
+                default:
+                    break
+                }
+            }
+        }
         
         return true
     }

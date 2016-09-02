@@ -64,6 +64,14 @@ public class Player: Operation {
         avformat_close_input(&formatContext)
     }
     
+    public override func cancel() {
+        self.audioQueue?.suspend()
+        self.videoQueue?.suspend()
+        self.audioPlayQueue?.suspend()
+        self.decode_queue.suspend()
+        super.cancel()
+    }
+    
     public typealias PlayerStartCompletionHandle = () -> Void
     var completion: PlayerStartCompletionHandle?
     public func start(completion: PlayerStartCompletionHandle ) {
@@ -90,7 +98,6 @@ public class Player: Operation {
         self.startAudioPlay()
     }
     
-    
     public typealias PlayerDecodeHanlder = (UnsafePointer<UInt8>, UnsafePointer<UInt8>, UnsafePointer<UInt8>, Int) -> Void
     
     public func requestVideoFrame(time: Double, decodeCompletion: PlayerDecodeHanlder) {
@@ -102,7 +109,7 @@ public class Player: Operation {
     lazy var audioPlayQueue: DispatchQueue? = DispatchQueue(label: "audio.queue", qos: .background)
     private func startAudioPlay() {
         audioPlayQueue?.async {
-            while true {
+            while false == self.isCancelled {
                 self.audioQueue?.read(handle: { (aframe) in
                     let len = Int(aframe.pointee.linesize.0)
                     let datas = aframe.pointee.datas
@@ -137,10 +144,7 @@ public class Player: Operation {
             defer {
                 print("👏🏽 decode finished")
             }
-            decode: while true {
-                if self.isCancelled {
-                    break
-                }
+            decode: while false == self.isCancelled {
                 if self.videoQueue!.fulled || self.audioQueue!.fulled {
                     continue
                 }
