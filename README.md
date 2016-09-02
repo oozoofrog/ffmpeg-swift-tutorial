@@ -3,6 +3,9 @@
 >$ git submodule init<br/>
 >$ ./FFmpeg-iOS-build-script/build-ffmpeg.sh
 
+###2016.09.02
+- pull out SDL from Player.swift and doing update video on ViewController.swift 
+
 ###2016.09.01
 - use Accelerate for copy audio stream
 - stop using AVFilter

@@ -34,8 +34,8 @@ extension AVFrame {
     var datas: [UnsafePointer<UInt8>?] {
         var tuple = self.data
         let tuple_ptr = withUnsafePointer(to: &tuple){$0}
-        let float_ptr: UnsafePointer<UnsafePointer<UInt8>?> = UnsafePointer(tuple_ptr.withMemoryRebound(to: (UnsafePointer<UInt8>?.self)!, capacity: 8){$0})
-        let buffer_ptr : UnsafeBufferPointer<UnsafePointer<UInt8>?> = UnsafeBufferPointer.init(start: float_ptr, count: 8)
+        let uint8_ptr: UnsafePointer<UnsafePointer<UInt8>?> = UnsafePointer(tuple_ptr.withMemoryRebound(to: (UnsafePointer<UInt8>?.self)!, capacity: 8){$0})
+        let buffer_ptr : UnsafeBufferPointer<UnsafePointer<UInt8>?> = UnsafeBufferPointer.init(start: uint8_ptr, count: 8)
         let arr = Array(buffer_ptr)
         return arr
     }

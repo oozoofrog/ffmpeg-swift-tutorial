@@ -8,9 +8,7 @@
 
 import Foundation
 import ffmpeg
-import SDL
 import AVFoundation
-import UIKit
 import Accelerate
 
 extension AVAudioPlayerNode {
@@ -32,6 +30,13 @@ extension AVAudioPlayerNode {
 
 public class Player: Operation {
     
+    var videoSize: CGSize {
+        guard let ctx = self.videoContext else {
+            return CGSize()
+        }
+        return CGSize(width: Int(ctx.pointee.width), height: Int(ctx.pointee.height))
+    }
+    
     public let capture_queue = DispatchQueue(label: "capture", qos: DispatchQoS.userInteractive, attributes: DispatchQueue.Attributes.concurrent, autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit)
     public let decode_queue = DispatchQueue(label: "decode", qos: .background, attributes: .concurrent, autoreleaseFrequency: .inherit)
     
@@ -42,9 +47,6 @@ public class Player: Operation {
         
         self.path = path
         super.init()
-        
-        displayLink = CADisplayLink(target: self, selector: #selector(update(link:)))
-        displayLink?.isPaused = true
     }
     
     deinit {
@@ -62,6 +64,13 @@ public class Player: Operation {
         avformat_close_input(&formatContext)
     }
     
+    public typealias PlayerStartCompletionHandle = () -> Void
+    var completion: PlayerStartCompletionHandle?
+    public func start(completion: PlayerStartCompletionHandle ) {
+        self.completion = completion
+        self.start()
+    }
+    
     public override func main() {
         
         guard setupFFmpeg() else {
@@ -69,76 +78,23 @@ public class Player: Operation {
             return
         }
         
-        guard setupSDL() else {
-            print("SDL setup failed")
-            return
-        }
-        
         guard setupAudio() else {
             print("Audio Engine setup failed")
             return
         }
-        
-        let dstRect = AVMakeRect(aspectRatio: CGSize(width: Int(video_rect.w), height: Int(video_rect.h)), insideRect: CGRect(origin: CGPoint(), size: self.screenSize))
-        
-        self.dst_rect = SDL_Rect(x: Int32(dstRect.origin.x), y: Int32(dstRect.origin.y), w: Int32(dstRect.width), h: Int32(dstRect.height))
-        
-        self.startEventPulling()
+
         self.decodeFrames()
         
+        self.completion?()
     }
     
-    func startDisplayLink() {
-        displayLink?.isPaused = false
-        displayLink?.add(to: RunLoop.current, forMode: .commonModes)
-    }
     
-    func stopDisplayLink() {
-        displayLink?.isPaused = true
-        displayLink?.invalidate()
-    }
+    public typealias PlayerDecodeHanlder = (UnsafePointer<UInt8>, UnsafePointer<UInt8>, UnsafePointer<UInt8>, Int) -> Void
     
-    var event = SDL_Event()
-    func startEventPulling() {
-        capture_queue.async {
-            event_loop: while true {
-                SDL_PollEvent(&self.event)
-                
-                switch self.event.type {
-                case SDL_FINGERDOWN.rawValue, SDL_QUIT.rawValue:
-                    self.capture_queue.async(execute: {
-                        DispatchQueue.main.async(execute: {
-                            
-                            self.audioPlayers.forEach(){$0.stop()}
-                            
-                            self.displayLink?.isPaused = true
-                            self.displayLink?.invalidate()
-                            SDL_Quit()
-                        })
-                    })
-                    break event_loop
-                default:
-                    break
-                }
-            }
-        }
-    }
-    
-    //MARK: - display link
-    var displayLink: CADisplayLink?
-    var first: CFTimeInterval = 0
-    func update(link: CADisplayLink) {
-        if 0 == first {
-            first = link.timestamp
-        }
-        
-        videoQueue?.read(time: link.timestamp - first) { (frame) in
-            SDL_UpdateYUVTexture(texture, &video_rect, frame.pointee.data.0, frame.pointee.linesize.0, frame.pointee.data.1, frame.pointee.linesize.1, frame.pointee.data.2, frame.pointee.linesize.2)
-            SDL_RenderClear(renderer)
-            var dst = dst_rect!
-            SDL_RenderCopy(renderer, texture, &video_rect, &dst)
-            SDL_RenderPresent(renderer)
-        }
+    public func requestVideoFrame(time: Double, decodeCompletion: PlayerDecodeHanlder) {
+        self.videoQueue?.read(time: time, handle: { (frame) in
+            decodeCompletion(frame.pointee.data.0!, frame.pointee.data.1!, frame.pointee.data.2!, Int(frame.pointee.linesize.0))
+        })
     }
     
     let pkt = av_packet_alloc()
@@ -155,7 +111,10 @@ public class Player: Operation {
                 print("👏🏽 decode finished")
             }
             decode: while true {
-                if false == self.displayLink?.isPaused && self.videoQueue?.fulled ?? true {
+                if self.isCancelled {
+                    break
+                }
+                if self.videoQueue?.fulled ?? true {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
@@ -198,14 +157,6 @@ public class Player: Operation {
                             let r = l
                             self.audioPlayers[player].schedule(format: self.audioFormat!, left: datas[l]!, right: datas[r]!, bufferLength: len, completion: nil)
                         }
-                        
-                        if self.displayLink?.isPaused ?? true {
-                            DispatchQueue.main.async {
-                                if self.displayLink?.isPaused ?? true {
-                                    self.startDisplayLink()
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -243,7 +194,6 @@ public class Player: Operation {
     }
     
     //MARK: - FFmpeg, SDL
-    public let screenSize: CGSize = UIScreen.main.bounds.size
     
     public var formatContext: UnsafeMutablePointer<AVFormatContext>?
     
@@ -253,7 +203,6 @@ public class Player: Operation {
     public var videoContext: UnsafeMutablePointer<AVCodecContext>?
     
     private(set) lazy var video_rect: SDL_Rect = {return SDL_Rect(x: 0, y: 0, w: self.videoContext?.pointee.width ?? 0, h: self.videoContext?.pointee.height ?? 0)}()
-    private(set) var dst_rect: SDL_Rect!
     
     public var audio_index: Int32 = -1
     public var audioStream: UnsafeMutablePointer<AVStream>?
@@ -363,46 +312,6 @@ public class Player: Operation {
         }
         
         self.audioPlayers.forEach(){$0.play()}
-        
-        return true
-    }
-    
-    //MARK: - setupSDL
-    var window: OpaquePointer!
-    var renderer: OpaquePointer!
-    var texture: OpaquePointer!
-    
-    private func setupSDL() -> Bool {
-        
-        SDL_SetMainReady()
-        
-        guard 0 <= SDL_Init(UInt32(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO)) else {
-            print("SDL_Init: " + String(cString: SDL_GetError()))
-            return false
-        }
-        
-        guard let w = SDL_CreateWindow("SwiftPlayer", 0, 0, Int32(screenSize.width), Int32(screenSize.height), SDL_WINDOW_OPENGL.rawValue | SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_BORDERLESS.rawValue) else {
-            print("SDL_CreateWindow: " + String(cString: SDL_GetError()))
-            return false
-        }
-        
-        window = w
-        
-        guard let r = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED.rawValue | SDL_RENDERER_TARGETTEXTURE.rawValue) else {
-            print("SDL_CreateRenderer: " + String(cString: SDL_GetError()))
-            return false
-        }
-        
-        renderer = r
-        
-        print(video_rect)
-        
-        guard let t = SDL_CreateTexture(renderer, Uint32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_TARGET.rawValue), self.video_rect.w, self.video_rect.h) else {
-            print("SDL_CreateTexture: " + String(cString: SDL_GetError()))
-            return false
-        }
-        
-        texture = t
         
         return true
     }
