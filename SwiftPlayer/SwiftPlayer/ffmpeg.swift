@@ -146,8 +146,8 @@ class AVFrameQueue {
             return
         }
         readTimeStamp = frame.pointee.time(time_base: self.time_base)
-        handle(frame)
-        if -1 == time || time > frame.pointee.time(time_base: time_base) {
+        if -1 == time || time > readTimeStamp {
+            handle(frame)
             av_frame_unref(frame)
             self.rindex += 1
             if rindex >= containerQueueCount {

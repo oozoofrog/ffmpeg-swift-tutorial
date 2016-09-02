@@ -104,6 +104,7 @@ func decode() {
     
     var packetList: AVPacketList?
     let sema = DispatchSemaphore(value: 10)
+    
     decode: while true {
         ret = av_read_frame(pFormat, &packet)
         guard 0 <= ret else {
@@ -116,8 +117,6 @@ func decode() {
         }
         if packet.stream_index == audioStreamIndex {
             sema.wait()
-            let time = Double(packet.dts) * av_q2d(audioCtx!.pointee.time_base)
-            print("packet \(time)")
             ret = avcodec_send_packet(audioCtx, &packet)
             if ret == AVERROR_CONVERT(EAGAIN) {
             } else if 0 > ret {
@@ -125,9 +124,9 @@ func decode() {
                 assertionFailure()
                 break
             }
-            
+            av_packet_unref(&packet)
             ret = avcodec_receive_frame(audioCtx, &frame)
-            print("frame \(Double(av_frame_get_best_effort_timestamp(&frame)) * av_q2d(audioCtx!.pointee.time_base))")
+            
             if ret == AVERROR_CONVERT(EAGAIN) {
                 break
             } else if 0 > ret {
@@ -135,9 +134,8 @@ func decode() {
                 assertionFailure()
                 break decode
             }
-            
-            let buffer = AVAudioPCMBuffer(pcmFormat: audioFormat!, frameCapacity: AVAudioFrameCount(Int(frame.linesize.0) / MemoryLayout<Float>.size))
-            buffer.frameLength = buffer.frameCapacity / 2
+            let buffer = AVAudioPCMBuffer(pcmFormat: audioFormat!, frameCapacity: AVAudioFrameCount(frame.nb_samples))
+            buffer.frameLength = buffer.frameCapacity
             let channels = buffer.floatChannelData!
             let lbuf = frame.data.0!.withMemoryRebound(to: Float.self, capacity: Int(buffer.frameLength)){$0}
             let rbuf = frame.data.1!.withMemoryRebound(to: Float.self, capacity: Int(buffer.frameLength)){$0}
@@ -145,21 +143,27 @@ func decode() {
             let rbuf1 = frame.data.3!.withMemoryRebound(to: Float.self, capacity: Int(buffer.frameLength)){$0}
             let lbuf2 = frame.data.4!.withMemoryRebound(to: Float.self, capacity: Int(buffer.frameLength)){$0}
             let rbuf2 = frame.data.5!.withMemoryRebound(to: Float.self, capacity: Int(buffer.frameLength)){$0}
-            vDSP_vadd((channels[0]), 1, lbuf, 1, (channels[0]), 1, vDSP_Length(buffer.frameLength))
-            vDSP_vadd((channels[1]), 1, rbuf, 1, (channels[1]), 1, vDSP_Length(buffer.frameLength))
+            
+            cblas_scopy(Int32(buffer.frameLength), lbuf, 1, channels[0], 1)
+            cblas_scopy(Int32(buffer.frameLength), rbuf, 1, channels[1], 1)
+            
             vDSP_vadd(channels[0], 1, lbuf1, 1, (channels[0]), 1, vDSP_Length(buffer.frameLength))
             vDSP_vadd(channels[1], 1, rbuf1, 1, (channels[1]), 1, vDSP_Length(buffer.frameLength))
             vDSP_vadd(channels[0], 1, lbuf2, 1, (channels[0]), 1, vDSP_Length(buffer.frameLength))
             vDSP_vadd(channels[1], 1, rbuf2, 1, (channels[1]), 1, vDSP_Length(buffer.frameLength))
             
-            player.scheduleBuffer(buffer, completionHandler: {sema.signal()})
+            player.scheduleBuffer(buffer, at: nil, options: [], completionHandler: {
+                sema.signal()
+            })
             av_frame_unref(&frame)
+        }
+        else {
+            av_packet_unref(&packet)
         }
     }
     
-    while true {
-        
-    }
+    avcodec_send_packet(audioCtx, nil)
+    avcodec_receive_frame(audioCtx, nil)
 }
 
 decode()

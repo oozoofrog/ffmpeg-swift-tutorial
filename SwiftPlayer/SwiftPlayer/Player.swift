@@ -12,20 +12,29 @@ import AVFoundation
 import Accelerate
 
 extension AVAudioPlayerNode {
-    func schedule(at: AVAudioTime? = nil, format: AVAudioFormat, left: UnsafePointer<UInt8>, right: UnsafePointer<UInt8>, bufferLength: Int, completion: AVAudioNodeCompletionHandler? ) {
-        let lbuf = left.withMemoryRebound(to: Float.self, capacity: bufferLength / MemoryLayout<Float>.size){$0}
-        let rbuf = right.withMemoryRebound(to: Float.self, capacity: bufferLength / MemoryLayout<Float>.size){$0}
-        let pcm_buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(bufferLength / MemoryLayout<Float>.size))
-        pcm_buf.frameLength = pcm_buf.frameCapacity / 2
-        guard let channels = pcm_buf.floatChannelData else {
+    func schedule(at: AVAudioTime? = nil, channels c: Int, format: AVAudioFormat, audioDatas: UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?>?, bufferLength len: Int, completion: AVAudioNodeCompletionHandler? ) {
+        guard let datas = audioDatas else {
             return
         }
-        vDSP_vclr(channels[0], 1, vDSP_Length(pcm_buf.frameLength))
-        vDSP_vclr(channels[1], 1, vDSP_Length(pcm_buf.frameLength))
-        vDSP_vadd(channels[0], 1, lbuf, 1, channels[0], 1, vDSP_Length(pcm_buf.frameLength))
-        vDSP_vadd(channels[1], 1, rbuf, 1, channels[1], 1, vDSP_Length(pcm_buf.frameLength))
+        let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(len))
+        buf.frameLength = buf.frameCapacity
+        let channels = buf.floatChannelData
+        for i in 0..<8 {
+            guard let data = datas[i] else {
+                break
+            }
+            guard let channel = channels?[i % c] else {
+                break
+            }
+            let floats = data.withMemoryRebound(to: Float.self, capacity: len){$0}
+            if i < c {
+                cblas_scopy(Int32(len), floats, 1, channel, 1)
+            } else {
+                vDSP_vadd(channel, 1, floats, 1, channel, 1, vDSP_Length(len))
+            }
+        }
         
-        self.scheduleBuffer(pcm_buf, at: at, options: [], completionHandler:completion)
+        self.scheduleBuffer(buf, completionHandler: completion)
     }
 }
 
@@ -69,7 +78,8 @@ public class Player: Operation {
         self.videoQueue?.stop()
         self.audioPlayQueue?.suspend()
         self.decode_queue?.suspend()
-        self.audioPlayers.forEach(){$0.stop()}
+        self.audioPlayer.stop()
+        self.audioEngine.stop()
         super.cancel()
     }
     
@@ -110,28 +120,16 @@ public class Player: Operation {
     lazy var audioPlayQueue: DispatchQueue? = DispatchQueue(label: "audio.queue", qos: .background)
     private func startAudioPlay() {
         audioPlayQueue?.async(execute: {
-            let startTime = mach_absolute_time()
             while false == self.isCancelled {
                 if self.audioQueue?.stopped() ?? true {
                     break
                 }
                 self.audioQueue?.read(handle: { (aframe) in
-                    let start: AVAudioTime? = nil
-                    let len = Int(aframe.pointee.linesize.0)
-                    let datas = aframe.pointee.datas
-                    let dataCount = datas.reduce(0, { (result, ptr) -> Int in
-                        return nil != ptr ? result + 1 : result
+                    let len = Int(aframe.pointee.nb_samples)
+                    let datas = aframe.pointee.extended_data
+                    self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, bufferLength: len, completion: {
+                        
                     })
-                    
-                    for playerIndex in 0..<(dataCount / 2) {
-                        self.audioPlayers[playerIndex].schedule(at: start, format: self.audioFormat!, left: datas[playerIndex * 2]!, right: datas[playerIndex * 2 + 1]!, bufferLength: len, completion: nil)
-                    }
-                    if 1 == dataCount % 2 {
-                        let player = dataCount / 2 + 1
-                        let l = player * 2
-                        let r = l
-                        self.audioPlayers[player].schedule(at: start, format: self.audioFormat!, left: datas[l]!, right: datas[r]!, bufferLength: len, completion: nil)
-                    }
                 })
             }
         })
@@ -150,6 +148,10 @@ public class Player: Operation {
         decode_queue?.async {
             defer {
                 print("👏🏽 decode finished")
+                avcodec_send_packet(self.videoContext, nil)
+                avcodec_receive_frame(self.videoContext, nil)
+                avcodec_send_packet(self.audioContext, nil)
+                avcodec_receive_frame(self.audioContext, nil)
             }
             decode: while false == self.isCancelled {
                 if self.audioQueue?.stopped() ?? true || self.videoQueue?.stopped() ?? true {
@@ -161,27 +163,36 @@ public class Player: Operation {
                 guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
                     break decode
                 }
+                defer {
+                    av_packet_unref(self.pkt)
+                }
                 
                 if let pkt = self.pkt, let frame = self.frame {
                     if pkt.pointee.stream_index == self.video_index, let videoContext = self.videoContext {
                         let ret = self.decode(ctx: videoContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
+                        defer {
+                            av_frame_unref(frame)
+                        }
                         guard 0 <= ret else {
                             print_err(ret)
                             continue
                         }
                         
                         self.videoQueue?.write(frame: frame){
-                            av_frame_unref(frame)
+                            
                         }
                     }
                     else if pkt.pointee.stream_index == self.audio_index, let ctx = self.audioContext {
                         let ret = self.decode(ctx: ctx, packet: pkt, frame: self.aframe, got_frame: &self.got_frame, length: &self.length)
+                        defer {
+                            av_frame_unref(self.aframe)
+                        }
                         guard 0 <= ret else {
                             print_err(ret)
                             continue
                         }
                         self.audioQueue?.write(frame: self.aframe!, completion: {
-                            av_frame_unref(self.aframe)
+                            
                         })
                     }
                 }
@@ -307,7 +318,7 @@ public class Player: Operation {
     let audioEngine: AVAudioEngine = AVAudioEngine()
     var audioFormat: AVAudioFormat?
     
-    var audioPlayers: [AVAudioPlayerNode] = []
+    var audioPlayer: AVAudioPlayerNode = AVAudioPlayerNode()
     
     func setupAudio() -> Bool {
         let audioSession = AVAudioSession.sharedInstance()
@@ -320,15 +331,14 @@ public class Player: Operation {
             return false
         }
         
-        audioFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(self.audioStream!.pointee.codecpar.pointee.sample_rate), channels: 2, interleaved: false)
+        audioFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(self.audioStream!.pointee.codecpar.pointee.sample_rate), channels: AVAudioChannelCount(audioSession.preferredOutputNumberOfChannels), interleaved: false)
         
         let mixer = audioEngine.mainMixerNode
         mixer.outputVolume = 1.0
-        for i in 0..<Int(self.audioContext!.pointee.channels / 2 + self.audioContext!.pointee.channels % 2) {
-            self.audioPlayers.append(AVAudioPlayerNode())
-            audioEngine.attach(self.audioPlayers[i])
-            audioEngine.connect(self.audioPlayers[i], to: mixer, format: audioFormat)
-        }
+        
+        audioEngine.attach(audioPlayer)
+        audioEngine.connect(audioPlayer, to: mixer, format: audioFormat)
+        
         audioEngine.prepare()
         
         do {
@@ -338,7 +348,7 @@ public class Player: Operation {
             return false
         }
         
-        self.audioPlayers.forEach(){$0.play()}
+        self.audioPlayer.play()
         
         return true
     }
