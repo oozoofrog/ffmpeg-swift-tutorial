@@ -62,7 +62,7 @@ class AVFrameQueue {
     var rindex = 0
     
     let type: AVMediaType
-    init(type: AVMediaType, queueCount: Int = 1024, time_base: AVRational) {
+    init(type: AVMediaType, queueCount: Int = 2048, time_base: AVRational) {
         self.type = type
         self.time_base = time_base
         self.containerQueue = [UnsafeMutablePointer<AVFrame>?](repeating: nil, count: queueCount)
@@ -111,8 +111,7 @@ class AVFrameQueue {
         if -1 == windex {
             return false
         }
-        let threshold = self.containerQueueCacheCountThreshold
-        return windex != rindex && (windex > rindex + threshold || windex > rindex - threshold)
+        return windex < rindex
     }
     
     var readTimeStamp: Double = 0
