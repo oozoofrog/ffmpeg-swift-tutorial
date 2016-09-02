@@ -62,7 +62,7 @@ class AVFrameQueue {
     var rindex = 0
     
     let type: AVMediaType
-    init(type: AVMediaType, queueCount: Int = 2048, time_base: AVRational) {
+    init(type: AVMediaType, queueCount: Int = 1024, time_base: AVRational) {
         self.type = type
         self.time_base = time_base
         self.containerQueue = [UnsafeMutablePointer<AVFrame>?](repeating: nil, count: queueCount)
@@ -80,6 +80,7 @@ class AVFrameQueue {
                 var ptr = ptr
                 av_frame_free(&ptr)
         }
+        self.containerQueue = []
         quit = true
     }
     
@@ -117,6 +118,9 @@ class AVFrameQueue {
     var readTimeStamp: Double = 0
     
     func write(frame: UnsafeMutablePointer<AVFrame>, completion: @escaping () -> Void) {
+        if quit {
+            return
+        }
         lock()
         defer {
             unlock()
@@ -125,7 +129,6 @@ class AVFrameQueue {
             windex = 0
         }
         if let writeFrame = self.containerQueue[windex] {
-//            av_frame_copy(writeFrame, frame)
             av_frame_move_ref(writeFrame, frame)
         } else {
             containerQueue[windex] = av_frame_clone(frame)
@@ -142,7 +145,7 @@ class AVFrameQueue {
         defer {
             unlock()
         }
-        guard let frame = containerQueue[rindex], 0 <= windex else {
+        guard let frame = containerQueue[rindex], nil != frame.pointee.data.0, 0 <= windex else {
             return
         }
         readTimeStamp = frame.pointee.time(time_base: self.time_base)

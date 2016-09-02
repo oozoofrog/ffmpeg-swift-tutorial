@@ -149,9 +149,7 @@ public class Player: Operation {
             defer {
                 print("👏🏽 decode finished")
                 avcodec_send_packet(self.videoContext, nil)
-                avcodec_receive_frame(self.videoContext, nil)
                 avcodec_send_packet(self.audioContext, nil)
-                avcodec_receive_frame(self.audioContext, nil)
             }
             decode: while false == self.isCancelled {
                 if self.audioQueue?.stopped() ?? true || self.videoQueue?.stopped() ?? true {
@@ -281,7 +279,7 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(videoContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
-        videoQueue = AVFrameQueue(type: AVMEDIA_TYPE_VIDEO, time_base: videoStream?.pointee.time_base ?? AVRational())
+        videoQueue = AVFrameQueue(type: AVMEDIA_TYPE_VIDEO, queueCount: 64, time_base: videoStream?.pointee.time_base ?? AVRational())
         
         audio_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0)
         audioStream = formatContext?.pointee.streams.advanced(by: Int(audio_index)).pointee
@@ -293,7 +291,7 @@ public class Player: Operation {
         audioContext?.pointee.coded_width = audioStream?.pointee.codec.pointee.coded_width ?? 0
         audioContext?.pointee.coded_height = audioStream?.pointee.codec.pointee.coded_height ?? 0
         audioContext?.pointee.time_base = audioStream?.pointee.time_base ?? AVRational()
-        audioQueue = AVFrameQueue(type: AVMEDIA_TYPE_AUDIO, queueCount: 4096, time_base: audioContext!.pointee.time_base)
+        audioQueue = AVFrameQueue(type: AVMEDIA_TYPE_AUDIO, queueCount: 128, time_base: audioContext!.pointee.time_base)
         
         guard 0 <= avcodec_open2(audioContext, audioCodec, nil) else {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(audioContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
