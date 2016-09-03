@@ -17,6 +17,10 @@ class ViewController: UIViewController {
     
     var displayLink: CADisplayLink? = nil
     
+    deinit {
+        print("view finished")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -33,24 +37,30 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        weak var weakSelf = self
         if let path = self.path, 0 < path.lengthOfBytes(using: .utf8) {
             self.player = Player(path: path)
             
             self.player?.start(start: { 
                 DispatchQueue.main.async {
-                    guard self.setupSDL(player: self.player!) else {
-                        self.player?.cancel()
+                    guard weakSelf?.setupSDL(player: weakSelf!.player!) ?? false else {
+                        weakSelf?.player?.cancel()
                         return
                     }
                     
-                    self.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
-                    self.displayLink?.add(to: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+                    weakSelf?.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
+                    weakSelf?.displayLink?.add(to: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
                 }
                 }, stop: {
                     var event = SDL_Event(quit: SDL_QuitEvent(type: SDL_QUIT.rawValue, timestamp: 0))
                     SDL_PushEvent(&event)
             })
         }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        print("\(String(describing: self))-\(#function)-\(self.player)")
+        super.viewDidDisappear(animated)
     }
 
     override func didReceiveMemoryWarning() {
@@ -123,6 +133,7 @@ class ViewController: UIViewController {
         
         texture = t
         
+        weak var weakSelf = self
         eventQueue?.async {
             var event: SDL_Event = SDL_Event()
             event_loop: while true {
@@ -132,16 +143,20 @@ class ViewController: UIViewController {
                 case SDL_FINGERDOWN.rawValue, SDL_QUIT.rawValue:
                     DispatchQueue.main.async(execute: {
                         
-                        self.player?.cancel()
-                        self.player = nil
-                        self.displayLink?.isPaused = true
-                        self.displayLink?.invalidate()
-                        SDL_DestroyTexture(self.texture)
-                        SDL_DestroyRenderer(self.renderer)
-                        SDL_DestroyWindow(self.window)
+                        guard let ws = weakSelf else {
+                            return
+                        }
+                        
+                        ws.player?.cancel()
+                        ws.player = nil
+                        ws.displayLink?.isPaused = true
+                        ws.displayLink?.invalidate()
+                        SDL_DestroyTexture(ws.texture)
+                        SDL_DestroyRenderer(ws.renderer)
+                        SDL_DestroyWindow(ws.window)
                         SDL_Quit()
                         
-                        let _ = self.navigationController?.popViewController(animated: true)
+                        let _ = ws.navigationController?.popViewController(animated: true)
                     })
                     break event_loop
                 default:

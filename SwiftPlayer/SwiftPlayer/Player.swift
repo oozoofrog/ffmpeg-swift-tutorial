@@ -77,14 +77,15 @@ class AVFrameQueue<D: MediaData> {
     var quit: Bool = false
     
     var time_base: AVRational
-    
+    let duration: Double
     var containerQueue: [D] = []
     let queueLimit: Int
     let queue_lock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
     let type: AVMediaType
     var completion: (() -> Void)? = nil
-    init(type: AVMediaType, queueCount: Int = 1024, time_base: AVRational) {
+    init(type: AVMediaType, queueCount: Int = 1024, time_base: AVRational, duration: Double) {
+        self.duration = duration
         self.type = type
         self.time_base = time_base
         self.queueLimit = queueCount
@@ -149,7 +150,8 @@ class AVFrameQueue<D: MediaData> {
             unlock()
         }
    
-        if quit && 0 < readTimeStamp && 0 == self.containerQueue.count {
+        if duration <= readTimeStamp + 1.0 && 0 == self.containerQueue.count {
+            quit = true
             completion?()
             return
         }
@@ -225,7 +227,10 @@ public class Player: Operation {
         super.init()
     }
     
-    deinit {
+    lazy var playerLock: DispatchSemaphore? = DispatchSemaphore(value: 1)
+    public override func cancel() {
+        playerLock?.wait()
+        self.isExecuting = false
         
         avcodec_send_packet(videoContext, nil)
         avcodec_send_packet(audioContext, nil)
@@ -247,12 +252,6 @@ public class Player: Operation {
         avformat_free_context(formatContext)
         
         avformat_network_deinit()
-    }
-    
-    lazy var playerLock: DispatchSemaphore? = DispatchSemaphore(value: 1)
-    public override func cancel() {
-        playerLock?.wait()
-        self.isExecuting = false
         
         self.audioQueue?.stop()
         self.videoQueue?.stop()
@@ -473,7 +472,7 @@ public class Player: Operation {
         }
         
         av_dump_format(formatContext, 0, path, 0)
-        
+        let duration = Double(formatContext!.pointee.duration + (formatContext!.pointee.duration <= Int64.max ? 5000 : 0)) / Double(AV_TIME_BASE)
         video_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, &videoCodec, 0)
         videoStream = formatContext?.pointee.streams.advanced(by: Int(video_index)).pointee
         videoContext = avcodec_alloc_context3(videoCodec)
@@ -482,7 +481,7 @@ public class Player: Operation {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(videoContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
         }
-        videoQueue = AVFrameQueue(type: AVMEDIA_TYPE_VIDEO, queueCount: 64, time_base: videoStream?.pointee.time_base ?? AVRational())
+        videoQueue = AVFrameQueue(type: AVMEDIA_TYPE_VIDEO, queueCount: 64, time_base: videoStream?.pointee.time_base ?? AVRational(), duration: duration)
         videoQueue?.completion = {
             self.finished()
         }
@@ -497,7 +496,7 @@ public class Player: Operation {
         audioContext?.pointee.coded_width = audioStream?.pointee.codec.pointee.coded_width ?? 0
         audioContext?.pointee.coded_height = audioStream?.pointee.codec.pointee.coded_height ?? 0
         audioContext?.pointee.time_base = audioStream?.pointee.time_base ?? AVRational()
-        audioQueue = AVFrameQueue(type: AVMEDIA_TYPE_AUDIO, queueCount: 128, time_base: audioContext!.pointee.time_base)
+        audioQueue = AVFrameQueue(type: AVMEDIA_TYPE_AUDIO, queueCount: 128, time_base: audioContext!.pointee.time_base, duration: duration)
         audioQueue?.completion = {
             self.finished()
         }
