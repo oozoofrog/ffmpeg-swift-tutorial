@@ -37,7 +37,7 @@ class ViewController: UIViewController {
             self.player = Player(path: path)
             
             self.player?.start {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue.main.async {
                     guard self.setupSDL(player: self.player!) else {
                         self.player?.cancel()
                         return

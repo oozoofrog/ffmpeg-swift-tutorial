@@ -271,8 +271,10 @@ public class Player: Operation {
         })
     }
     
+    var audioPlayStarted: Bool = false
     lazy var audioPlayQueue: DispatchQueue? = DispatchQueue(label: "audio.queue", qos: .background)
     private func startAudioPlay() {
+        audioPlayStarted = true
         audioPlayQueue?.async(execute: {
             while false == self.isCancelled {
                 if self.audioQueue?.stopped() ?? true {
@@ -287,7 +289,6 @@ public class Player: Operation {
                 })
             }
         })
-   
     }
     
     let audio_filtered_frame = av_frame_alloc()!
