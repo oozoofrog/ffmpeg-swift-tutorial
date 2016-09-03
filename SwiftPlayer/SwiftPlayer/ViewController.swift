@@ -36,7 +36,7 @@ class ViewController: UIViewController {
         if let path = self.path, 0 < path.lengthOfBytes(using: .utf8) {
             self.player = Player(path: path)
             
-            self.player?.start {
+            self.player?.start(start: { 
                 DispatchQueue.main.async {
                     guard self.setupSDL(player: self.player!) else {
                         self.player?.cancel()
@@ -46,7 +46,10 @@ class ViewController: UIViewController {
                     self.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
                     self.displayLink?.add(to: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
                 }
-            }
+                }, stop: {
+                    var event = SDL_Event(quit: SDL_QuitEvent(type: SDL_QUIT.rawValue, timestamp: 0))
+                    SDL_PushEvent(&event)
+            })
         }
     }
 
@@ -130,10 +133,15 @@ class ViewController: UIViewController {
                     DispatchQueue.main.async(execute: {
                         
                         self.player?.cancel()
-                        
+                        self.player = nil
                         self.displayLink?.isPaused = true
                         self.displayLink?.invalidate()
+                        SDL_DestroyTexture(self.texture)
+                        SDL_DestroyRenderer(self.renderer)
+                        SDL_DestroyWindow(self.window)
                         SDL_Quit()
+                        
+                        let _ = self.navigationController?.popViewController(animated: true)
                     })
                     break event_loop
                 default:

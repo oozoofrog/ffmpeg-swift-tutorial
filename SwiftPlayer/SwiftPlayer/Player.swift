@@ -74,7 +74,7 @@ struct AudioData: MediaData {
 
 class AVFrameQueue<D: MediaData> {
     
-    private var quit: Bool = false
+    var quit: Bool = false
     
     var time_base: AVRational
     
@@ -83,6 +83,7 @@ class AVFrameQueue<D: MediaData> {
     let queue_lock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
     let type: AVMediaType
+    var completion: (() -> Void)? = nil
     init(type: AVMediaType, queueCount: Int = 1024, time_base: AVRational) {
         self.type = type
         self.time_base = time_base
@@ -147,10 +148,11 @@ class AVFrameQueue<D: MediaData> {
         defer {
             unlock()
         }
-        if quit || 0 == self.containerQueue.count {
+   
+        if quit && 0 < readTimeStamp && 0 == self.containerQueue.count {
+            completion?()
             return
         }
-
         while 0 < self.containerQueue.count {
             guard let next = self.containerQueue.popLast() else {
                 return
@@ -189,6 +191,22 @@ extension AVAudioPlayerNode {
 
 public class Player: Operation {
     
+    public override var isConcurrent: Bool {
+        return true
+    }
+    
+    private var _executing: Bool = false
+    public override var isExecuting: Bool {
+        get {
+            return _executing
+        }
+        set {
+            willChangeValue(forKey: "isExecuting")
+            _executing = newValue
+            didChangeValue(forKey: "isExecuting")
+        }
+    }
+    
     var videoSize: CGSize {
         guard let ctx = self.videoContext else {
             return CGSize()
@@ -196,7 +214,7 @@ public class Player: Operation {
         return CGSize(width: Int(ctx.pointee.width), height: Int(ctx.pointee.height))
     }
     
-    lazy var decode_queue: DispatchQueue? = DispatchQueue(label: "decode", qos: .background, attributes: .concurrent, autoreleaseFrequency: .inherit)
+    lazy var decode_queue: DispatchQueue? = DispatchQueue(label: "decode", qos: .background)
     
     
     public var path: String
@@ -208,6 +226,10 @@ public class Player: Operation {
     }
     
     deinit {
+        
+        avcodec_send_packet(videoContext, nil)
+        avcodec_send_packet(audioContext, nil)
+        
         if 0 < avcodec_is_open(videoContext) {
             avcodec_close(videoContext)
         }
@@ -218,31 +240,48 @@ public class Player: Operation {
         }
         avcodec_free_context(&audioContext)
         
+        videoContext = nil
+        audioContext = nil
+        
         avformat_close_input(&formatContext)
         avformat_free_context(formatContext)
         
         avformat_network_deinit()
     }
     
+    lazy var playerLock: DispatchSemaphore? = DispatchSemaphore(value: 1)
     public override func cancel() {
+        playerLock?.wait()
+        self.isExecuting = false
+        
         self.audioQueue?.stop()
         self.videoQueue?.stop()
-        self.audioPlayQueue?.suspend()
-        self.decode_queue?.suspend()
+        self.audioPlayQueue = nil
+        self.decode_queue = nil
         self.audioPlayer.stop()
         self.audioEngine.stop()
+        
+        self.playerLock?.signal()
         super.cancel()
     }
     
-    public typealias PlayerStartCompletionHandle = () -> Void
-    var completion: PlayerStartCompletionHandle?
-    public func start(completion: PlayerStartCompletionHandle ) {
-        self.completion = completion
+    private func finished() {
+        if self.decodeFinished && true == self.audioQueue?.quit && true == self.videoQueue?.quit {
+            self.stopCompletion?()
+        }
+    }
+    
+    public typealias PlayerWorkHandle = () -> Void
+    var startCompletion: PlayerWorkHandle?
+    var stopCompletion: PlayerWorkHandle?
+    public func start(start: PlayerWorkHandle?, stop: PlayerWorkHandle? = nil) {
+        self.startCompletion = start
+        self.stopCompletion = stop
         self.start()
     }
     
     public override func main() {
-        
+        self.isExecuting = true
         guard setupFFmpeg() else {
             print("find streams failed")
             return
@@ -255,7 +294,7 @@ public class Player: Operation {
 
         self.decodeFrames()
         
-        self.completion?()
+        self.startCompletion?()
         
         self.startAudioPlay()
     }
@@ -263,6 +302,10 @@ public class Player: Operation {
     public typealias PlayerDecodeHanlder = (UnsafePointer<UInt8>, UnsafePointer<UInt8>, UnsafePointer<UInt8>, Int) -> Void
     
     public func requestVideoFrame(time: Double, decodeCompletion: PlayerDecodeHanlder) {
+        self.playerLock?.wait()
+        defer {
+            self.playerLock?.signal()
+        }
         self.videoQueue?.read(time: time, handle: { (frame) in
             let y: UnsafePointer<UInt8> = frame.datas[0].withUnsafeBytes(){$0}
             let u: UnsafePointer<UInt8> = frame.datas[1].withUnsafeBytes(){$0}
@@ -276,16 +319,18 @@ public class Player: Operation {
     private func startAudioPlay() {
         audioPlayStarted = true
         audioPlayQueue?.async(execute: {
-            while false == self.isCancelled {
+            while self.isExecuting {
+                self.playerLock?.wait()
+                defer {
+                    self.playerLock?.signal()
+                }
                 if self.audioQueue?.stopped() ?? true {
                     break
                 }
                 self.audioQueue?.read(handle: { (aframe) in
                     let len = aframe.linesizes[0] / MemoryLayout<Float>.size / 2
                     let datas: [UnsafePointer<UInt8>] = aframe.datas.flatMap(){$0.withUnsafeBytes(){$0}}
-                    self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, bufferLength: len, completion: {
-                        
-                    })
+                    self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, bufferLength: len, completion: nil)
                 })
             }
         })
@@ -295,7 +340,7 @@ public class Player: Operation {
     
     var got_frame: Int32 = 0
     var length: Int32 = 0
- 
+    var decodeFinished: Bool = false
     func decodeFrames() {
         decode_queue?.async {
             
@@ -303,13 +348,16 @@ public class Player: Operation {
             var frame = AVFrame()
             defer {
                 print("👏🏽 decode finished")
-                
+                self.isExecuting = false
                 av_packet_unref(&packet)
                 av_frame_unref(&frame)
-                avcodec_send_packet(self.videoContext, nil)
-                avcodec_send_packet(self.audioContext, nil)
+                self.decodeFinished = true
             }
-            decode: while false == self.isCancelled {
+            decode: while self.isExecuting {
+                self.playerLock?.wait()
+                defer {
+                    self.playerLock?.signal()
+                }
                 guard let video = self.videoQueue, let audio = self.audioQueue else {
                     break decode
                 }
@@ -435,6 +483,9 @@ public class Player: Operation {
             return false
         }
         videoQueue = AVFrameQueue(type: AVMEDIA_TYPE_VIDEO, queueCount: 64, time_base: videoStream?.pointee.time_base ?? AVRational())
+        videoQueue?.completion = {
+            self.finished()
+        }
         
         audio_index = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0)
         audioStream = formatContext?.pointee.streams.advanced(by: Int(audio_index)).pointee
@@ -447,7 +498,9 @@ public class Player: Operation {
         audioContext?.pointee.coded_height = audioStream?.pointee.codec.pointee.coded_height ?? 0
         audioContext?.pointee.time_base = audioStream?.pointee.time_base ?? AVRational()
         audioQueue = AVFrameQueue(type: AVMEDIA_TYPE_AUDIO, queueCount: 128, time_base: audioContext!.pointee.time_base)
-        
+        audioQueue?.completion = {
+            self.finished()
+        }
         guard 0 <= avcodec_open2(audioContext, audioCodec, nil) else {
             print("Couldn't open codec for \(String(cString: avcodec_get_name(audioContext?.pointee.codec_id ?? AV_CODEC_ID_NONE)))")
             return false
