@@ -298,18 +298,25 @@ public class Player: Operation {
  
     func decodeFrames() {
         decode_queue?.async {
+            
+            var packet = AVPacket()
+            var frame = AVFrame()
             defer {
                 print("👏🏽 decode finished")
+                
+                av_packet_unref(&packet)
+                av_frame_unref(&frame)
                 avcodec_send_packet(self.videoContext, nil)
                 avcodec_send_packet(self.audioContext, nil)
             }
-            var packet = AVPacket()
-            var frame = AVFrame()
             decode: while false == self.isCancelled {
-                if self.audioQueue?.stopped() ?? true || self.videoQueue?.stopped() ?? true {
+                guard let video = self.videoQueue, let audio = self.audioQueue else {
                     break decode
                 }
-                if self.videoQueue!.waiting || self.audioQueue!.waiting {
+                if video.stopped() || audio.stopped() {
+                    break decode
+                }
+                if video.waiting || audio.waiting {
                     continue
                 }
                 guard 0 <= av_read_frame(self.formatContext, &packet) else {
@@ -328,7 +335,7 @@ public class Player: Operation {
                     defer {
                         av_frame_unref(&frame)
                     }
-                    self.videoQueue?.write(&frame)
+                    video.write(&frame)
                 }
                 else if packet.stream_index == self.audio_index, let ctx = self.audioContext {
                     let ret = self.decode(ctx: ctx, packet: &packet, frame: &frame, got_frame: &self.got_frame, length: &self.length)
@@ -339,7 +346,7 @@ public class Player: Operation {
                     defer {
                         av_frame_unref(&frame)
                     }
-                    self.audioQueue?.write(&frame)
+                    audio.write(&frame)
                 }
                 
             }
@@ -359,7 +366,7 @@ public class Player: Operation {
                 print_err(ret)
                 return 1 == is_eof(ret) ? 0 : ret
             }
-            
+            av_packet_unref(packet)
             ret = avcodec_receive_frame(ctx, frame)
             
             if 0 > ret && ret != err2averr(ret) && 1 != is_eof(ret) {
