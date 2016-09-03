@@ -11,18 +11,167 @@ import ffmpeg
 import AVFoundation
 import Accelerate
 
-extension AVAudioPlayerNode {
-    func schedule(at: AVAudioTime? = nil, channels c: Int, format: AVAudioFormat, audioDatas: UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?>?, bufferLength len: Int, completion: AVAudioNodeCompletionHandler? ) {
-        guard let datas = audioDatas else {
+protocol MediaData {
+    var datas: [Data] {get}
+    var linesizes: [Int] {get}
+    var timeStamp: Double {get}
+    init?(timeBase: AVRational, frame: UnsafeMutablePointer<AVFrame>)
+}
+struct VideoData: MediaData {
+    let y: Data
+    let u: Data
+    let v: Data
+    var datas: [Data] {
+        return [y, u, v]
+    }
+    var linesizes: [Int] {
+        return [lumaLength, chromaLength, chromaLength]
+    }
+    let timeStamp: Double
+    let lumaLength: Int
+    var chromaLength: Int {
+        return lumaLength / 2
+    }
+    init?(timeBase: AVRational, frame: UnsafeMutablePointer<AVFrame>) {
+        self.lumaLength = Int(frame.pointee.linesize.0)
+        let height = Int(frame.pointee.height)
+        guard let y = frame.pointee.data.0 else {
+            return nil
+        }
+        self.y = Data(bytes: y, count: self.lumaLength * height)
+        guard let u = frame.pointee.data.1 else {
+            return nil
+        }
+        
+        self.u = Data(bytes: u, count: self.lumaLength / 2 * (height / 2))
+        guard let v = frame.pointee.data.2 else {
+            return nil
+        }
+        self.v = Data(bytes: v, count: self.lumaLength / 2 * (height / 2))
+        self.timeStamp = Double(av_frame_get_best_effort_timestamp(frame)) * av_q2d(timeBase)
+    }
+}
+struct AudioData: MediaData {
+    var datas: [Data] = []
+    var linesizes: [Int] = []
+    let timeStamp: Double
+    
+    init?(timeBase: AVRational, frame: UnsafeMutablePointer<AVFrame>) {
+        for i in 0..<8 {
+            guard let buffer = frame.pointee.extended_data[i] else {
+                break
+            }
+            datas.append(Data(bytes: buffer, count: Int(frame.pointee.linesize.0)))
+            linesizes.append(Int(frame.pointee.linesize.0))
+        }
+        if 0 == datas.count {
+            return nil
+        }
+        self.timeStamp = Double(av_frame_get_best_effort_timestamp(frame)) * av_q2d(timeBase)
+    }
+}
+
+
+class AVFrameQueue<D: MediaData> {
+    
+    private var quit: Bool = false
+    
+    var time_base: AVRational
+    
+    var containerQueue: [D] = []
+    let queueLimit: Int
+    let queue_lock: DispatchSemaphore = DispatchSemaphore(value: 1)
+    
+    let type: AVMediaType
+    init(type: AVMediaType, queueCount: Int = 1024, time_base: AVRational) {
+        self.type = type
+        self.time_base = time_base
+        self.queueLimit = queueCount
+    }
+    
+    func stop() {
+        lock()
+        defer {
+            unlock()
+        }
+        quit = true
+        self.containerQueue = []
+    }
+    
+    func stopped() -> Bool {
+        lock()
+        defer {
+            unlock()
+        }
+        return quit
+    }
+    
+    func lock() {
+        queue_lock.wait()
+    }
+    
+    func ingore() -> Bool {
+        return queue_lock.wait(timeout: .now()) == .timedOut
+    }
+    
+    func unlock() {
+        queue_lock.signal()
+    }
+    
+    var waiting: Bool {
+        lock()
+        defer {
+            unlock()
+        }
+        return self.queueLimit < containerQueue.count
+    }
+    
+    var readTimeStamp: Double = 0
+    
+    func write(_ frame: UnsafeMutablePointer<AVFrame>) {
+        lock()
+        defer {
+            unlock()
+        }
+        if quit {
             return
         }
+        guard let data = D(timeBase: self.time_base, frame: frame) else {
+            return
+        }
+        containerQueue.insert(data, at: 0)
+    }
+    
+    func read(time: Double = -1, handle: (D) -> Void) {
+        lock()
+        defer {
+            unlock()
+        }
+        if quit || 0 == self.containerQueue.count {
+            return
+        }
+
+        while 0 < self.containerQueue.count {
+            guard let next = self.containerQueue.popLast() else {
+                return
+            }
+            readTimeStamp = next.timeStamp
+            if -1 == time || readTimeStamp >= time {
+                handle(next)
+                break
+            }
+        }
+    }
+}
+
+extension AVAudioPlayerNode {
+    func schedule(at: AVAudioTime? = nil, channels c: Int, format: AVAudioFormat, audioDatas datas: [UnsafePointer<UInt8>], bufferLength len: Int, completion: AVAudioNodeCompletionHandler? ) {
+        
         let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(len))
         buf.frameLength = buf.frameCapacity
         let channels = buf.floatChannelData
-        for i in 0..<8 {
-            guard let data = datas[i] else {
-                break
-            }
+        for i in 0..<datas.count {
+            let data = datas[i]
             guard let channel = channels?[i % c] else {
                 break
             }
@@ -59,7 +208,6 @@ public class Player: Operation {
     }
     
     deinit {
-        avformat_network_deinit()
         if 0 < avcodec_is_open(videoContext) {
             avcodec_close(videoContext)
         }
@@ -71,6 +219,9 @@ public class Player: Operation {
         avcodec_free_context(&audioContext)
         
         avformat_close_input(&formatContext)
+        avformat_free_context(formatContext)
+        
+        avformat_network_deinit()
     }
     
     public override func cancel() {
@@ -113,7 +264,10 @@ public class Player: Operation {
     
     public func requestVideoFrame(time: Double, decodeCompletion: PlayerDecodeHanlder) {
         self.videoQueue?.read(time: time, handle: { (frame) in
-            decodeCompletion(frame.pointee.data.0!, frame.pointee.data.1!, frame.pointee.data.2!, Int(frame.pointee.linesize.0))
+            let y: UnsafePointer<UInt8> = frame.datas[0].withUnsafeBytes(){$0}
+            let u: UnsafePointer<UInt8> = frame.datas[1].withUnsafeBytes(){$0}
+            let v: UnsafePointer<UInt8> = frame.datas[2].withUnsafeBytes(){$0}
+            decodeCompletion(y, u, v, frame.linesizes[0])
         })
     }
     
@@ -125,8 +279,8 @@ public class Player: Operation {
                     break
                 }
                 self.audioQueue?.read(handle: { (aframe) in
-                    let len = Int(aframe.pointee.nb_samples)
-                    let datas = aframe.pointee.extended_data
+                    let len = aframe.linesizes[0] / MemoryLayout<Float>.size / 2
+                    let datas: [UnsafePointer<UInt8>] = aframe.datas.flatMap(){$0.withUnsafeBytes(){$0}}
                     self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, bufferLength: len, completion: {
                         
                     })
@@ -136,9 +290,6 @@ public class Player: Operation {
    
     }
     
-    let pkt = av_packet_alloc()
-    let frame = av_frame_alloc()
-    let aframe = av_frame_alloc()
     let audio_filtered_frame = av_frame_alloc()!
     
     var got_frame: Int32 = 0
@@ -151,49 +302,45 @@ public class Player: Operation {
                 avcodec_send_packet(self.videoContext, nil)
                 avcodec_send_packet(self.audioContext, nil)
             }
+            var packet = AVPacket()
+            var frame = AVFrame()
             decode: while false == self.isCancelled {
                 if self.audioQueue?.stopped() ?? true || self.videoQueue?.stopped() ?? true {
                     break decode
                 }
-                if self.videoQueue!.fulled || self.audioQueue!.fulled {
+                if self.videoQueue!.waiting || self.audioQueue!.waiting {
                     continue
                 }
-                guard 0 <= av_read_frame(self.formatContext, self.pkt) else {
+                guard 0 <= av_read_frame(self.formatContext, &packet) else {
                     break decode
                 }
                 defer {
-                    av_packet_unref(self.pkt)
+                    av_packet_unref(&packet)
                 }
                 
-                if let pkt = self.pkt, let frame = self.frame {
-                    if pkt.pointee.stream_index == self.video_index, let videoContext = self.videoContext {
-                        let ret = self.decode(ctx: videoContext, packet: pkt, frame: frame, got_frame: &self.got_frame, length: &self.length)
-                        defer {
-                            av_frame_unref(frame)
-                        }
-                        guard 0 <= ret else {
-                            print_err(ret)
-                            continue
-                        }
-                        
-                        self.videoQueue?.write(frame: frame){
-                            
-                        }
+                if packet.stream_index == self.video_index, let videoContext = self.videoContext {
+                    let ret = self.decode(ctx: videoContext, packet: &packet, frame: &frame, got_frame: &self.got_frame, length: &self.length)
+                    guard 0 <= ret else {
+                        print_err(ret)
+                        continue
                     }
-                    else if pkt.pointee.stream_index == self.audio_index, let ctx = self.audioContext {
-                        let ret = self.decode(ctx: ctx, packet: pkt, frame: self.aframe, got_frame: &self.got_frame, length: &self.length)
-                        defer {
-                            av_frame_unref(self.aframe)
-                        }
-                        guard 0 <= ret else {
-                            print_err(ret)
-                            continue
-                        }
-                        self.audioQueue?.write(frame: self.aframe!, completion: {
-                            
-                        })
+                    defer {
+                        av_frame_unref(&frame)
                     }
+                    self.videoQueue?.write(&frame)
                 }
+                else if packet.stream_index == self.audio_index, let ctx = self.audioContext {
+                    let ret = self.decode(ctx: ctx, packet: &packet, frame: &frame, got_frame: &self.got_frame, length: &self.length)
+                    guard 0 <= ret else {
+                        print_err(ret)
+                        continue
+                    }
+                    defer {
+                        av_frame_unref(&frame)
+                    }
+                    self.audioQueue?.write(&frame)
+                }
+                
             }
         }
     }
@@ -244,8 +391,8 @@ public class Player: Operation {
     public var audioCodec: UnsafeMutablePointer<AVCodec>?
     public var audioContext: UnsafeMutablePointer<AVCodecContext>?
     
-    var videoQueue: AVFrameQueue?
-    var audioQueue: AVFrameQueue?
+    var videoQueue: AVFrameQueue<VideoData>?
+    var audioQueue: AVFrameQueue<AudioData>?
     
     //MARK: - setupFFmpeg
     private func setupFFmpeg() -> Bool {
@@ -317,6 +464,7 @@ public class Player: Operation {
     var audioFormat: AVAudioFormat?
     
     var audioPlayer: AVAudioPlayerNode = AVAudioPlayerNode()
+    var channels: Int = 0
     
     func setupAudio() -> Bool {
         let audioSession = AVAudioSession.sharedInstance()
@@ -328,6 +476,8 @@ public class Player: Operation {
             assertionFailure(err.localizedDescription)
             return false
         }
+        
+        channels = audioSession.preferredOutputNumberOfChannels
         
         audioFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(self.audioStream!.pointee.codecpar.pointee.sample_rate), channels: AVAudioChannelCount(audioSession.preferredOutputNumberOfChannels), interleaved: false)
         

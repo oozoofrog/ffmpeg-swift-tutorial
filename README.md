@@ -3,6 +3,12 @@
 >$ git submodule init<br/>
 >$ ./FFmpeg-iOS-build-script/build-ffmpeg.sh
 
+###3016.09.03
+- add MediaData protocol
+- add VideoData: MediaData
+- add AudioData: MediaData
+- reduce memory usage
+
 ###2016.09.02
 - pull out SDL from Player.swift and doing update video on ViewController.swift
 - resolve thread dead races
@@ -20,8 +26,6 @@
 - No more referencing ffmpeg tutorials. It is too old, and never working well.
 
 ###TODO
-- perfectly playing audio to normal
-- update to FFmpeg 3.1.3
 - add seeking functions
 
 ###olds
