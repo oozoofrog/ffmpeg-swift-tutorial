@@ -56,7 +56,6 @@
 		A947D64C1D77BF0B00ED6338 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		A9534E981D77AF6C00411FC9 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		A9534E9A1D77BC2400411FC9 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../../README.md; sourceTree = "<group>"; };
-		A9F8D3E31D797A7900532BCC /* SwiftPlaying.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = SwiftPlaying.playground; sourceTree = "<group>"; };
 		D805EF311D747187004BE9B3 /* ffmpeg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffmpeg.c; sourceTree = "<group>"; };
 		D805EF321D747187004BE9B3 /* ffmpeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffmpeg.h; sourceTree = "<group>"; };
 		D81915271D746C0100D919E9 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
@@ -141,7 +140,6 @@
 		D848FE6A1D745F4D0058E322 = {
 			isa = PBXGroup;
 			children = (
-				A9F8D3E31D797A7900532BCC /* SwiftPlaying.playground */,
 				D848FE751D745F4D0058E322 /* SwiftPlayer */,
 				D848FE741D745F4D0058E322 /* Products */,
 				D848FE8E1D745F980058E322 /* Frameworks */,
