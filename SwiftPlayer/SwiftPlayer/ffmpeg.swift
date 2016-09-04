@@ -31,9 +31,9 @@ extension AVFrame {
         
         return pts
     }
-    var datas: [UnsafeMutablePointer<UInt8>?] {
-        let buffer_ptr : UnsafeBufferPointer<UnsafeMutablePointer<UInt8>?> = UnsafeBufferPointer.init(start: self.extended_data, count: 8)
-        let arr = Array(buffer_ptr)
+    mutating func datas() -> [UnsafeMutablePointer<UInt8>?] {
+        let ptr = UnsafeBufferPointer(start: self.extended_data, count: 8)
+        let arr = Array(ptr)
         return arr
     }
     var lines: UnsafeMutablePointer<Int32> {

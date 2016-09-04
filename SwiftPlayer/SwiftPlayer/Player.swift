@@ -54,11 +54,14 @@ struct VideoData: MediaData {
 struct AudioData: MediaData {
     var datas: [Data] = []
     var linesizes: [Int] = []
+    let samples: Int
     let timeStamp: Double
     
     init?(timeBase: AVRational, frame: UnsafeMutablePointer<AVFrame>) {
+        self.samples = Int(frame.pointee.nb_samples)
+        let buffers = frame.pointee.datas()
         for i in 0..<8 {
-            guard let buffer = frame.pointee.extended_data[i] else {
+            guard let buffer = buffers[i] else {
                 break
             }
             datas.append(Data(bytes: buffer, count: Int(frame.pointee.linesize.0)))
@@ -169,21 +172,21 @@ class AVFrameQueue<D: MediaData> {
 }
 
 extension AVAudioPlayerNode {
-    func schedule(at: AVAudioTime? = nil, channels c: Int, format: AVAudioFormat, audioDatas datas: [UnsafePointer<UInt8>], bufferLength len: Int, completion: AVAudioNodeCompletionHandler? ) {
+    func schedule(at: AVAudioTime? = nil, channels c: Int, format: AVAudioFormat, audioDatas datas: [UnsafePointer<UInt8>], floatsLength: Int, samples: Int, completion: AVAudioNodeCompletionHandler? ) {
         
-        let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(len))
-        buf.frameLength = buf.frameCapacity
+        let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(floatsLength))
+        buf.frameLength = AVAudioFrameCount(samples)
         let channels = buf.floatChannelData
         for i in 0..<datas.count {
             let data = datas[i]
             guard let channel = channels?[i % c] else {
                 break
             }
-            let floats = data.withMemoryRebound(to: Float.self, capacity: len){$0}
+            let floats = data.withMemoryRebound(to: Float.self, capacity: floatsLength){$0}
             if i < c {
-                cblas_scopy(Int32(len), floats, 1, channel, 1)
+                cblas_scopy(Int32(floatsLength), floats, 1, channel, 1)
             } else {
-                vDSP_vadd(channel, 1, floats, 1, channel, 1, vDSP_Length(len))
+                vDSP_vadd(channel, 1, floats, 1, channel, 1, vDSP_Length(floatsLength))
             }
         }
         
@@ -327,9 +330,9 @@ public class Player: Operation {
                     break
                 }
                 self.audioQueue?.read(handle: { (aframe) in
-                    let len = aframe.linesizes[0] / MemoryLayout<Float>.size / 2
+                    let floatsLen = aframe.linesizes[0] / MemoryLayout<Float>.size
                     let datas: [UnsafePointer<UInt8>] = aframe.datas.flatMap(){$0.withUnsafeBytes(){$0}}
-                    self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, bufferLength: len, completion: nil)
+                    self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, floatsLength: floatsLen, samples: aframe.samples, completion: nil)
                 })
             }
         })
