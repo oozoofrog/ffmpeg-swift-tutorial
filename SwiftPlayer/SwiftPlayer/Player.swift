@@ -235,27 +235,6 @@ public class Player: Operation {
         playerLock?.wait()
         self.isExecuting = false
         
-        avcodec_send_packet(videoContext, nil)
-        avcodec_send_packet(audioContext, nil)
-        
-        if 0 < avcodec_is_open(videoContext) {
-            avcodec_close(videoContext)
-        }
-        avcodec_free_context(&videoContext)
-        
-        if 0 < avcodec_is_open(audioContext) {
-            avcodec_close(audioContext)
-        }
-        avcodec_free_context(&audioContext)
-        
-        videoContext = nil
-        audioContext = nil
-        
-        avformat_close_input(&formatContext)
-        avformat_free_context(formatContext)
-        
-        avformat_network_deinit()
-        
         self.audioQueue?.stop()
         self.videoQueue?.stop()
         self.audioPlayQueue = nil
@@ -349,11 +328,43 @@ public class Player: Operation {
             var packet = AVPacket()
             var frame = AVFrame()
             defer {
-                print("👏🏽 decode finished")
                 self.isExecuting = false
+                
+                avcodec_send_packet(self.videoContext, nil)
+                while true {
+                    if 1 == is_eof(avcodec_receive_frame(self.videoContext, &frame)) {
+                        break
+                    }
+                }
+                avcodec_send_packet(self.audioContext, nil)
+                
+                while true {
+                    if 1 == is_eof(avcodec_receive_frame(self.audioContext, &frame)) {
+                        break
+                    }
+                }
                 av_packet_unref(&packet)
                 av_frame_unref(&frame)
+                if 0 < avcodec_is_open(self.videoContext) {
+                    avcodec_close(self.videoContext)
+                }
+                avcodec_free_context(&self.videoContext)
+                
+                if 0 < avcodec_is_open(self.audioContext) {
+                    avcodec_close(self.audioContext)
+                }
+                avcodec_free_context(&self.audioContext)
+                
+                self.videoContext = nil
+                self.audioContext = nil
+                
+                avformat_close_input(&self.formatContext)
+                avformat_free_context(self.formatContext)
+                
+                avformat_network_deinit()
+                
                 self.decodeFinished = true
+                print("👏🏽 decode finished")
             }
             decode: while self.isExecuting {
                 self.playerLock?.wait()
