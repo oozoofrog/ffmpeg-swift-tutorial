@@ -11,7 +11,7 @@ import AVFoundation
 import CoreAudio
 import Accelerate
 
-var path =  try! FileManager.default.url(for: .moviesDirectory, in: .userDomainMask, appropriateFor: nil, create: false).appendingPathComponent("sample.mp4")
+var path = URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/sample.mp4")
 
 struct FileData {
     let handle: FileHandle
@@ -31,7 +31,7 @@ func read_function(_ user: UnsafeMutableRawPointer?, _ buf: UnsafeMutablePointer
     if Int(readSize) < data.count {
         reads.seek(toFileOffset: UInt64(reads.offsetInFile - UInt64(data.count) - UInt64(readSize)))
     }
-
+    
     return Int32(readSize)
 }
 
@@ -251,13 +251,13 @@ func test() {
         guard let stream = audioFormatCtx?.pointee.streams?[Int(audioStream)], let ctx = audioContext else {
             return
         }
-      
+        
         let id = outputAudioObjectID()
         let channels = outputChannels(forId: id)
         
         let engine = AVAudioEngine()
         let player = AVAudioPlayerNode()
-        let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(48000), channels: AVAudioChannelCount(channels), interleaved: false)
+        let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(44100), channels: AVAudioChannelCount(channels), interleaved: false)
         do {
             
             engine.attach(player)
@@ -276,14 +276,12 @@ func test() {
         let channel_layout_name: String = String(cString: nameBuf)
         var time_base = stream.pointee.time_base
         var resample = AVFilterHelper()
-        guard resample.setup(audioFormatCtx!, audioStream: stream, abuffer: "time_base=\(time_base.num)/\(time_base.den):sample_rate=\(stream.pointee.codecpar.pointee.sample_rate):sample_fmt=\(String(cString: av_get_sample_fmt_name(ctx.pointee.sample_fmt))):channel_layout=\(channel_layout_name):channels=\(ctx.pointee.channels)", aformat: "sample_fmts=\(String(cString: av_get_sample_fmt_name(AV_SAMPLE_FMT_FLT))):sample_rates=\(48000):channel_layouts=stereo") else {
+        guard resample.setup(audioFormatCtx!, audioStream: stream, abuffer: "time_base=\(time_base.num)/\(time_base.den):sample_rate=\(stream.pointee.codecpar.pointee.sample_rate):sample_fmt=\(String(cString: av_get_sample_fmt_name(ctx.pointee.sample_fmt))):channel_layout=\(channel_layout_name):channels=\(ctx.pointee.channels)", aformat: "sample_fmts=\(String(cString: av_get_sample_fmt_name(AV_SAMPLE_FMT_FLT))):sample_rates=\(44199):channel_layouts=stereo") else {
             return
         }
         var pkt = AVPacket()
         var frame = AVFrame()
-        
         var ret: Int32 = 0
-        let filterLock = DispatchSemaphore(value: 1)
         let group = DispatchGroup()
         decode: while true {
             ret = av_read_frame(audioFormatCtx, &pkt)
@@ -293,6 +291,7 @@ func test() {
                 continue
             }
             switch pkt.stream_index {
+                
             case audioStream:
                 ret = avcodec_send_packet(ctx, &pkt)
                 if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && false == IS_AVERROR_EOF(ret) {
@@ -302,7 +301,7 @@ func test() {
                 if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && false == IS_AVERROR_EOF(ret) {
                     continue
                 }
-        
+                
                 resample.applyFilter(&frame)
                 let result = resample.filterFrame!
                 var pcm = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(result.pointee.linesize.0 / result.pointee.channels / Int32(MemoryLayout<Float>.size)))
@@ -318,27 +317,29 @@ func test() {
                 let right = floats.advanced(by: 1)
                 cblas_scopy(Int32(pcm.frameCapacity), left, 2, channels[0], 1)
                 cblas_scopy(Int32(pcm.frameCapacity), right, 2, channels[1], 1)
-                var up: Float = 1.5
-                vDSP_vmul(&up, 0, channels[0], 1, channels[0], 1, vDSP_Length(pcm.frameCapacity))
-                vDSP_vmul(&up, 0, channels[1], 1, channels[1], 1, vDSP_Length(pcm.frameCapacity))
+                
+                let pts = Double(result.pointee.pkt_pts) * av_q2d(time_base)
+                let dur = Double(result.pointee.pkt_duration) * av_q2d(time_base)
                 group.enter()
-                player.scheduleBuffer(pcm, completionHandler: {
+                player.scheduleBuffer(pcm, at: nil, options: [], completionHandler: {
                     group.leave()
                 })
-                group.wait()
-                
             default:
                 break
             }
         }
         
-        group.notify(queue: audioThread, execute: { 
+        
+        group.notify(queue: audioThread, execute: {
+            print("playing finished")
             audioLock.signal()
         })
         
         defer {
             av_packet_unref(&pkt)
         }
+        audioLock.wait()
+        audioLock.signal()
     }
     
     videoLock.wait()
