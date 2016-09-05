@@ -329,8 +329,7 @@ func test() {
             }
         }
         
-        
-        group.notify(queue: audioThread, execute: {
+        group.notify(queue: DispatchQueue.global(), execute: {
             print("playing finished")
             audioLock.signal()
         })
