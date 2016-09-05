@@ -7,22 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A905FE1F1D740ECF001E496B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A905FE1E1D740ECF001E496B /* main.m */; };
-		A905FE271D740EF2001E496B /* tutorial5.swift in Sources */ = {isa = PBXBuildFile; fileRef = A905FE261D740EF2001E496B /* tutorial5.swift */; };
-		A905FE281D740F8C001E496B /* libavcodec.57.48.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135E1D6C1B37000A2A2E /* libavcodec.57.48.101.dylib */; };
-		A905FE291D740F8C001E496B /* libavfilter.6.47.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135F1D6C1B37000A2A2E /* libavfilter.6.47.100.dylib */; };
-		A905FE2A1D740F8C001E496B /* libavformat.57.41.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13601D6C1B37000A2A2E /* libavformat.57.41.100.dylib */; };
-		A905FE2B1D740F8C001E496B /* libavresample.3.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13611D6C1B37000A2A2E /* libavresample.3.0.0.dylib */; };
-		A905FE2C1D740F8C001E496B /* libavutil.55.28.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13621D6C1B37000A2A2E /* libavutil.55.28.100.dylib */; };
-		A905FE2D1D740F8C001E496B /* libswresample.2.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13631D6C1B37000A2A2E /* libswresample.2.1.100.dylib */; };
-		A905FE2E1D740F8C001E496B /* libswscale.4.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13641D6C1B37000A2A2E /* libswscale.4.1.100.dylib */; };
-		A905FE311D740F8C001E496B /* libavdevice.57.0.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A905FE2F1D740F8C001E496B /* libavdevice.57.0.101.dylib */; };
-		A905FE321D740F8C001E496B /* libpostproc.54.0.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A905FE301D740F8C001E496B /* libpostproc.54.0.100.dylib */; };
-		A905FE331D740FA4001E496B /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135C1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib */; };
-		A905FE361D74101B001E496B /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
 		A91089321D6C4B6000A48616 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = A91089311D6C4B6000A48616 /* README.md */; };
-		A96535A71D6AD130009FE760 /* Tutorial2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96535A61D6AD130009FE760 /* Tutorial2.swift */; };
-		A96535A91D6AF69E009FE760 /* Tutorial3.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96535A81D6AF69E009FE760 /* Tutorial3.swift */; };
+		A93460C11D7D047D00709FFF /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
+		A93460C21D7D46A200709FFF /* libswresample.2.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D88D31721D7B331F00E2ED02 /* libswresample.2.1.100.dylib */; };
+		A93460C51D7D5A7F00709FFF /* FFmpeg.h in Headers */ = {isa = PBXBuildFile; fileRef = A96D17471D5875F1009F7AC2 /* FFmpeg.h */; };
 		A96BD6271D59702A0095C84C /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6261D59702A0095C84C /* libSDL2.a */; };
 		A96BD65E1D59705A0095C84C /* begin_code.h in Headers */ = {isa = PBXBuildFile; fileRef = A96BD6281D59705A0095C84C /* begin_code.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A96BD65F1D59705A0095C84C /* close_code.h in Headers */ = {isa = PBXBuildFile; fileRef = A96BD6291D59705A0095C84C /* close_code.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -83,10 +71,7 @@
 		A96BD6AF1D599B2D0095C84C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */; };
 		A96BD6B11D599B330095C84C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6B01D599B330095C84C /* CoreAudio.framework */; };
 		A96BD6B31D599B450095C84C /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6B21D599B450095C84C /* OpenGLES.framework */; };
-		A96BD6B61D599C3E0095C84C /* SDLHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = A96BD6B41D599C3E0095C84C /* SDLHelper.h */; };
-		A96BD6B71D599C3E0095C84C /* SDLHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A96BD6B51D599C3E0095C84C /* SDLHelper.m */; };
 		A96D16F41D5860C5009F7AC2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */; };
-		A96D16F61D5860C5009F7AC2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96D16F51D5860C5009F7AC2 /* ViewController.swift */; };
 		A96D16F91D5860C5009F7AC2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A96D16F71D5860C5009F7AC2 /* Main.storyboard */; };
 		A96D16FB1D5860C5009F7AC2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A96D16FA1D5860C5009F7AC2 /* Assets.xcassets */; };
 		A96D16FE1D5860C5009F7AC2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A96D16FC1D5860C5009F7AC2 /* LaunchScreen.storyboard */; };
@@ -112,62 +97,20 @@
 		A96D17531D58764B009F7AC2 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A96D17511D58764B009F7AC2 /* libbz2.tbd */; };
 		A96D17541D58764B009F7AC2 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A96D17521D58764B009F7AC2 /* libz.tbd */; };
 		A96D17561D58764F009F7AC2 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A96D17551D58764F009F7AC2 /* libiconv.tbd */; };
-		A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96D17571D5876CD009F7AC2 /* tutorial.swift */; };
 		A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
-		A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */; };
-		A9759A5C1D6EB35200EE64BA /* sample.mp4 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
-		A98B2F771D6D25CC00AD314E /* FFmpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = A96D17481D5875F1009F7AC2 /* FFmpeg.m */; };
-		A98B2F7B1D6D260E00AD314E /* FFmpeg.h in Headers */ = {isa = PBXBuildFile; fileRef = A96D17471D5875F1009F7AC2 /* FFmpeg.h */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
-		A9B7A0741D6C39E40060ADF4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A9B7A0731D6C39E40060ADF4 /* main.m */; };
-		A9B7A0811D6C3A080060ADF4 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A0781D6C3A080060ADF4 /* libavcodec.a */; };
-		A9B7A0821D6C3A080060ADF4 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A0791D6C3A080060ADF4 /* libavdevice.a */; };
-		A9B7A0831D6C3A080060ADF4 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A07A1D6C3A080060ADF4 /* libavfilter.a */; };
-		A9B7A0841D6C3A080060ADF4 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A07B1D6C3A080060ADF4 /* libavformat.a */; };
-		A9B7A0851D6C3A080060ADF4 /* libavresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A07C1D6C3A080060ADF4 /* libavresample.a */; };
-		A9B7A0861D6C3A080060ADF4 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A07D1D6C3A080060ADF4 /* libavutil.a */; };
-		A9B7A0871D6C3A080060ADF4 /* libpostproc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A07E1D6C3A080060ADF4 /* libpostproc.a */; };
-		A9B7A0881D6C3A080060ADF4 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A07F1D6C3A080060ADF4 /* libswresample.a */; };
-		A9B7A0891D6C3A080060ADF4 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A0801D6C3A080060ADF4 /* libswscale.a */; };
-		A9B7A08B1D6C3A180060ADF4 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9B7A08A1D6C3A180060ADF4 /* libSDL2.a */; };
-		A9B7A08E1D6C3AFF0060ADF4 /* tutorial4.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B7A08D1D6C3AFF0060ADF4 /* tutorial4.swift */; };
-		A9BE13581D6C1AB8000A2A2E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A9BE13571D6C1AB8000A2A2E /* main.m */; };
-		A9BE135D1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135C1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib */; };
-		A9BE13651D6C1B37000A2A2E /* libavcodec.57.48.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135E1D6C1B37000A2A2E /* libavcodec.57.48.101.dylib */; };
-		A9BE13661D6C1B37000A2A2E /* libavfilter.6.47.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135F1D6C1B37000A2A2E /* libavfilter.6.47.100.dylib */; };
-		A9BE13671D6C1B37000A2A2E /* libavformat.57.41.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13601D6C1B37000A2A2E /* libavformat.57.41.100.dylib */; };
-		A9BE13681D6C1B37000A2A2E /* libavresample.3.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13611D6C1B37000A2A2E /* libavresample.3.0.0.dylib */; };
-		A9BE13691D6C1B37000A2A2E /* libavutil.55.28.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13621D6C1B37000A2A2E /* libavutil.55.28.100.dylib */; };
-		A9BE136A1D6C1B37000A2A2E /* libswresample.2.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13631D6C1B37000A2A2E /* libswresample.2.1.100.dylib */; };
-		A9BE136B1D6C1B37000A2A2E /* libswscale.4.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE13641D6C1B37000A2A2E /* libswscale.4.1.100.dylib */; };
-		D87FB18A1D6751D200103AC7 /* Tutorial4.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87FB1891D6751D200103AC7 /* Tutorial4.swift */; };
 		D88D31661D7B2DED00E2ED02 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88D31651D7B2DED00E2ED02 /* main.swift */; };
 		D88D316A1D7B32E800E2ED02 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A9BE135C1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib */; };
 		D88D316B1D7B331E00E2ED02 /* libavcodec.57.48.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D80776901D79BDD700A2377F /* libavcodec.57.48.101.dylib */; };
-		D88D316C1D7B331E00E2ED02 /* libavdevice.57.0.101.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D80776911D79BDD700A2377F /* libavdevice.57.0.101.dylib */; };
 		D88D316D1D7B331E00E2ED02 /* libavfilter.6.47.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D80776921D79BDD700A2377F /* libavfilter.6.47.100.dylib */; };
 		D88D316E1D7B331E00E2ED02 /* libavformat.57.41.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D80776931D79BDD700A2377F /* libavformat.57.41.100.dylib */; };
-		D88D316F1D7B331E00E2ED02 /* libavresample.3.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D80776941D79BDD700A2377F /* libavresample.3.0.0.dylib */; };
 		D88D31701D7B331E00E2ED02 /* libavutil.55.28.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D80776951D79BDD700A2377F /* libavutil.55.28.100.dylib */; };
-		D88D31731D7B331F00E2ED02 /* libpostproc.54.0.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D88D31711D7B331F00E2ED02 /* libpostproc.54.0.100.dylib */; };
-		D88D31741D7B331F00E2ED02 /* libswresample.2.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D88D31721D7B331F00E2ED02 /* libswresample.2.1.100.dylib */; };
-		D89657211D5DC0AE00F1DECB /* SDL&FFmpeg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */; };
-		D8DC59371D5D6D9200AADB7C /* SDLHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */; };
 		D8E9FE691D5D45B60095C53C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E9FE681D5D45B60095C53C /* AVFoundation.framework */; };
 		D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		A905FE1A1D740ECF001E496B /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		A96BD6AC1D5997960095C84C /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -177,25 +120,6 @@
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A9759A5B1D6EB34200EE64BA /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 16;
-			files = (
-				A9759A5C1D6EB35200EE64BA /* sample.mp4 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A9BE13531D6C1AB8000A2A2E /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
 		};
 		D88D31611D7B2DED00E2ED02 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -209,7 +133,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A905FE1C1D740ECF001E496B /* tutorial5 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tutorial5; sourceTree = BUILT_PRODUCTS_DIR; };
 		A905FE1E1D740ECF001E496B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A905FE231D740EF2001E496B /* tutorial5-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tutorial5-Bridging-Header.h"; sourceTree = "<group>"; };
 		A905FE241D740EF2001E496B /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
@@ -219,8 +142,6 @@
 		A905FE341D740FB9001E496B /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ffmpeg; path = ../../../../../../usr/local/Cellar/ffmpeg; sourceTree = "<group>"; };
 		A905FE351D740FB9001E496B /* sdl2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = sdl2; path = ../../../../../../usr/local/Cellar/sdl2; sourceTree = "<group>"; };
 		A91089311D6C4B6000A48616 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		A96535A61D6AD130009FE760 /* Tutorial2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tutorial2.swift; sourceTree = "<group>"; };
-		A96535A81D6AF69E009FE760 /* Tutorial3.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tutorial3.swift; sourceTree = "<group>"; };
 		A96BD6261D59702A0095C84C /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = "../../SDL-iOS/lib/libSDL2.a"; sourceTree = "<group>"; };
 		A96BD6281D59705A0095C84C /* begin_code.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = begin_code.h; path = "../../SDL-iOS/include/begin_code.h"; sourceTree = "<group>"; };
 		A96BD6291D59705A0095C84C /* close_code.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = close_code.h; path = "../../SDL-iOS/include/close_code.h"; sourceTree = "<group>"; };
@@ -282,11 +203,8 @@
 		A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		A96BD6B01D599B330095C84C /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		A96BD6B21D599B450095C84C /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
-		A96BD6B41D599C3E0095C84C /* SDLHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLHelper.h; sourceTree = "<group>"; };
-		A96BD6B51D599C3E0095C84C /* SDLHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLHelper.m; sourceTree = "<group>"; };
 		A96D16F01D5860C5009F7AC2 /* tutorial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tutorial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		A96D16F51D5860C5009F7AC2 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		A96D16F81D5860C5009F7AC2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		A96D16FA1D5860C5009F7AC2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A96D16FD1D5860C5009F7AC2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -315,15 +233,12 @@
 		A96D17511D58764B009F7AC2 /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		A96D17521D58764B009F7AC2 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		A96D17551D58764F009F7AC2 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
-		A96D17571D5876CD009F7AC2 /* tutorial.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorial.swift; sourceTree = "<group>"; };
 		A96D175B1D587725009F7AC2 /* sample.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample.mp4; sourceTree = "<group>"; };
 		A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ffmpeg-tutorial"; path = "../../ffmpeg-tutorial"; sourceTree = "<group>"; };
 		A970FA0A1D5C538700A114A1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AVHelper.swift; sourceTree = "<group>"; };
 		A98B2F881D6D60E700AD314E /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/AudioUnit.framework; sourceTree = DEVELOPER_DIR; };
 		A98B2F8A1D6D620500AD314E /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		A999BE7C1D5C1E0400097E95 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
-		A9B7A0711D6C39E40060ADF4 /* tutorial4 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tutorial4; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9B7A0731D6C39E40060ADF4 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A9B7A0781D6C3A080060ADF4 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libavcodec.a; sourceTree = "<group>"; };
 		A9B7A0791D6C3A080060ADF4 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libavdevice.a; sourceTree = "<group>"; };
@@ -338,7 +253,6 @@
 		A9B7A08C1D6C3AFF0060ADF4 /* tutorial4-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tutorial4-Bridging-Header.h"; sourceTree = "<group>"; };
 		A9B7A08D1D6C3AFF0060ADF4 /* tutorial4.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = tutorial4.swift; sourceTree = "<group>"; };
 		A9B7A08F1D6C3BD30060ADF4 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
-		A9BE13551D6C1AB8000A2A2E /* tutorial3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tutorial3; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9BE13571D6C1AB8000A2A2E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A9BE135C1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../../../../../../usr/local/Cellar/sdl2/2.0.4/lib/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		A9BE135E1D6C1B37000A2A2E /* libavcodec.57.48.101.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.57.48.101.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libavcodec.57.48.101.dylib; sourceTree = "<group>"; };
@@ -354,36 +268,16 @@
 		D80776931D79BDD700A2377F /* libavformat.57.41.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.57.41.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libavformat.57.41.100.dylib; sourceTree = "<group>"; };
 		D80776941D79BDD700A2377F /* libavresample.3.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavresample.3.0.0.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libavresample.3.0.0.dylib; sourceTree = "<group>"; };
 		D80776951D79BDD700A2377F /* libavutil.55.28.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.55.28.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libavutil.55.28.100.dylib; sourceTree = "<group>"; };
-		D87FB1891D6751D200103AC7 /* Tutorial4.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tutorial4.swift; sourceTree = "<group>"; };
 		D88D31631D7B2DED00E2ED02 /* tutorial6 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tutorial6; sourceTree = BUILT_PRODUCTS_DIR; };
 		D88D31651D7B2DED00E2ED02 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		D88D31711D7B331F00E2ED02 /* libpostproc.54.0.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpostproc.54.0.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libpostproc.54.0.100.dylib; sourceTree = "<group>"; };
 		D88D31721D7B331F00E2ED02 /* libswresample.2.1.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.2.1.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libswresample.2.1.100.dylib; sourceTree = "<group>"; };
 		D88D31751D7B33F700E2ED02 /* tutorial6-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tutorial6-Bridging-Header.h"; sourceTree = "<group>"; };
-		D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SDL&FFmpeg.swift"; sourceTree = "<group>"; };
-		D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDLHelper.swift; sourceTree = "<group>"; };
 		D8E9FE681D5D45B60095C53C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8F1B1EA1D58D5DE00564EE2 /* Castable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Castable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A905FE191D740ECF001E496B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A905FE331D740FA4001E496B /* libSDL2-2.0.0.dylib in Frameworks */,
-				A905FE311D740F8C001E496B /* libavdevice.57.0.101.dylib in Frameworks */,
-				A905FE321D740F8C001E496B /* libpostproc.54.0.100.dylib in Frameworks */,
-				A905FE281D740F8C001E496B /* libavcodec.57.48.101.dylib in Frameworks */,
-				A905FE291D740F8C001E496B /* libavfilter.6.47.100.dylib in Frameworks */,
-				A905FE2A1D740F8C001E496B /* libavformat.57.41.100.dylib in Frameworks */,
-				A905FE2B1D740F8C001E496B /* libavresample.3.0.0.dylib in Frameworks */,
-				A905FE2C1D740F8C001E496B /* libavutil.55.28.100.dylib in Frameworks */,
-				A905FE2D1D740F8C001E496B /* libswresample.2.1.100.dylib in Frameworks */,
-				A905FE2E1D740F8C001E496B /* libswscale.4.1.100.dylib in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A96D16ED1D5860C5009F7AC2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -411,49 +305,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A9B7A06E1D6C39E40060ADF4 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A9B7A08B1D6C3A180060ADF4 /* libSDL2.a in Frameworks */,
-				A9B7A0811D6C3A080060ADF4 /* libavcodec.a in Frameworks */,
-				A9B7A0821D6C3A080060ADF4 /* libavdevice.a in Frameworks */,
-				A9B7A0831D6C3A080060ADF4 /* libavfilter.a in Frameworks */,
-				A9B7A0841D6C3A080060ADF4 /* libavformat.a in Frameworks */,
-				A9B7A0851D6C3A080060ADF4 /* libavresample.a in Frameworks */,
-				A9B7A0861D6C3A080060ADF4 /* libavutil.a in Frameworks */,
-				A9B7A0871D6C3A080060ADF4 /* libpostproc.a in Frameworks */,
-				A9B7A0881D6C3A080060ADF4 /* libswresample.a in Frameworks */,
-				A9B7A0891D6C3A080060ADF4 /* libswscale.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A9BE13521D6C1AB8000A2A2E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A9BE13651D6C1B37000A2A2E /* libavcodec.57.48.101.dylib in Frameworks */,
-				A9BE13661D6C1B37000A2A2E /* libavfilter.6.47.100.dylib in Frameworks */,
-				A9BE13671D6C1B37000A2A2E /* libavformat.57.41.100.dylib in Frameworks */,
-				A9BE13681D6C1B37000A2A2E /* libavresample.3.0.0.dylib in Frameworks */,
-				A9BE13691D6C1B37000A2A2E /* libavutil.55.28.100.dylib in Frameworks */,
-				A9BE136A1D6C1B37000A2A2E /* libswresample.2.1.100.dylib in Frameworks */,
-				A9BE136B1D6C1B37000A2A2E /* libswscale.4.1.100.dylib in Frameworks */,
-				A9BE135D1D6C1AED000A2A2E /* libSDL2-2.0.0.dylib in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D88D31601D7B2DED00E2ED02 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D88D31731D7B331F00E2ED02 /* libpostproc.54.0.100.dylib in Frameworks */,
-				D88D31741D7B331F00E2ED02 /* libswresample.2.1.100.dylib in Frameworks */,
+				A93460C21D7D46A200709FFF /* libswresample.2.1.100.dylib in Frameworks */,
 				D88D316B1D7B331E00E2ED02 /* libavcodec.57.48.101.dylib in Frameworks */,
-				D88D316C1D7B331E00E2ED02 /* libavdevice.57.0.101.dylib in Frameworks */,
 				D88D316D1D7B331E00E2ED02 /* libavfilter.6.47.100.dylib in Frameworks */,
 				D88D316E1D7B331E00E2ED02 /* libavformat.57.41.100.dylib in Frameworks */,
-				D88D316F1D7B331E00E2ED02 /* libavresample.3.0.0.dylib in Frameworks */,
 				D88D31701D7B331E00E2ED02 /* libavutil.55.28.100.dylib in Frameworks */,
 				D88D316A1D7B32E800E2ED02 /* libSDL2-2.0.0.dylib in Frameworks */,
 			);
@@ -501,9 +360,6 @@
 			isa = PBXGroup;
 			children = (
 				A96D16F01D5860C5009F7AC2 /* tutorial.app */,
-				A9BE13551D6C1AB8000A2A2E /* tutorial3 */,
-				A9B7A0711D6C39E40060ADF4 /* tutorial4 */,
-				A905FE1C1D740ECF001E496B /* tutorial5 */,
 				D88D31631D7B2DED00E2ED02 /* tutorial6 */,
 			);
 			name = Products;
@@ -519,11 +375,6 @@
 				D880467A1D5F928A00896792 /* media_helper */,
 				A970FA0A1D5C538700A114A1 /* README.md */,
 				A96D16F31D5860C5009F7AC2 /* AppDelegate.swift */,
-				A96D16F51D5860C5009F7AC2 /* ViewController.swift */,
-				A96D17571D5876CD009F7AC2 /* tutorial.swift */,
-				A96535A61D6AD130009FE760 /* Tutorial2.swift */,
-				A96535A81D6AF69E009FE760 /* Tutorial3.swift */,
-				D87FB1891D6751D200103AC7 /* Tutorial4.swift */,
 				A96D17461D5875F0009F7AC2 /* tutorial-Bridging-Header.h */,
 				A96D175B1D587725009F7AC2 /* sample.mp4 */,
 				A96D16F71D5860C5009F7AC2 /* Main.storyboard */,
@@ -652,11 +503,6 @@
 			children = (
 				A96D17471D5875F1009F7AC2 /* FFmpeg.h */,
 				A96D17481D5875F1009F7AC2 /* FFmpeg.m */,
-				A96BD6B41D599C3E0095C84C /* SDLHelper.h */,
-				A96BD6B51D599C3E0095C84C /* SDLHelper.m */,
-				D89657201D5DC0AE00F1DECB /* SDL&FFmpeg.swift */,
-				D8DC59361D5D6D9200AADB7C /* SDLHelper.swift */,
-				A970FA0C1D5C5BC800A114A1 /* AVHelper.swift */,
 			);
 			name = media_helper;
 			sourceTree = "<group>";
@@ -738,6 +584,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		A93460C41D7D5A6D00709FFF /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A93460C51D7D5A7F00709FFF /* FFmpeg.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A96D17351D587152009F7AC2 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -763,7 +617,6 @@
 				A96BD6691D59705A0095C84C /* SDL_cpuinfo.h in Headers */,
 				A96BD66A1D59705A0095C84C /* SDL_endian.h in Headers */,
 				A96BD66B1D59705A0095C84C /* SDL_error.h in Headers */,
-				A96BD6B61D599C3E0095C84C /* SDLHelper.h in Headers */,
 				A96BD66C1D59705A0095C84C /* SDL_events.h in Headers */,
 				A96BD66D1D59705A0095C84C /* SDL_filesystem.h in Headers */,
 				A96BD66E1D59705A0095C84C /* SDL_gamecontroller.h in Headers */,
@@ -808,34 +661,9 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A98B2F7A1D6D260200AD314E /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A98B2F7B1D6D260E00AD314E /* FFmpeg.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		A905FE1B1D740ECF001E496B /* tutorial5 */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A905FE201D740ECF001E496B /* Build configuration list for PBXNativeTarget "tutorial5" */;
-			buildPhases = (
-				A905FE181D740ECF001E496B /* Sources */,
-				A905FE191D740ECF001E496B /* Frameworks */,
-				A905FE1A1D740ECF001E496B /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = tutorial5;
-			productName = tutorial5;
-			productReference = A905FE1C1D740ECF001E496B /* tutorial5 */;
-			productType = "com.apple.product-type.tool";
-		};
 		A96D16EF1D5860C5009F7AC2 /* tutorial */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A96D17021D5860C5009F7AC2 /* Build configuration list for PBXNativeTarget "tutorial" */;
@@ -856,41 +684,6 @@
 			productReference = A96D16F01D5860C5009F7AC2 /* tutorial.app */;
 			productType = "com.apple.product-type.application";
 		};
-		A9B7A0701D6C39E40060ADF4 /* tutorial4 */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A9B7A0751D6C39E40060ADF4 /* Build configuration list for PBXNativeTarget "tutorial4" */;
-			buildPhases = (
-				A98B2F7A1D6D260200AD314E /* Headers */,
-				A9B7A06D1D6C39E40060ADF4 /* Sources */,
-				A9B7A06E1D6C39E40060ADF4 /* Frameworks */,
-				A9759A5B1D6EB34200EE64BA /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = tutorial4;
-			productName = tutorial4;
-			productReference = A9B7A0711D6C39E40060ADF4 /* tutorial4 */;
-			productType = "com.apple.product-type.tool";
-		};
-		A9BE13541D6C1AB8000A2A2E /* tutorial3 */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A9BE13591D6C1AB8000A2A2E /* Build configuration list for PBXNativeTarget "tutorial3" */;
-			buildPhases = (
-				A9BE13511D6C1AB8000A2A2E /* Sources */,
-				A9BE13521D6C1AB8000A2A2E /* Frameworks */,
-				A9BE13531D6C1AB8000A2A2E /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = tutorial3;
-			productName = tutorial3;
-			productReference = A9BE13551D6C1AB8000A2A2E /* tutorial3 */;
-			productType = "com.apple.product-type.tool";
-		};
 		D88D31621D7B2DED00E2ED02 /* tutorial6 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D88D31671D7B2DEE00E2ED02 /* Build configuration list for PBXNativeTarget "tutorial6" */;
@@ -898,6 +691,7 @@
 				D88D315F1D7B2DED00E2ED02 /* Sources */,
 				D88D31601D7B2DED00E2ED02 /* Frameworks */,
 				D88D31611D7B2DED00E2ED02 /* CopyFiles */,
+				A93460C41D7D5A6D00709FFF /* Headers */,
 			);
 			buildRules = (
 			);
@@ -918,24 +712,10 @@
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = gretech;
 				TargetAttributes = {
-					A905FE1B1D740ECF001E496B = {
-						CreatedOnToolsVersion = 8.0;
-						LastSwiftMigration = 0800;
-						ProvisioningStyle = Automatic;
-					};
 					A96D16EF1D5860C5009F7AC2 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = HY47J4787Q;
 						LastSwiftMigration = 0800;
-						ProvisioningStyle = Automatic;
-					};
-					A9B7A0701D6C39E40060ADF4 = {
-						CreatedOnToolsVersion = 8.0;
-						LastSwiftMigration = 0800;
-						ProvisioningStyle = Automatic;
-					};
-					A9BE13541D6C1AB8000A2A2E = {
-						CreatedOnToolsVersion = 8.0;
 						ProvisioningStyle = Automatic;
 					};
 					D88D31621D7B2DED00E2ED02 = {
@@ -960,9 +740,6 @@
 			projectRoot = "";
 			targets = (
 				A96D16EF1D5860C5009F7AC2 /* tutorial */,
-				A9BE13541D6C1AB8000A2A2E /* tutorial3 */,
-				A9B7A0701D6C39E40060ADF4 /* tutorial4 */,
-				A905FE1B1D740ECF001E496B /* tutorial5 */,
 				D88D31621D7B2DED00E2ED02 /* tutorial6 */,
 			);
 		};
@@ -1003,51 +780,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A905FE181D740ECF001E496B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A905FE361D74101B001E496B /* FFmpeg.m in Sources */,
-				A905FE1F1D740ECF001E496B /* main.m in Sources */,
-				A905FE271D740EF2001E496B /* tutorial5.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A96D16EC1D5860C5009F7AC2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				A96D174A1D5875F1009F7AC2 /* FFmpeg.m in Sources */,
-				D89657211D5DC0AE00F1DECB /* SDL&FFmpeg.swift in Sources */,
-				A96D16F61D5860C5009F7AC2 /* ViewController.swift in Sources */,
 				D8F1B1EB1D58D5DE00564EE2 /* Castable.swift in Sources */,
 				A91089321D6C4B6000A48616 /* README.md in Sources */,
-				A96BD6B71D599C3E0095C84C /* SDLHelper.m in Sources */,
 				A96D16F41D5860C5009F7AC2 /* AppDelegate.swift in Sources */,
-				D87FB18A1D6751D200103AC7 /* Tutorial4.swift in Sources */,
-				A96535A71D6AD130009FE760 /* Tutorial2.swift in Sources */,
-				D8DC59371D5D6D9200AADB7C /* SDLHelper.swift in Sources */,
-				A96D17581D5876CD009F7AC2 /* tutorial.swift in Sources */,
-				A970FA0D1D5C5BC800A114A1 /* AVHelper.swift in Sources */,
-				A96535A91D6AF69E009FE760 /* Tutorial3.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A9B7A06D1D6C39E40060ADF4 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A98B2F771D6D25CC00AD314E /* FFmpeg.m in Sources */,
-				A9B7A08E1D6C3AFF0060ADF4 /* tutorial4.swift in Sources */,
-				A9B7A0741D6C39E40060ADF4 /* main.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A9BE13511D6C1AB8000A2A2E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A9BE13581D6C1AB8000A2A2E /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1055,6 +795,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A93460C11D7D047D00709FFF /* FFmpeg.m in Sources */,
 				D88D31661D7B2DED00E2ED02 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1081,57 +822,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		A905FE211D740ECF001E496B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				HEADER_SEARCH_PATHS = (
-					/usr/local/Cellar/ffmpeg/3.1.2/include,
-					/usr/local/Cellar/sdl2/2.0.4/include,
-				);
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/ffmpeg/3.1.2/lib,
-					/usr/local/Cellar/sdl2/2.0.4/lib,
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "tutorial5/tutorial5-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
-			};
-			name = Debug;
-		};
-		A905FE221D740ECF001E496B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				HEADER_SEARCH_PATHS = (
-					/usr/local/Cellar/ffmpeg/3.1.2/include,
-					/usr/local/Cellar/sdl2/2.0.4/include,
-				);
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/ffmpeg/3.1.2/lib,
-					/usr/local/Cellar/sdl2/2.0.4/lib,
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "tutorial5/tutorial5-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
-			};
-			name = Release;
-		};
 		A96D17001D5860C5009F7AC2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1285,101 +975,6 @@
 			};
 			name = Release;
 		};
-		A9B7A0761D6C39E40060ADF4 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/Cellar/ffmpeg/3.1.2/include,
-					/usr/local/Cellar/sdl2/2.0.4/include,
-				);
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/ffmpeg/3.1.2/lib,
-					/usr/local/Cellar/sdl2/2.0.4/lib,
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "tutorial4/tutorial4-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
-			};
-			name = Debug;
-		};
-		A9B7A0771D6C39E40060ADF4 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/Cellar/ffmpeg/3.1.2/include,
-					/usr/local/Cellar/sdl2/2.0.4/include,
-				);
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/ffmpeg/3.1.2/lib,
-					/usr/local/Cellar/sdl2/2.0.4/lib,
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "tutorial4/tutorial4-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
-			};
-			name = Release;
-		};
-		A9BE135A1D6C1AB8000A2A2E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				HEADER_SEARCH_PATHS = (
-					/usr/local/Cellar/sdl2/2.0.4/include,
-					/usr/local/Cellar/ffmpeg/3.1.2/include,
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/sdl2/2.0.4/lib,
-					/usr/local/Cellar/ffmpeg/3.1.2/lib,
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		A9BE135B1D6C1AB8000A2A2E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_IDENTITY = "-";
-				HEADER_SEARCH_PATHS = (
-					/usr/local/Cellar/sdl2/2.0.4/include,
-					/usr/local/Cellar/ffmpeg/3.1.2/include,
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/sdl2/2.0.4/lib,
-					/usr/local/Cellar/ffmpeg/3.1.2/lib,
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Release;
-		};
 		D88D31681D7B2DEE00E2ED02 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1399,7 +994,7 @@
 					/usr/local/Cellar/sdl2/2.0.4/lib,
 					/usr/local/Cellar/ffmpeg/3.1.3/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial6/tutorial6-Bridging-Header.h";
@@ -1427,7 +1022,7 @@
 					/usr/local/Cellar/sdl2/2.0.4/lib,
 					/usr/local/Cellar/ffmpeg/3.1.3/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "tutorial6/tutorial6-Bridging-Header.h";
@@ -1438,15 +1033,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A905FE201D740ECF001E496B /* Build configuration list for PBXNativeTarget "tutorial5" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A905FE211D740ECF001E496B /* Debug */,
-				A905FE221D740ECF001E496B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A96D16EB1D5860C5009F7AC2 /* Build configuration list for PBXProject "tutorial" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1465,24 +1051,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A9B7A0751D6C39E40060ADF4 /* Build configuration list for PBXNativeTarget "tutorial4" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A9B7A0761D6C39E40060ADF4 /* Debug */,
-				A9B7A0771D6C39E40060ADF4 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		A9BE13591D6C1AB8000A2A2E /* Build configuration list for PBXNativeTarget "tutorial3" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A9BE135A1D6C1AB8000A2A2E /* Debug */,
-				A9BE135B1D6C1AB8000A2A2E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D88D31671D7B2DEE00E2ED02 /* Build configuration list for PBXNativeTarget "tutorial6" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1490,6 +1058,7 @@
 				D88D31691D7B2DEE00E2ED02 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -70,6 +70,12 @@ BOOL AVFILTER_EOF(int ret) {
     return ret == AVERROR(EAGAIN) || ret == AVERROR_EOF;
 }
 
+NSString *channels_name(int channels, uint64_t channel_layout) {
+    char buf[128];
+    av_get_channel_layout_string(buf, 128, channels, channel_layout);
+    return [[NSString alloc] initWithCString:buf encoding:NSASCIIStringEncoding];
+}
+
 NSString* codec_name_for_codec_id(enum AVCodecID codec_id) {
     return [NSString stringWithCString:avcodec_get_name(codec_id) encoding:NSASCIIStringEncoding];
 }
@@ -93,6 +99,8 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
 
 @interface AVFilterHelper ()
 {
+    BOOL isAudio;
+    
     AVFilter *buffersrc;
     AVFilter *buffersink;
     AVFilterContext *buffersrc_ctx;
@@ -100,6 +108,13 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
     AVFilterGraph *filter_graph;
     AVFilterInOut *inputs;
     AVFilterInOut *outputs;
+    
+    AVFilter *abuffer;
+    AVFilterContext *abuffer_ctx;
+    AVFilter *abuffersink;
+    AVFilterContext *abuffersink_ctx;
+    AVFilter *aformat;
+    AVFilterContext *aformat_ctx;
 }
 @end
 
@@ -108,8 +123,7 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
 - (nullable instancetype)init {
     self = [super init];
     if (self) {
-        buffersrc = avfilter_get_by_name("buffer");
-        buffersink = avfilter_get_by_name("buffersink");
+        avfilter_register_all();
         
         filter_graph = avfilter_graph_alloc();
         _filterFrame = av_frame_alloc();
@@ -117,7 +131,17 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
     return self;
 }
 
+- (void)dealloc
+{
+    avfilter_graph_free(&filter_graph);
+    av_frame_unref(_filterFrame);
+    av_frame_free(&_filterFrame);
+}
+
 - (BOOL)setup:(AVFormatContext *)fmt_ctx videoStream:(AVStream *)videoStream filterDescription:(NSString *)filterDescription {
+    isAudio = false;
+    buffersrc = avfilter_get_by_name("buffer");
+    buffersink = avfilter_get_by_name("buffersink");
     
     AVRational time_base = videoStream->time_base;
     AVRational pixel_aspect = videoStream->codecpar->sample_aspect_ratio;
@@ -158,17 +182,64 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
     return YES;
 }
 
-- (BOOL)applyFilter:(AVFrame *)sourceFrame {
-    if (isErr(av_buffersrc_add_frame_flags(buffersrc_ctx, sourceFrame, AV_BUFFERSRC_FLAG_KEEP_REF), "buffersrc to source frame")) {
+- (BOOL)setup:(AVFormatContext *)fmt_ctx audioStream:(AVStream *)audioStream abuffer:(NSString *)abuffer_args aformat:(NSString *)aformat_args {
+    
+    NSLog(@"%s -> abuffer: %@, aformat: %@", __PRETTY_FUNCTION__, abuffer_args, aformat_args);
+    isAudio = true;
+    
+    abuffer = avfilter_get_by_name("abuffer");
+    abuffersink = avfilter_get_by_name("abuffersink");
+    aformat = avfilter_get_by_name("aformat");
+    
+    if (isErr(avfilter_graph_create_filter(&abuffer_ctx, abuffer, "abuffer", abuffer_args.UTF8String, nil, filter_graph), "audio buffer")) {
         return NO;
     }
-    while (1) {
-        int ret = av_buffersink_get_frame(buffersink_ctx, _filterFrame);
-        if (AVFILTER_EOF(ret)) {
-            return YES;
-        }
-        if (isErr(ret, "buffersink get frame")) {
+    
+    if (isErr(avfilter_graph_create_filter(&aformat_ctx, aformat, "aformat converter", aformat_args.UTF8String, nil, filter_graph), "audio format")) {
+        return NO;
+    }
+    
+    if (isErr(avfilter_graph_create_filter(&abuffersink_ctx, abuffersink, "abuffersink", NULL, NULL, filter_graph), "abuffersink")) {
+        return NO;
+    }
+    
+    if (isErr(avfilter_link(abuffer_ctx, 0, aformat_ctx, 0), "link to aformat from abuffer")) {
+        return NO;
+    }
+    if (isErr(avfilter_link(aformat_ctx, 0, abuffersink_ctx, 0), "link to abuffersink from aformat")) {
+        return NO;
+    }
+    
+    if (isErr(avfilter_graph_config(filter_graph, nil), "config audio filter")) {
+        return NO;
+    }
+    
+    return YES;
+}
+
+- (BOOL)applyFilter:(AVFrame *)sourceFrame {
+    if (isAudio) {
+        if (isErr(av_buffersrc_add_frame_flags(abuffer_ctx, sourceFrame, AV_BUFFERSRC_FLAG_KEEP_REF), "abuffer add source frame")) {
             return NO;
+        }
+        
+        if (isErr(av_buffersink_get_frame(abuffersink_ctx, _filterFrame), "get filtered frame")) {
+            return NO;
+        }
+        return YES;
+    }
+    else {
+        if (isErr(av_buffersrc_add_frame_flags(buffersrc_ctx, sourceFrame, AV_BUFFERSRC_FLAG_KEEP_REF), "buffersrc to source frame")) {
+            return NO;
+        }
+        while (1) {
+            int ret = av_buffersink_get_frame(buffersink_ctx, _filterFrame);
+            if (AVFILTER_EOF(ret)) {
+                return YES;
+            }
+            if (isErr(ret, "buffersink get frame")) {
+                return NO;
+            }
         }
     }
     return NO;
@@ -177,11 +248,6 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
 - (void)clearInOut {
     avfilter_inout_free(&inputs);
     avfilter_inout_free(&outputs);
-}
-
-- (void)dealloc {
-    av_frame_free(&_filterFrame);
-    avfilter_graph_free(&filter_graph);
 }
 
 @end

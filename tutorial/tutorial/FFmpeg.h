@@ -11,6 +11,7 @@
 #import <libavfilter/avfilter.h>
 #import <libavfilter/avfiltergraph.h>
 #import <libavfilter/buffersrc.h>
+#import <libswresample/swresample.h>
 
 typedef struct Test{
     int values[8];
@@ -30,6 +31,8 @@ BOOL IS_AVERROR_EOF(int err);
 
 BOOL AVFILTER_EOF(int ret);
 
+NSString *channels_name(int channels, uint64_t channel_layout);
+
 NSString* codec_name_for_codec_id(enum AVCodecID codec_id);
 NSString* codec_name_for_stream(AVStream* stream);
 NSString* codec_name_for_codec_parameters(AVCodecParameters *codecpar);
@@ -45,6 +48,7 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx);
 @property (nonatomic, assign) AVFrame *filterFrame;
 
 - (BOOL)setup:(AVFormatContext *)fmt_ctx videoStream:(AVStream *)videoStream filterDescription:(NSString *)filterDescription;
+- (BOOL)setup:(AVFormatContext *)fmt_ctx audioStream:(AVStream *)audioStream abuffer:(NSString *)abuffer_args aformat:(NSString *)aformat_args;
 
 - (BOOL)applyFilter:(AVFrame *)sourceFrame;
 
