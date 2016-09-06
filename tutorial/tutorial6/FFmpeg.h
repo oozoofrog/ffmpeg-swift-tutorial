@@ -11,6 +11,7 @@
 #import <libavfilter/avfilter.h>
 #import <libavfilter/avfiltergraph.h>
 #import <libavfilter/buffersrc.h>
+#import <libavfilter/buffersink.h>
 #import <libswresample/swresample.h>
 
 typedef struct Test{

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A91089321D6C4B6000A48616 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = A91089311D6C4B6000A48616 /* README.md */; };
 		A93460C21D7D46A200709FFF /* libswresample.2.1.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D88D31721D7B331F00E2ED02 /* libswresample.2.1.100.dylib */; };
+		A9587E971D7FBA4B00FBEC77 /* FFmpegHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9587E961D7FBA4B00FBEC77 /* FFmpegHelper.swift */; };
 		A96BD6A71D59976B0095C84C /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6A61D59976B0095C84C /* GameController.framework */; };
 		A96BD6A91D5997720095C84C /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6A81D5997720095C84C /* CoreMotion.framework */; };
 		A96BD6AF1D599B2D0095C84C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A96BD6AE1D599B2D0095C84C /* QuartzCore.framework */; };
@@ -82,6 +83,7 @@
 		A905FE341D740FB9001E496B /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ffmpeg; path = ../../../../../../usr/local/Cellar/ffmpeg; sourceTree = "<group>"; };
 		A905FE351D740FB9001E496B /* sdl2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = sdl2; path = ../../../../../../usr/local/Cellar/sdl2; sourceTree = "<group>"; };
 		A91089311D6C4B6000A48616 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		A9587E961D7FBA4B00FBEC77 /* FFmpegHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFmpegHelper.swift; sourceTree = "<group>"; };
 		A96BD6941D5973F90095C84C /* sdl.map */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; name = sdl.map; path = ../../sdl.map; sourceTree = "<group>"; };
 		A96BD6A61D59976B0095C84C /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		A96BD6A81D5997720095C84C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
@@ -322,6 +324,7 @@
 			children = (
 				D8558CBA1D7DA8CC00964937 /* FFmpeg.h */,
 				D8558CBB1D7DA8CC00964937 /* FFmpeg.m */,
+				A9587E961D7FBA4B00FBEC77 /* FFmpegHelper.swift */,
 				D88D31651D7B2DED00E2ED02 /* main.swift */,
 				D88D31751D7B33F700E2ED02 /* tutorial6-Bridging-Header.h */,
 			);
@@ -531,6 +534,7 @@
 			files = (
 				D8558CBD1D7DA8CC00964937 /* FFmpeg.m in Sources */,
 				D88D31661D7B2DED00E2ED02 /* main.swift in Sources */,
+				A9587E971D7FBA4B00FBEC77 /* FFmpegHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

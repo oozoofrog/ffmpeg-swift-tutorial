@@ -4,4 +4,6 @@
 
 #import <SDL2/SDL.h>
 #import <libavformat/avformat.h>
+#import <libavutil/time.h>
+#import <libavutil/imgutils.h>
 #import "FFmpeg.h"
