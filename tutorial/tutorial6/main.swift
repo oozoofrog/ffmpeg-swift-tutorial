@@ -160,9 +160,9 @@ class Player {
                         continue
                     }
                     self.decodeLock.wait()
-                    self.displayLock.wait()
+                    self.timerLock.wait()
                     self.videoQueue.insert(data, at: 0)
-                    self.displayLock.signal()
+                    self.timerLock.signal()
                     if 12 > self.videoQueue.count {
                         self.decodeLock.signal()
                     }
@@ -174,14 +174,14 @@ class Player {
     }
     
     var videoQueue: [VideoData] = []
-    var displayLock: DispatchSemaphore = DispatchSemaphore(value: 1)
-    let displayQueue = DispatchQueue(label: "timer", attributes: .concurrent)
-    lazy var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: .strict, queue:self.displayQueue)
+    var timerLock: DispatchSemaphore = DispatchSemaphore(value: 1)
+    let timerQueue = DispatchQueue(label: "timer", attributes: .concurrent)
+    lazy var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: .strict, queue:self.timerQueue)
     
     func startDisplay(fps: Double) {
         timer?.scheduleRepeating(deadline: .now(), interval: fps, leeway: DispatchTimeInterval.nanoseconds(0))
         timer?.setEventHandler {
-            self.displayLock.wait()
+            self.timerLock.wait()
             if let data = self.videoQueue.popLast() {
                 var tr = CGRect(x: 0, y: 0, width: Int(data.w), height: Int(data.h))
                 var ww: Int32 = 0
@@ -203,7 +203,7 @@ class Player {
                 SDL_RenderPresent(self.renderer)
                 print(data.timeRange)
             }
-            self.displayLock.signal()
+            self.timerLock.signal()
             self.decodeLock.signal()
         }
         timer?.resume()
