@@ -116,4 +116,10 @@ class SweetStream {
         }
         return true
     }
+    
+    var filter: AVFilterHelper? = nil
+    func setupFilter() {
+        self.filter = AVFilterHelper()
+        self.filter?.setup(self.format, audioStream: self.stream, abuffer: <#T##String!#>, aformat: <#T##String!#>)
+    }
 }

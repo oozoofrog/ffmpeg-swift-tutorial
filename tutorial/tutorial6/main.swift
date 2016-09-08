@@ -97,7 +97,8 @@ class Player {
     var format: UnsafeMutablePointer<AVFormatContext>?
     let decodeQueue: DispatchQueue = DispatchQueue(label: "decode")
     let decodeLock: DispatchSemaphore = DispatchSemaphore(value: 1)
-    var videoStream: SweetStream!
+    var videoStream: SweetStream?
+    var audioStream: SweetStream?
     var videoRect: SDL_Rect = SDL_Rect()
     func decode() {
         guard 0 <= avformat_open_input(&format, path.path, nil, nil) else {
@@ -112,51 +113,48 @@ class Player {
         
         av_dump_format(format, -1, path.path, 0)
         
-        guard let videoStream = SweetStream(format: format, type: AVMEDIA_TYPE_VIDEO) else {
+        guard let videoStream = format?.pointee.streamArray(type: AVMEDIA_TYPE_VIDEO).first, videoStream.open() else {
             return
         }
         self.videoStream = videoStream
-        guard videoStream.open() else {
+        guard let audioStream = format?.pointee.streamArray(type: AVMEDIA_TYPE_AUDIO).first, audioStream.open() else {
             return
         }
+        self.audioStream = audioStream
         
         videoRect.w = videoStream.w
         videoRect.h = videoStream.h
         texture = SDL_CreateTexture(renderer, Uint32(SDL_PIXELFORMAT_IYUV), Int32(SDL_TEXTUREACCESS_STREAMING.rawValue), videoRect.w, videoRect.h)
         
-        let videoIndex = self.videoStream.index
-        let time_base = self.videoStream.time_base
         decodeQueue.async {
             
-            self.startDisplay(fps: self.videoStream.fps)
+            self.startDisplay(fps: videoStream.fps)
             
             var ret: Int32 = 0
-            var pkt = av_packet_alloc()
-            var frame = av_frame_alloc()
+            var pkt: AVPacket = AVPacket()
+            var frame: AVFrame = AVFrame()
             defer {
-                av_packet_unref(pkt)
-                av_frame_unref(frame)
-                av_packet_free(&pkt)
-                av_frame_free(&frame)
+                av_packet_unref(&pkt)
+                av_frame_unref(&frame)
             }
             while true {
-                ret = av_read_frame(self.format, pkt)
+                ret = av_read_frame(self.format, &pkt)
                 guard 0 <= ret else {
                     break
                 }
-                switch pkt?.pointee.stream_index {
-                case videoIndex?:
-                    ret = avcodec_send_packet(self.videoStream.codec, pkt)
+                switch pkt.stream_index {
+                case videoStream.index:
+                    ret = avcodec_send_packet(videoStream.codec, &pkt)
                     if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && false == IS_AVERROR_EOF(ret) {
                         break
                     }
-                    ret = avcodec_receive_frame(self.videoStream.codec, frame)
+                    ret = avcodec_receive_frame(videoStream.codec, &frame)
                     if ret == AVERROR_CONVERT(EAGAIN) || IS_AVERROR_EOF(ret) {
                         continue
                     } else if 0 > ret {
                         break
                     }
-                    guard let data = frame?.pointee.videoData(time_base: time_base) else {
+                    guard let data = frame.videoData(time_base: videoStream.time_base) else {
                         continue
                     }
                     self.decodeLock.wait()
@@ -166,6 +164,18 @@ class Player {
                     if 12 > self.videoQueue.count {
                         self.decodeLock.signal()
                     }
+                case audioStream.index:
+                    ret = avcodec_send_packet(audioStream.codec, &pkt)
+                    if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) {
+                        break
+                    }
+                    ret = avcodec_receive_frame(audioStream.codec, &frame)
+                    if ret == AVERROR_CONVERT(EAGAIN) {
+                        continue
+                    } else if 0 > ret {
+                        break
+                    }
+                    
                 default:
                     break
                 }
