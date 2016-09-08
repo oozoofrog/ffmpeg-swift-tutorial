@@ -103,6 +103,8 @@ class SweetStream {
         self.stream = s
         
         self.codec = self.stream.pointee.codec
+        self.codec.pointee.thread_count = 2
+        self.codec.pointee.thread_type = FF_THREAD_FRAME
     }
     
     func open() -> Bool {
