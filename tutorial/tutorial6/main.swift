@@ -156,7 +156,6 @@ class Player {
                     default:
                         break
                     }
-                    let result = DispatchTime.now().rawValue - testStart.rawValue
                     guard let data = frame.videoData(time_base: videoStream.time_base) else {
                         continue
                     }
