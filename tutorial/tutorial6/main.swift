@@ -272,13 +272,23 @@ class Player {
     }
 }
 
+var quit: Bool = false
+
+
 let player = Player { 
-    
+    quit = true
 }
 DispatchQueue.global().async {
     player.start()
 }
 
-while true {
-    
+var event = SDL_Event()
+while false == quit {
+    SDL_PollEvent(&event)
+    switch event.type {
+    case SDL_QUIT.rawValue:
+        quit = true
+    default:
+        break
+    }
 }
