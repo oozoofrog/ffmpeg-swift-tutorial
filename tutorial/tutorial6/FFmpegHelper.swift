@@ -117,6 +117,28 @@ class SweetStream {
         return true
     }
     
+    enum SweetDecodeResult {
+        case err(Int32)
+        case success
+        case pass
+    }
+    
+    func decode(pkt: UnsafeMutablePointer<AVPacket>, frame: UnsafeMutablePointer<AVFrame>) -> SweetDecodeResult{
+        
+        var ret = avcodec_send_packet(self.codec, pkt)
+        if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && false == IS_AVERROR_EOF(ret){
+            return .err(ret)
+        }
+        ret = avcodec_receive_frame(self.codec, frame)
+        if ret == AVERROR_CONVERT(EAGAIN) {
+            return .pass
+        }
+        if 0 > ret && false == IS_AVERROR_EOF(ret) {
+            return .err(ret)
+        }
+        return .success
+    }
+    
     var filter: AVFilterHelper? = nil
     func setupFilter(
         outSampleRate: Int32,

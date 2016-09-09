@@ -147,20 +147,16 @@ class Player {
                 }
                 switch pkt.stream_index {
                 case videoStream.index:
-                    let testStart = DispatchTime.now()
-                    ret = avcodec_send_packet(videoStream.codec, &pkt)
-                    if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) && false == IS_AVERROR_EOF(ret) {
-                        break
-                    }
-                    ret = avcodec_receive_frame(videoStream.codec, &frame)
-                    if ret == AVERROR_CONVERT(EAGAIN) || IS_AVERROR_EOF(ret) {
+                    switch videoStream.decode(pkt: &pkt, frame: &frame) {
+                    case .pass:
                         continue
-                    } else if 0 > ret {
+                    case .err(let err):
+                        print_err(err, "video_decoding")
+                        return
+                    default:
                         break
                     }
                     let result = DispatchTime.now().rawValue - testStart.rawValue
-                    let secs = Double(result) / Double(NSEC_PER_SEC)
-                    print("performance -> \(String(format: "%f", secs)) secs")
                     guard let data = frame.videoData(time_base: videoStream.time_base) else {
                         continue
                     }
@@ -172,14 +168,13 @@ class Player {
                         self.decodeLock.signal()
                     }
                 case audioStream.index:
-                    ret = avcodec_send_packet(audioStream.codec, &pkt)
-                    if 0 > ret && ret != AVERROR_CONVERT(EAGAIN) {
-                        break
-                    }
-                    ret = avcodec_receive_frame(audioStream.codec, &frame)
-                    if ret == AVERROR_CONVERT(EAGAIN) {
+                    switch audioStream.decode(pkt: &pkt, frame: &frame) {
+                    case .pass:
                         continue
-                    } else if 0 > ret {
+                    case .err(let err):
+                        print_err(err, "audio decoding")
+                        return
+                    default:
                         break
                     }
                     
