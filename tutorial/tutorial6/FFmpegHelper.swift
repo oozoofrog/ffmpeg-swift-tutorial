@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AVFoundation
 
 extension AVFrame {
     mutating func videoData(time_base: AVRational) -> VideoData? {
@@ -33,6 +34,19 @@ extension AVFrame {
         }
         
         return nil
+    }
+    
+    mutating func dataCount() -> Int {
+        let dataPtr = Array(UnsafeBufferPointer.init(start: &self.data.0, count: 8))
+        
+        return dataPtr.reduce(0, { (result, ptr) -> Int in
+            return nil == ptr ? result : result + 1
+        })
+    }
+    
+    mutating func audioData(time_base: AVRational) -> AudioData? {
+        let format = MediaHelper.audioDefaultFormat
+        return AudioData(data: Data(bytes: self.data.0!, count: Int(linesize.0)), format: format, bufferSize: Int(linesize.0), sampleSize: Int(nb_samples), pts: av_frame_get_best_effort_timestamp(&self), dur: self.pkt_duration, time_base: time_base)
     }
 }
 
@@ -135,6 +149,19 @@ class SweetStream {
         }
         if 0 > ret && false == IS_AVERROR_EOF(ret) {
             return .err(ret)
+        }
+        guard let filter = self.filter else {
+            return .success
+        }
+        switch filter.applyFilter(frame) {
+        case .success:
+            return .success
+        case .continue, .noMoreFrames:
+            return .pass
+        case .failed:
+            return .err(-1)
+        default:
+            break
         }
         return .success
     }

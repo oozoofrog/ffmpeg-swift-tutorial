@@ -27,6 +27,7 @@
 		A96D175C1D587725009F7AC2 /* sample.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A96D175B1D587725009F7AC2 /* sample.mp4 */; };
 		A96D175F1D587D0B009F7AC2 /* ffmpeg-tutorial in Resources */ = {isa = PBXBuildFile; fileRef = A96D175E1D587D0B009F7AC2 /* ffmpeg-tutorial */; };
 		A999BE7D1D5C1E0400097E95 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A999BE7C1D5C1E0400097E95 /* examples */; };
+		A9F52ACB1D828CB0007E53F0 /* MediaHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F52ACA1D828CB0007E53F0 /* MediaHelper.swift */; };
 		D8558CB61D7DA07500964937 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D8558CB41D7DA07500964937 /* libbz2.tbd */; };
 		D8558CB71D7DA07500964937 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D8558CB51D7DA07500964937 /* libz.tbd */; };
 		D8558CB91D7DA08100964937 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D8558CB81D7DA08100964937 /* libiconv.tbd */; };
@@ -132,6 +133,7 @@
 		A9BE13621D6C1B37000A2A2E /* libavutil.55.28.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.55.28.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libavutil.55.28.100.dylib; sourceTree = "<group>"; };
 		A9BE13631D6C1B37000A2A2E /* libswresample.2.1.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.2.1.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libswresample.2.1.100.dylib; sourceTree = "<group>"; };
 		A9BE13641D6C1B37000A2A2E /* libswscale.4.1.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.4.1.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.2/lib/libswscale.4.1.100.dylib; sourceTree = "<group>"; };
+		A9F52ACA1D828CB0007E53F0 /* MediaHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaHelper.swift; sourceTree = "<group>"; };
 		D80776901D79BDD700A2377F /* libavcodec.57.48.101.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.57.48.101.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libavcodec.57.48.101.dylib; sourceTree = "<group>"; };
 		D80776911D79BDD700A2377F /* libavdevice.57.0.101.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavdevice.57.0.101.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libavdevice.57.0.101.dylib; sourceTree = "<group>"; };
 		D80776921D79BDD700A2377F /* libavfilter.6.47.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavfilter.6.47.100.dylib; path = ../../../../../../usr/local/Cellar/ffmpeg/3.1.3/lib/libavfilter.6.47.100.dylib; sourceTree = "<group>"; };
@@ -325,6 +327,7 @@
 				D8558CBA1D7DA8CC00964937 /* FFmpeg.h */,
 				D8558CBB1D7DA8CC00964937 /* FFmpeg.m */,
 				A9587E961D7FBA4B00FBEC77 /* FFmpegHelper.swift */,
+				A9F52ACA1D828CB0007E53F0 /* MediaHelper.swift */,
 				D88D31651D7B2DED00E2ED02 /* main.swift */,
 				D88D31751D7B33F700E2ED02 /* tutorial6-Bridging-Header.h */,
 			);
@@ -532,6 +535,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9F52ACB1D828CB0007E53F0 /* MediaHelper.swift in Sources */,
 				D8558CBD1D7DA8CC00964937 /* FFmpeg.m in Sources */,
 				D88D31661D7B2DED00E2ED02 /* main.swift in Sources */,
 				A9587E971D7FBA4B00FBEC77 /* FFmpegHelper.swift in Sources */,

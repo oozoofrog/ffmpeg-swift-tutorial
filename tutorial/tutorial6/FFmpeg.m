@@ -126,7 +126,6 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
         avfilter_register_all();
         
         filter_graph = avfilter_graph_alloc();
-        _filterFrame = av_frame_alloc();
     }
     return self;
 }
@@ -134,8 +133,6 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
 - (void)dealloc
 {
     avfilter_graph_free(&filter_graph);
-    av_frame_unref(_filterFrame);
-    av_frame_free(&_filterFrame);
 }
 
 - (BOOL)setup:(AVFormatContext *)fmt_ctx videoStream:(AVStream *)videoStream filterDescription:(NSString *)filterDescription {
@@ -233,7 +230,7 @@ NSString* codec_name_for_codec_ctx(AVCodecContext *ctx) {
     if (0 > ret) {
         return AVFilterApplyResultFailed;
     }
-    ret = av_buffersink_get_frame(sink, _filterFrame);
+    ret = av_buffersink_get_frame(sink, sourceFrame);
     if (0 <= ret) {
         return AVFilterApplyResultSuccess;
     }

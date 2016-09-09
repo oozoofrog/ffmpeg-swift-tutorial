@@ -53,8 +53,6 @@ typedef NS_ENUM(NSUInteger, AVFilterApplyResult) {
 };
 @interface AVFilterHelper : NSObject
 
-@property (nonatomic, assign) AVFrame *filterFrame;
-
 - (BOOL)setup:(AVFormatContext *)fmt_ctx videoStream:(AVStream *)videoStream filterDescription:(NSString *)filterDescription;
 - (BOOL)setup:(AVFormatContext *)fmt_ctx audioStream:(AVStream *)audioStream abuffer:(NSString *)abuffer_args aformat:(NSString *)aformat_args;
 
