@@ -118,8 +118,40 @@ class SweetStream {
     }
     
     var filter: AVFilterHelper? = nil
-    func setupFilter() {
+    func setupFilter(
+        outSampleRate: Int32,
+        outSampleFmt: AVSampleFormat,
+        outChannels: Int32) -> Bool{
+        
+        let inSampleRate: Int32 = self.stream.pointee.codecpar.pointee.sample_rate
+        let inSampleFmt: AVSampleFormat = AVSampleFormat(rawValue: self.stream.pointee.codecpar.pointee.format)
+        let inTimeBase: AVRational = self.time_base
+        let inChannelLayout: UInt64 = self.stream.pointee.codecpar.pointee.channel_layout
+        let inChannels: Int32 = self.stream.pointee.codecpar.pointee.channels
+        
         self.filter = AVFilterHelper()
-        self.filter?.setup(self.format, audioStream: self.stream, abuffer: <#T##String!#>, aformat: <#T##String!#>)
+        //TODO: setup filter
+        var sbuf = [Int8](repeating: 0, count: 64)
+        av_get_channel_layout_string(&sbuf, Int32(sbuf.count), inChannels, inChannelLayout)
+        let inChannelLayoutString = String(cString: sbuf)
+        guard 0 < inChannelLayoutString.lengthOfBytes(using: .utf8) else {
+            return false
+        }
+        sbuf = [Int8](repeating: 0, count: 64)
+        let outChannelLayout = av_get_default_channel_layout(outChannels)
+        av_get_channel_layout_string(&sbuf, Int32(sbuf.count), outChannels, UInt64(outChannelLayout))
+        let outChannelLayoutString = String(cString: sbuf)
+        guard 0 < outChannelLayoutString.lengthOfBytes(using: .utf8) else {
+            return false
+        }
+        let inTimeBaseStr = "\(inTimeBase.num)/\(inTimeBase.den)"
+        let inSampleFormatStr = String(cString: av_get_sample_fmt_name(inSampleFmt))
+        let outSampleFormatStr = String(cString: av_get_sample_fmt_name(outSampleFmt))
+        
+        return filter?.setup(
+            format,
+            audioStream: stream,
+            abuffer: "sample_rate=\(inSampleRate):sample_fmt=\(inSampleFormatStr):time_base=\(inTimeBaseStr):channels=\(inChannels):channel_layout=\(inChannelLayoutString)",
+            aformat: "sample_rates=\(outSampleRate):sample_fmts=\(outSampleFormatStr):channel_layouts=\(outChannelLayoutString)") ?? false
     }
 }
