@@ -79,7 +79,7 @@ class SweetStream {
     var fps: Double {
         return 1.0 / av_q2d(self.stream.pointee.avg_frame_rate)
     }
-    
+    var rate: Float = 0.0
     var time_base: AVRational {
         switch self.type {
         case AVMEDIA_TYPE_AUDIO, AVMEDIA_TYPE_VIDEO:
