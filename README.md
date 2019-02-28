@@ -3,7 +3,7 @@
 >$ git submodule init<br/>
 >$ ./FFmpeg-iOS-build-script/build-ffmpeg.sh
 
-###3016.09.03
+###2016.09.03
 - add MediaData protocol
 - add VideoData: MediaData
 - add AudioData: MediaData
