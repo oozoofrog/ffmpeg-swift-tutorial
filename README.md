@@ -48,3 +48,8 @@ SDL2.0 + ffmpeg 3.1.1 + swift is different from olds
 
 
 now working on tutorial4
+
+
+## Modernization checks
+- Run Swift package tests for modernization utilities:
+  - `swift test`

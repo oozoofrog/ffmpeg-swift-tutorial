@@ -14,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
         
@@ -83,31 +83,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func createSymbolickLinkForDocuments() {
-        if let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName), let type: FileAttributeType = attributes[.type] as? FileAttributeType {
-            if type == .typeSymbolicLink && (self.docPath as String) == self.linkOfDocumentPathForUserWithAppName {
-                return
-            }
+        let destinationPath = self.docPath as String
+
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName),
+           let type = attributes[.type] as? FileAttributeType,
+           type == .typeSymbolicLink,
+           destinationPath == self.linkOfDocumentPathForUserWithAppName {
+            return
         }
+
         do {
-            let attributes = try? FileManager.default.attributesOfItem(atPath: self.documentPathForUserWithAppName)
-            if let attributes = attributes {
-                
-                let type: FileAttributeType = attributes[.type] as! FileAttributeType
-                if type == .typeSymbolicLink {
-                    try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
-                    try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
-                }
-                else {
-                    try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
-                    try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
-                }
-            } else {
-                try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: self.docPath as String)
+            if FileManager.default.fileExists(atPath: self.documentPathForUserWithAppName) {
+                try FileManager.default.removeItem(atPath: self.documentPathForUserWithAppName)
             }
-            
-        } catch let err as NSError {
-            assertionFailure(err.localizedDescription)
+            try FileManager.default.createSymbolicLink(atPath: self.documentPathForUserWithAppName, withDestinationPath: destinationPath)
+        } catch {
+            assertionFailure(error.localizedDescription)
         }
     }
 }
-
