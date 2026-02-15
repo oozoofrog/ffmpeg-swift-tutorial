@@ -24,8 +24,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let prevIO = UIApplication.shared.statusBarOrientation
-        if UIInterfaceOrientationIsPortrait(prevIO) {
+        if UIDevice.current.orientation.isPortrait || UIDevice.current.orientation == .unknown {
             UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
         }
     }
@@ -37,25 +36,30 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        weak var weakSelf = self
-        if let path = self.path, 0 < path.lengthOfBytes(using: .utf8) {
-            self.player = Player(path: path)
-            
-            self.player?.start(start: { 
-                DispatchQueue.main.async {
-                    guard weakSelf?.setupSDL(player: weakSelf!.player!) ?? false else {
-                        weakSelf?.player?.cancel()
-                        return
-                    }
-                    
-                    weakSelf?.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
-                    weakSelf?.displayLink?.add(to: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-                }
-                }, stop: {
-                    var event = SDL_Event(quit: SDL_QuitEvent(type: SDL_QUIT.rawValue, timestamp: 0))
-                    SDL_PushEvent(&event)
-            })
+        guard let path = self.path, 0 < path.lengthOfBytes(using: .utf8) else {
+            return
         }
+
+        self.player = Player(path: path)
+
+        self.player?.start(start: { [weak self] in
+            DispatchQueue.main.async {
+                guard let self else {
+                    return
+                }
+
+                guard let player = self.player, self.setupSDL(player: player) else {
+                    self.player?.cancel()
+                    return
+                }
+
+                self.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
+                self.displayLink?.add(to: .current, forMode: .default)
+            }
+        }, stop: {
+            var event = SDL_Event(quit: SDL_QuitEvent(type: SDL_QUIT.rawValue, timestamp: 0))
+            SDL_PushEvent(&event)
+        })
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -69,7 +73,7 @@ class ViewController: UIViewController {
     }
 
     var start: Double = 0
-    func update(link: CADisplayLink) {
+    @objc func update(link: CADisplayLink) {
         if 0 == start {
             start = link.timestamp
         }
