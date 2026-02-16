@@ -24,8 +24,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let prevIO = UIApplication.shared.statusBarOrientation
-        if UIInterfaceOrientationIsPortrait(prevIO) {
+        let prevIO = self.view.window?.windowScene?.interfaceOrientation ?? .portrait
+        if prevIO.isPortrait {
             UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
         }
     }
@@ -49,7 +49,7 @@ class ViewController: UIViewController {
                     }
                     
                     weakSelf?.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
-                    weakSelf?.displayLink?.add(to: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+                    weakSelf?.displayLink?.add(to: RunLoop.current, forMode: .default)
                 }
                 }, stop: {
                     var event = SDL_Event(quit: SDL_QuitEvent(type: SDL_QUIT.rawValue, timestamp: 0))
