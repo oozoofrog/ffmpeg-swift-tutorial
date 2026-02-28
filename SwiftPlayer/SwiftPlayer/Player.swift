@@ -174,7 +174,7 @@ class AVFrameQueue<D: MediaData> {
 extension AVAudioPlayerNode {
     func schedule(at: AVAudioTime? = nil, channels c: Int, format: AVAudioFormat, audioDatas datas: [UnsafePointer<UInt8>], floatsLength: Int, samples: Int, completion: AVAudioNodeCompletionHandler? ) {
         
-        let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(floatsLength))
+        guard let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(floatsLength)) else { return }
         buf.frameLength = AVAudioFrameCount(samples)
         let channels = buf.floatChannelData
         for i in 0..<datas.count {
@@ -288,10 +288,16 @@ public class Player: Operation {
             self.playerLock?.signal()
         }
         self.videoQueue?.read(time: time, handle: { (frame) in
-            let y: UnsafePointer<UInt8> = frame.datas[0].withUnsafeBytes(){$0}
-            let u: UnsafePointer<UInt8> = frame.datas[1].withUnsafeBytes(){$0}
-            let v: UnsafePointer<UInt8> = frame.datas[2].withUnsafeBytes(){$0}
-            decodeCompletion(y, u, v, frame.linesizes[0])
+            frame.datas[0].withUnsafeBytes { yRaw in
+                frame.datas[1].withUnsafeBytes { uRaw in
+                    frame.datas[2].withUnsafeBytes { vRaw in
+                        let y = yRaw.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                        let u = uRaw.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                        let v = vRaw.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                        decodeCompletion(y, u, v, frame.linesizes[0])
+                    }
+                }
+            }
         })
     }
     
@@ -310,7 +316,7 @@ public class Player: Operation {
                 }
                 self.audioQueue?.read(handle: { (aframe) in
                     let floatsLen = aframe.linesizes[0] / MemoryLayout<Float>.size
-                    let datas: [UnsafePointer<UInt8>] = aframe.datas.flatMap(){$0.withUnsafeBytes(){$0}}
+                    let datas: [UnsafePointer<UInt8>] = aframe.datas.compactMap(){ $0.withUnsafeBytes { $0.baseAddress?.assumingMemoryBound(to: UInt8.self) } }
                     self.audioPlayer.schedule(channels: AVAudioSession.sharedInstance().preferredOutputNumberOfChannels, format: self.audioFormat!, audioDatas: datas, floatsLength: floatsLen, samples: aframe.samples, completion: nil)
                 })
             }
@@ -522,15 +528,15 @@ public class Player: Operation {
         return true
     }
     
-    var interruptionNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVAudioSessionInterruption, object: nil, queue: .main) { (noti) in
+    var interruptionNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { (noti) in
         print("🤔 audio interruption -> " + noti.description)
     }
     
-    var routeNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVAudioSessionRouteChange, object: nil, queue: .main) { (noti) in
+    var routeNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { (noti) in
         print("🤔 audio route change -> " + noti.description)
     }
     
-    var mediaResetNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVAudioSessionMediaServicesWereReset, object: nil, queue: .main) { (noti) in
+    var mediaResetNotification: NSObjectProtocol? = NotificationCenter.default.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { (noti) in
         print("🤔 audio media reset -> " + noti.description)
     }
     
@@ -544,7 +550,7 @@ public class Player: Operation {
         let audioSession = AVAudioSession.sharedInstance()
         
         do {
-            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setCategory(.playback)
             try audioSession.setActive(true)
         } catch let err as NSError {
             assertionFailure(err.localizedDescription)

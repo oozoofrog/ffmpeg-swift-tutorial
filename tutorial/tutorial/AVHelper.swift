@@ -261,7 +261,7 @@ struct AVFilterDescriptor: AVFilterDescription {
     var description: String {
         var descriptions = [String]()
         if 0 < pix_fmts.count {
-            let pix_fmts_str = self.pix_fmts.flatMap(){return String(cString:av_get_pix_fmt_name($0))}.joined(separator: "|")
+            let pix_fmts_str = self.pix_fmts.map(){return String(cString:av_get_pix_fmt_name($0))}.joined(separator: "|")
             descriptions.append("format=pix_fmts=\(pix_fmts_str)")
         }
         if let smartblur = self.smartblur {

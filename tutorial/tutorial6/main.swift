@@ -64,10 +64,10 @@ struct AudioData: MediaTimeDatable {
     var sampleSize: Int
     
     var pcmBuffer: AVAudioPCMBuffer {
-        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(bufferSize))
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(bufferSize)) else { return AVAudioPCMBuffer() }
         buffer.frameLength = AVAudioFrameCount(sampleSize)
         let floatBuffer: UnsafePointer<Float> = data.withUnsafeBytes { (ptr) -> UnsafePointer<Float> in
-            return ptr
+            return ptr.baseAddress!.assumingMemoryBound(to: Float.self)
         }
         for i in 0..<channels {
             guard let channel = buffer.floatChannelData?[Int(i)] else {
@@ -104,7 +104,7 @@ class Player {
         guard 0 <= SDL_Init(Uint32(SDL_INIT_VIDEO)) else {
             return
         }
-        guard let screen = NSScreen.screens()?.first?.frame.applying(CGAffineTransform(scaleX: 0.5, y: 0.5)) else {
+        guard let screen = NSScreen.screens.first?.frame.applying(CGAffineTransform(scaleX: 0.5, y: 0.5)) else {
             return
         }
         wr.x = Int32(screen.origin.x)
@@ -241,7 +241,7 @@ class Player {
     lazy var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: .strict, queue:self.timerQueue)
     
     func startDisplay(fps: Double) {
-        timer?.scheduleRepeating(deadline: .now(), interval: fps, leeway: DispatchTimeInterval.nanoseconds(0))
+        timer?.schedule(deadline: .now(), repeating: fps, leeway: DispatchTimeInterval.nanoseconds(0))
         timer?.setEventHandler {
             self.timerLock.wait()
             if let data = self.videoQueue.popLast() {
@@ -256,9 +256,9 @@ class Player {
                     w: Int32(tr.width),
                     h: Int32(tr.height))
                 var src =  SDL_Rect(x: 0, y: 0, w: data.w, h: data.h)
-                let y: UnsafePointer<UInt8> = data.y.withUnsafeBytes(){$0}
-                let u: UnsafePointer<Uint8> = data.u.withUnsafeBytes(){$0}
-                let v: UnsafePointer<Uint8> = data.v.withUnsafeBytes(){$0}
+                let y: UnsafePointer<UInt8> = data.y.withUnsafeBytes(){ $0.baseAddress!.assumingMemoryBound(to: UInt8.self) }
+                let u: UnsafePointer<UInt8> = data.u.withUnsafeBytes(){ $0.baseAddress!.assumingMemoryBound(to: UInt8.self) }
+                let v: UnsafePointer<UInt8> = data.v.withUnsafeBytes(){ $0.baseAddress!.assumingMemoryBound(to: UInt8.self) }
                 SDL_UpdateYUVTexture(self.texture, &self.videoRect, y, data.lumaLength, u, data.chromaLength, v, data.chromaLength)
                 SDL_RenderClear(self.renderer)
                 SDL_RenderCopy(self.renderer, self.texture, &src, &dstrect)

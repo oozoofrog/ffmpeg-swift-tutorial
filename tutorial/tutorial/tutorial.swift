@@ -41,7 +41,7 @@ enum TutorialIndex: Int {
         tutorial?.run()
     }
     
-    static let all: [TutorialIndex] = (1..<TutorialIndex.tutorialNumber.rawValue).flatMap(){TutorialIndex(rawValue: $0)}
+    static let all: [TutorialIndex] = (1..<TutorialIndex.tutorialNumber.rawValue).compactMap(){TutorialIndex(rawValue: $0)}
 }
 
 protocol Tutorial {

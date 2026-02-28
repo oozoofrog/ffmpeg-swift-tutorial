@@ -92,7 +92,7 @@ class TableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         
-        guard let file = self.files?[(indexPath as NSIndexPath).row] else {
+        guard let file = self.files?[indexPath.row] else {
             cell.textLabel?.text = nil
             return cell
         }

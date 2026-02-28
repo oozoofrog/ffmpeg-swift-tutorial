@@ -20,10 +20,10 @@ extension AVFrame {
     mutating func time(time_base: AVRational) -> CFTimeInterval {
         var pts = 0.0
         let opaque = nil != self.opaque ? self.opaque.assumingMemoryBound(to: Int64.self).pointee : 0
-        if AV_NOPTS_VALUE == self.pkt_pts && AV_NOPTS_VALUE != opaque {
+        if AV_NOPTS_VALUE == self.pts && AV_NOPTS_VALUE != opaque {
             pts = Double(opaque)
-        } else if self.pkt_pts != AV_NOPTS_VALUE {
-            pts = Double(self.pkt_pts)
+        } else if self.pts != AV_NOPTS_VALUE {
+            pts = Double(self.pts)
         } else {
             pts = 0
         }
