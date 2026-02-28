@@ -36,9 +36,10 @@ class TableViewController: UITableViewController {
         fd = open(documentPath, O_EVTONLY)
         documents_observer = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .delete], queue: .main)
         
-        weak var weakSelf: TableViewController? = self
-        documents_observer?.setEventHandler {
-            weakSelf?.updateDocuments()
+        documents_observer?.setEventHandler { [weak self] in
+            Task { @MainActor in
+                self?.updateDocuments()
+            }
         }
         documents_observer?.resume()
     }

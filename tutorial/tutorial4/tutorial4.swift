@@ -16,12 +16,12 @@ let AV_NOPTS_VALUE = Int64.min
 
 @objc public class tutorial4: NSObject {
     
-    static var a_pts = 0.0
-    static var v_pts = 0.0
-    
-    static var window: OpaquePointer?
-    static var renderer: OpaquePointer?
-    static var screen_mutex: OpaquePointer?
+    nonisolated(unsafe) static var a_pts = 0.0
+    nonisolated(unsafe) static var v_pts = 0.0
+
+    nonisolated(unsafe) static var window: OpaquePointer?
+    nonisolated(unsafe) static var renderer: OpaquePointer?
+    nonisolated(unsafe) static var screen_mutex: OpaquePointer?
     
     static public func packet_queue_init(q: UnsafeMutablePointer<PacketQueue>) {
         memset(q, 0, MemoryLayout<PacketQueue>.stride)
@@ -238,7 +238,7 @@ let AV_NOPTS_VALUE = Int64.min
         }
     }
     
-    static public var audio_callback: SDL_AudioCallback = { userdata, stream, len in
+    nonisolated(unsafe) static public var audio_callback: SDL_AudioCallback = { userdata, stream, len in
         guard let vs: UnsafeMutablePointer<VideoState> = userdata?.assumingMemoryBound(to: VideoState.self) else {
             return
         }
@@ -271,7 +271,7 @@ let AV_NOPTS_VALUE = Int64.min
         }
     }
     
-    static public var video_thread: SDL_ThreadFunction = { arg in
+    nonisolated(unsafe) static public var video_thread: SDL_ThreadFunction = { arg in
         
         let vs: UnsafeMutablePointer<VideoState> = arg!.assumingMemoryBound(to: VideoState.self)
         var pkt1: AVPacket = AVPacket()
@@ -347,7 +347,7 @@ let AV_NOPTS_VALUE = Int64.min
         return 0
     }
     
-    static var sdl_refresh_timer_cb: SDL_TimerCallback = {
+    nonisolated(unsafe) static var sdl_refresh_timer_cb: SDL_TimerCallback = {
         var event = SDL_Event()
         event.type = (SDL_USEREVENT).rawValue
         event.user.data1 = $1
@@ -413,7 +413,7 @@ let AV_NOPTS_VALUE = Int64.min
         return vs.pointee.stream_open(at: at)
     }
     
-    static public var decode_thread: SDL_ThreadFunction = { (arg) in
+    nonisolated(unsafe) static public var decode_thread: SDL_ThreadFunction = { (arg) in
         guard let vs: UnsafeMutablePointer<VideoState> = arg?.assumingMemoryBound(to: VideoState.self) else {
             return -1
         }

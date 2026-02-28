@@ -36,9 +36,10 @@ class ViewController: UITableViewController {
         fd = open(documentPath, O_EVTONLY)
         documents_observer = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .delete], queue: .main)
         
-        weak var weakSelf: ViewController? = self
-        documents_observer?.setEventHandler {
-            weakSelf?.updateDocuments()
+        documents_observer?.setEventHandler { [weak self] in
+            Task { @MainActor in
+                self?.updateDocuments()
+            }
         }
         documents_observer?.resume()
     }
@@ -123,10 +124,9 @@ class ViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        weak var weakSelf: ViewController? = self
-        let actions = TutorialIndex.all.lazy.map({ index -> UIContextualAction in
-            let action = UIContextualAction(style: .normal, title: "\(index)") { (_, _, completionHandler) in
-                guard let file = weakSelf?.files?[indexPath.row], let documentPath = weakSelf?.documentPath else {
+        let actions = TutorialIndex.all.lazy.map({ [weak self] index -> UIContextualAction in
+            let action = UIContextualAction(style: .normal, title: "\(index)") { [weak self] (_, _, completionHandler) in
+                guard let file = self?.files?[indexPath.row], let documentPath = self?.documentPath else {
                     completionHandler(false)
                     return
                 }

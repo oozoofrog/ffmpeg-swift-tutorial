@@ -18,9 +18,9 @@ struct  Tutorial3: Tutorial {
         var cond: OpaquePointer = SDL_CreateCond()
     }
     
-    static var audioq: PacketQueue = PacketQueue()
-    
-    static var quit: Bool = false
+    nonisolated(unsafe) static var audioq: PacketQueue = PacketQueue()
+
+    nonisolated(unsafe) static var quit: Bool = false
     
     var paths: [String]
     
@@ -102,10 +102,10 @@ struct  Tutorial3: Tutorial {
         return ret
     }
     
-    static var pkt = av_packet_alloc()!
-    static var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
-    static var audio_pkt_size: Int32 = 0
-    static var frame = av_frame_alloc()!
+    nonisolated(unsafe) static var pkt = av_packet_alloc()!
+    nonisolated(unsafe) static var audio_pkt_data: UnsafeMutablePointer<UInt8>? = nil
+    nonisolated(unsafe) static var audio_pkt_size: Int32 = 0
+    nonisolated(unsafe) static var frame = av_frame_alloc()!
     
     
     static func audio_decode_frame(aCodecCtx: UnsafeMutablePointer<AVCodecContext>, audio_buf: UnsafeMutablePointer<UInt8>, buf_size: Int32) -> Int32 {
@@ -151,11 +151,11 @@ struct  Tutorial3: Tutorial {
         }
     }
     
-    static var audio_buf: [UInt8] = [UInt8](repeating: 0, count: MAX_AUDIO_FRAME_SIZE.cast() * 3 / 2)
-    static var audio_buf_ptr = audio_buf.withUnsafeMutableBufferPointer(){$0}
-    static var audio_buf_size: UInt32 = 0
-    static var audio_buf_index: UInt32 = 0
-    static var audio_callback: SDL_AudioCallback = { userdata, stream, len in
+    nonisolated(unsafe) static var audio_buf: [UInt8] = [UInt8](repeating: 0, count: MAX_AUDIO_FRAME_SIZE.cast() * 3 / 2)
+    nonisolated(unsafe) static var audio_buf_ptr = audio_buf.withUnsafeMutableBufferPointer(){$0}
+    nonisolated(unsafe) static var audio_buf_size: UInt32 = 0
+    nonisolated(unsafe) static var audio_buf_index: UInt32 = 0
+    nonisolated(unsafe) static var audio_callback: SDL_AudioCallback = { userdata, stream, len in
         print(#function)
         var aCodecCtx: UnsafeMutablePointer<AVCodecContext> = userdata!.cast(to: AVCodecContext.self)
         var len1: Int32 = 0, audio_size: Int32 = 0
@@ -185,7 +185,7 @@ struct  Tutorial3: Tutorial {
         Tutorial3.audio_buf_index += len1.cast()
     }
     
-    static var audio_stream: UnsafeMutablePointer<AVStream>!
+    nonisolated(unsafe) static var audio_stream: UnsafeMutablePointer<AVStream>!
     
     func run() {
         var pFormatCtx: UnsafeMutablePointer<AVFormatContext>? = nil

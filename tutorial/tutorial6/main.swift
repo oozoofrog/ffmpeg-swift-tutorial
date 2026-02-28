@@ -12,7 +12,7 @@ import CoreAudio
 import Accelerate
 import AppKit
 
-var path = URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/sample.mp4")
+nonisolated(unsafe) var path = URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/sample.mp4")
 
 protocol MediaTimeDatable {
     var pts: Int64 { get }
@@ -84,8 +84,8 @@ struct AudioData: MediaTimeDatable {
     let time_base: AVRational
 }
 
-class Player {
-    
+class Player: @unchecked Sendable {
+
     var playLock: DispatchSemaphore = DispatchSemaphore(value: 0)
     var stopHandle: () -> Void
     
@@ -272,17 +272,17 @@ class Player {
     }
 }
 
-var quit: Bool = false
+nonisolated(unsafe) var quit: Bool = false
 
 
-let player = Player { 
+let player = Player {
     quit = true
 }
 DispatchQueue.global().async {
     player.start()
 }
 
-var event = SDL_Event()
+nonisolated(unsafe) var event = SDL_Event()
 while false == quit {
     SDL_PollEvent(&event)
     switch event.type {

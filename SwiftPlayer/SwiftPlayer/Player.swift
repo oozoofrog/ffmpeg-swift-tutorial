@@ -75,7 +75,7 @@ struct AudioData: MediaData {
 }
 
 
-class AVFrameQueue<D: MediaData> {
+class AVFrameQueue<D: MediaData>: @unchecked Sendable {
     
     var quit: Bool = false
     
@@ -194,7 +194,7 @@ extension AVAudioPlayerNode {
     }
 }
 
-public class Player: Operation {
+public class Player: Operation, @unchecked Sendable {
     
     public override var isConcurrent: Bool {
         return true
@@ -252,7 +252,7 @@ public class Player: Operation {
         }
     }
     
-    public typealias PlayerWorkHandle = () -> Void
+    public typealias PlayerWorkHandle = @Sendable () -> Void
     var startCompletion: PlayerWorkHandle?
     var stopCompletion: PlayerWorkHandle?
     public func start(start: PlayerWorkHandle?, stop: PlayerWorkHandle? = nil) {

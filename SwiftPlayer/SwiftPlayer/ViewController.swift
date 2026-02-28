@@ -37,19 +37,18 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        weak var weakSelf = self
         if let path = self.path, 0 < path.lengthOfBytes(using: .utf8) {
             self.player = Player(path: path)
-            
-            self.player?.start(start: { 
-                DispatchQueue.main.async {
-                    guard weakSelf?.setupSDL(player: weakSelf!.player!) ?? false else {
-                        weakSelf?.player?.cancel()
+
+            self.player?.start(start: { [weak self] in
+                Task { @MainActor in
+                    guard self?.setupSDL(player: self!.player!) ?? false else {
+                        self?.player?.cancel()
                         return
                     }
-                    
-                    weakSelf?.displayLink = CADisplayLink(target: self, selector: #selector(ViewController.update(link:)))
-                    weakSelf?.displayLink?.add(to: RunLoop.current, forMode: .default)
+
+                    self?.displayLink = CADisplayLink(target: self as Any, selector: #selector(ViewController.update(link:)))
+                    self?.displayLink?.add(to: RunLoop.current, forMode: .default)
                 }
                 }, stop: {
                     var event = SDL_Event(quit: SDL_QuitEvent(type: SDL_QUIT.rawValue, timestamp: 0))
@@ -69,7 +68,7 @@ class ViewController: UIViewController {
     }
 
     var start: Double = 0
-    func update(link: CADisplayLink) {
+    @objc func update(link: CADisplayLink) {
         if 0 == start {
             start = link.timestamp
         }
@@ -133,20 +132,18 @@ class ViewController: UIViewController {
         
         texture = t
         
-        weak var weakSelf = self
-        eventQueue?.async {
+        eventQueue?.async { [weak self] in
             var event: SDL_Event = SDL_Event()
             event_loop: while true {
                 SDL_PollEvent(&event)
-                
+
                 switch event.type {
                 case SDL_FINGERDOWN.rawValue, SDL_QUIT.rawValue:
-                    DispatchQueue.main.async(execute: {
-                        
-                        guard let ws = weakSelf else {
+                    Task { @MainActor in
+                        guard let ws = self else {
                             return
                         }
-                        
+
                         ws.player?.cancel()
                         ws.player = nil
                         ws.displayLink?.isPaused = true
@@ -155,9 +152,9 @@ class ViewController: UIViewController {
                         SDL_DestroyRenderer(ws.renderer)
                         SDL_DestroyWindow(ws.window)
                         SDL_Quit()
-                        
+
                         let _ = ws.navigationController?.popViewController(animated: true)
-                    })
+                    }
                     break event_loop
                 default:
                     break
